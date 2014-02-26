@@ -1,0 +1,32 @@
+NavierStokes
+====================
+
+Purpose: a system for synchronizing information between federated social networks.
+
+Requirements
+============
+
+* cliaspora-0.1.7.tgz (Diaspora access)
+* PyPump (pump.io access)
+* cURL (GNU Social access)
+
+
+Example navierstokes.cfg file
+=============================
+
+[gnusocial]
+type: gnusocial
+site: gnusocial.server.url
+username: myname
+password: XXXXXXXXXXXXXXXX
+
+[pump.io]
+type: pump.io
+webfinger: user@pump.server
+client_credentials: XXXXXXXXXXXXXXXXXXXXxx
+client_tokens: XXXXXXXXXXXXXXXXXX
+
+[diaspora]
+type: diaspora
+webfinger: user@diaspora.server
+password: XXXXXXXXXXXXXXXXXXX
