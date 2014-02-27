@@ -33,6 +33,7 @@ class PumpHandler(SocialHandler):
         self.credentials = credentials
         self.tokens = tokens
 
+
         self.pump = self.CreatePumpClient(self.webfinger, self.credentials, self.tokens)
         self.me   = self.pump.Person(self.webfinger)
 
@@ -41,6 +42,10 @@ class PumpHandler(SocialHandler):
         self.debug = False
         
         pass
+
+    def simple_verifier(url):
+        print 'Go to: ' + url
+        return raw_input('Verifier: ') # they will get a code back
 
     def CreatePumpClient(self, webfinger, client_credentials,client_tokens):
         client = Client(
@@ -55,6 +60,7 @@ class PumpHandler(SocialHandler):
             client=client,
             token=client_tokens[0], # the token
             secret=client_tokens[1], # the token secret
+            verifier_callback=self.simple_verifier
             )
         
         return pump
@@ -149,4 +155,9 @@ class PumpHandler(SocialHandler):
 
     def write(self, messages = []):
 
+        for message in messages:
+            new_note = self.pump.Note(message.content)
+            new_note.send()
+            pass
+        
         pass

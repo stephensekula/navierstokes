@@ -17,6 +17,7 @@ import logging
 import ConfigParser
 import codecs
 import math
+import copy
 
 from os.path import expanduser
 from lockfile import FileLock,LockTimeout
@@ -30,6 +31,11 @@ import DiasporaTools
 
 from MessageObj import Message
 
+# Fuzzy text matching
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
+
+
 FORMAT = "%(asctime)-15s %(message)s"
 logging.basicConfig(format=FORMAT,level=logging.INFO)
 
@@ -37,7 +43,7 @@ home = expanduser("~")
 
 # Parse command line options
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "dhi:o:", ["debug","help", "input=", "output="])
+    opts, args = getopt.getopt(sys.argv[1:], "dfhi:o:", ["debug","fuzzy","help", "input=", "output="])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -47,11 +53,15 @@ output = None
 input = None
 verbose = False
 debug = False
+fuzzy = False
+
 for o, a in opts:
     if o in ("-h", "--help"):
         sys.exit()
     if o in ("-d", "--debug"):
         debug = True
+    if o in ("-f", "--fuzzy"):
+        fuzzy = True
     elif o in ("-i", "--input"):
         input = a
     elif o in ("-o", "--output"):
@@ -105,95 +115,151 @@ if not os.path.exists(home+'/.navierstokes/'):
 
 
 
-messagesToWrite = []
-
-source = sources_and_sinks[input]
-sinks = []
-
-sinknames = []
-
-if output != None:
-    sinknames = output.split(',')
-    pass
-
-for sink in sinknames:
-    sinks.append( sources_and_sinks[sink] )
-    pass
-
-
 # retrieve messages from source
-messages = []
-
-messages = source.gather()
-
-# print time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(most_recent_message_time))
-# print timestamp
-
-# Acquire file lock on last_update file before trying to write any messages.
-lock = FileLock(home+"/.navierstokes/last_update.txt")
-
-while not lock.i_am_locking():
-    try:
-        lock.acquire(timeout=10)
-    except LockTimeout:
-        logging.error("Lock acquisition: %s", "Unable to acquire file lock needed for operations.")
-        sys.exit()
-        pass
-    pass
-
-last_update = open(home+'/.navierstokes/last_update.txt','r+')
-timestamp = last_update.read()
-timestamp = float(timestamp.rstrip('\n'))
-last_update.close()
-
-most_recent_message_time = timestamp
-#current_time = time.time()+3600.0*6.0
 current_time = time.mktime(time.gmtime())
 
-for message in messages:
 
+if True == fuzzy:
 
-    print "Message UNIX Epoch: %f, and current time: %f" % (message.date,current_time)
+    # create a map between a source and a list of messages from the source
+    messages = {}
+    messagesToWrite = {}
 
-    if (math.fabs(message.date - current_time))>3600:
-        print "Message is too old - will not post to other services."
-        continue
-
-    if message.reply:
-        continue
-    
-    if message.repost:
-        message.content = 'I thought this, posted by <a href="%s">%s</a>, was interesting on %s: ' % (unicode(message.author_url).encode("utf-8"), unicode(message.author).encode("utf-8"), input) + message.content
+    for name in sources_and_sinks:
+        messagesToWrite[name] = []
+        messages[name] = []
+        messages[name] = copy.deepcopy(sources_and_sinks[name].gather())
         pass
     
-    messagetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(message.date))
-    # print "   Message time: %s" % (messagetime)
-    # print "               : %f" % (message.date)
-    
-    if message.date > timestamp:
-        # print message.content
-        if message.date > most_recent_message_time:
-            most_recent_message_time = message.date
+    # find all messages within the last hour from one source that are not present in another
+    for source in messages:
+        for message in messages[source]:
+
+            if message.reply:
+                continue
+        
+            if (math.fabs(message.date - current_time))<3600:
+                for other_source in messages:
+                    found_match = False
+                    if other_source == source:
+                        continue
+                    for other_message in messages[other_source]:
+                        match_ratio = fuzz.WRatio(message.content, other_message.content, force_ascii=True)
+                        if match_ratio > 75:
+                            found_match = True
+                            break
+                        pass
+                    if not found_match:
+                        if message.repost:
+                            message.content = 'RT ' + message.content
+                            pass
+
+                        messagesToWrite[other_source].append(message)
+                        pass
+                    pass
+                pass
             pass
-        messagesToWrite.append(message)
         pass
     
-    pass
 
-if len(sinks) == 0:
+    print messagesToWrite
+
+    for sinkname in sources_and_sinks:
+        print "Writing messages to " + sources_and_sinks[sinkname].__class__.__name__
+        sources_and_sinks[sinkname].write( messagesToWrite[sinkname] )
+        pass
+
+else:
+    # Exact mode - take from input, send to output
+    messagesToWrite = []
+
+    source = sources_and_sinks[input]
+    sinks = []
+    
+    sinknames = []
+    
+    if output != None:
+        sinknames = output.split(',')
+        pass
+    
+    for sink in sinknames:
+        sinks.append( sources_and_sinks[sink] )
+        pass
+
+    messages = []
+    messages = source.gather()
+
+
+
+
+    # print time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(most_recent_message_time))
+    # print timestamp
+    
+    # Acquire file lock on last_update file before trying to write any messages.
+    lock = FileLock(home+"/.navierstokes/last_update.txt")
+    
+    while not lock.i_am_locking():
+        try:
+            lock.acquire(timeout=10)
+        except LockTimeout:
+            logging.error("Lock acquisition: %s", "Unable to acquire file lock needed for operations.")
+            sys.exit()
+            pass
+        pass
+    
+    last_update = open(home+'/.navierstokes/last_update.txt','r+')
+    timestamp = last_update.read()
+    timestamp = float(timestamp.rstrip('\n'))
+    last_update.close()
+    
+    most_recent_message_time = timestamp
+    
+    for message in messages:
+        
+        
+        print "Message UNIX Epoch: %f, and current time: %f" % (message.date,current_time)
+        
+        if (math.fabs(message.date - current_time))>3600:
+            print "Message is too old - will not post to other services."
+            continue
+        
+        if message.reply:
+            continue
+        
+        if message.repost:
+            message.content = 'I thought this, posted by <a href="%s">%s</a>, was interesting on %s: ' % (unicode(message.author_url).encode("utf-8"), unicode(message.author).encode("utf-8"), input) + message.content
+            pass
+        
+        messagetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(message.date))
+        # print "   Message time: %s" % (messagetime)
+        # print "               : %f" % (message.date)
+        
+        if message.date > timestamp:
+            # print message.content
+            if message.date > most_recent_message_time:
+                most_recent_message_time = message.date
+                pass
+            messagesToWrite.append(message)
+            pass
+        
+        pass
+
+    if len(sinks) == 0:
+        lock.release()
+        sys.exit()
+        pass
+
+
+    for sink in sinks:
+        logging.info("Handler::write: %s", "Writing message to " + sink.__class__.__name__)
+        sink.write( messagesToWrite )
+        pass
+
+    # Write the current time to the last_check.txt
+    last_update = open(home+'/.navierstokes/last_update.txt','w')
+    last_update.write(str(most_recent_message_time))
+    last_update.close()
+
     lock.release()
-    sys.exit()
+
     pass
-
-
-for sink in sinks:
-    logging.info("Handler::write: %s", "Writing message to " + sink.__class__.__name__)
-    sink.write( messagesToWrite )
-    pass
-
-# Write the current time to the last_check.txt
-last_update = open(home+'/.navierstokes/last_update.txt','w')
-last_update.write(str(most_recent_message_time))
-last_update.close()
-
-lock.release()

@@ -124,7 +124,7 @@ class GNUSocialHandler(SocialHandler):
             if dent_author != self.username:
                 continue
             message = Message()
-            message.content = dent_text
+            message.SetContent(dent_text)
             message.author = dent_author
             message.reply = True if self.find_element_of_status(dent_xml,"in_reply_to_status_id") != "" else False
 

@@ -1,8 +1,9 @@
 import time
+import codecs
 
 class Message:
     def __init__(self):
-        self.content = ""
+        self.content = unicode()
         self.id = 0
         self.file = ""
         self.date = 0
@@ -24,9 +25,11 @@ class Message:
         print "ATTACHMENTS: %s" % (str(self.attachments))
         
     def SetContent(self, text):
-        if all(ord(c) < 128 for c in text):
-            self.content = text
-        else:
-            self.content = unicode(text).encode("utf-8")
-            pass
-        pass
+        self.content = text
+        # if all(ord(c) < 128 for c in text):
+        #    self.content = text
+        # else:
+        #    print text
+        #    self.content = unicode(text).encode("ascii")
+        #    pass
+        # pass

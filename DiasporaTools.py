@@ -64,8 +64,8 @@ class DiasporaHandler(SocialHandler):
                 if line.find("COMMENTS:") != -1:
                     in_message = False
 
-                    msg.content = msg.content.replace('arx-iv','arxiv')
-                    msg.content = msg.content.replace('arX-iv','arXiv')
+                    msg.SetContent( msg.content.replace('arx-iv','arxiv') )
+                    msg.SetContent( msg.content.replace('arX-iv','arXiv') )
 
                     if self.debug:
                         msg.Print()
@@ -79,7 +79,7 @@ class DiasporaHandler(SocialHandler):
                     if not re.search('.*[a-zA-Z]-$', line):
                         line = line + " "
                         pass
-                    msg.content += line
+                    msg.SetContent(msg.content + line)
                 pass
 
             pass
