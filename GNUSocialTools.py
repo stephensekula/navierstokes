@@ -120,6 +120,12 @@ class GNUSocialHandler(SocialHandler):
         highest_id = 0
         for dent_xml in dents_xml:
             dent_text = self.find_element_of_status(dent_xml,"text")
+
+            # if the dent has a @ at the beginning, it was meant to be a direct
+            # message to someone on GNU social and should not be broadcast
+            if dent_text[0] == "@":
+                continue
+
             dent_author = self.status_author_name(dent_xml)
             if dent_author != self.username:
                 continue
@@ -146,6 +152,13 @@ class GNUSocialHandler(SocialHandler):
             pass
 
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
+
+        if self.debug:
+            print "********************** GNU Social Handler **********************\n"
+            print "Here are the messages I gathered from the GNU Social server:\n"
+            for message in self.messages:
+                message.Print()
+                pass
 
         # cleanup
         os.system('rm -f /tmp/%d_dents.xml' % (pid))

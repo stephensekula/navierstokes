@@ -103,6 +103,13 @@ class DiasporaHandler(SocialHandler):
 
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
+        if self.debug:
+            print "********************** Diaspora Handler **********************\n"
+            print "Here are the messages I gathered from the Diaspora server:\n"
+            for message in self.messages:
+                message.Print()
+                pass
+
         return self.messages
 
     

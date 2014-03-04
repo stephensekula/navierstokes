@@ -59,9 +59,9 @@ fuzzy = False
 for o, a in opts:
     if o in ("-h", "--help"):
         sys.exit()
-    if o in ("-d", "--debug"):
+    elif o in ("-d", "--debug"):
         debug = True
-    if o in ("-f", "--fuzzy"):
+    elif o in ("-f", "--fuzzy"):
         fuzzy = True
     elif o in ("-i", "--input"):
         input = a
@@ -199,13 +199,17 @@ if True == fuzzy:
             
             if not message_already_written:
                 messagesToActuallyWrite.append( message )
-                message_archive_file.write( message_md5sum + "\n" )
+                if not debug:
+                    message_archive_file.write( message_md5sum + "\n" )
+                    pass
                 pass
             pass
 
-        print messagesToActuallyWrite
-        sources_and_sinks[sinkname].write( messagesToActuallyWrite )
- 
+        if debug:
+            print messagesToActuallyWrite
+        else:
+            sources_and_sinks[sinkname].write( messagesToActuallyWrite )
+            pass
         message_archive_file.close()
 
         lock.release()
@@ -296,12 +300,17 @@ else:
 
     for sink in sinks:
         logging.info("Handler::write: %s", "Writing message to " + sink.__class__.__name__)
-        sink.write( messagesToWrite )
+        if not debug:
+            sink.write( messagesToWrite )
+            pass
         pass
 
     # Write the current time to the last_check.txt
     last_update = open(home+'/.navierstokes/last_update.txt','w')
-    last_update.write(str(most_recent_message_time))
+    if not debug:
+        last_update.write(str(most_recent_message_time))
+        pass
+
     last_update.close()
 
     lock.release()
