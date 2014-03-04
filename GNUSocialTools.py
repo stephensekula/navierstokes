@@ -121,10 +121,7 @@ class GNUSocialHandler(SocialHandler):
         for dent_xml in dents_xml:
             dent_text = self.find_element_of_status(dent_xml,"text")
 
-            # if the dent has a @ at the beginning, it was meant to be a direct
-            # message to someone on GNU social and should not be broadcast
-            if dent_text[0] == "@":
-                continue
+                
 
             dent_author = self.status_author_name(dent_xml)
             if dent_author != self.username:
@@ -133,6 +130,11 @@ class GNUSocialHandler(SocialHandler):
             message.SetContent(dent_text)
             message.author = dent_author
             message.reply = True if self.find_element_of_status(dent_xml,"in_reply_to_status_id") != "" else False
+
+            # if the dent has a @ at the beginning, it was meant to be a direct
+            # message to someone on GNU social and should not be broadcast
+            if dent_text[0] == "@":
+                message.direct = 1
 
             dent_attachments = self.status_attachment(dent_xml)
             for dent_attachment in dent_attachments:
