@@ -6,7 +6,7 @@ Purpose: a system for synchronizing information between federated social network
 Requirements
 ============
 
-* cliaspora-0.1.7.tgz (Diaspora access)
+* cliaspora-0.1.7.tgz (Diaspora access) (https://freeshell.de/~mk/projects/cliaspora.html)
 * PyPump (pump.io access)
 * cURL (GNU Social access)
 

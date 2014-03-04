@@ -130,12 +130,12 @@ class DiasporaHandler(SocialHandler):
             if len(message.attachments) > 0:
                 for attachment in message.attachments:
                     # to post an image, first upload it then comment on it.
-                    os.system('cliaspora upload public %s' % (attachment))
+                    os.system('cliaspora upload public "%s" %s' % (notice_text,attachment))
                     # get the POST-ID of this image
-                    post_id = commands.getoutput("cliaspora show activity | grep \"POST-ID\" | head -1")
-                    post_id = post_id.replace('\n','')
-                    post_id = re.search('.*POST-ID: ([0-9]*)\.*',post_id).group(1)
-                    os.system('cat /tmp/diaspora | cliaspora comment %s' % (post_id))
+                    #post_id = commands.getoutput("cliaspora show activity | grep \"POST-ID\" | head -1")
+                    #post_id = post_id.replace('\n','')
+                    #post_id = re.search('.*POST-ID: ([0-9]*)\.*',post_id).group(1)
+                    #os.system('cat /tmp/diaspora | cliaspora comment %s' % (post_id))
                     pass
                 pass
             else:

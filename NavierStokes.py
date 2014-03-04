@@ -18,6 +18,7 @@ import ConfigParser
 import codecs
 import math
 import copy
+import hashlib
 
 from os.path import expanduser
 from lockfile import FileLock,LockTimeout
@@ -143,9 +144,9 @@ if True == fuzzy:
                     found_match = False
                     if other_source == source:
                         continue
-                    for other_message in messages[other_source]:
+                    for other_message in messages[other_source] + messagesToWrite[other_source]:
                         match_ratio = fuzz.WRatio(message.content, other_message.content, force_ascii=True)
-                        if match_ratio > 75:
+                        if match_ratio > 50:
                             found_match = True
                             break
                         pass
@@ -165,9 +166,52 @@ if True == fuzzy:
     print messagesToWrite
 
     for sinkname in sources_and_sinks:
-        print "Writing messages to " + sources_and_sinks[sinkname].__class__.__name__
-        sources_and_sinks[sinkname].write( messagesToWrite[sinkname] )
+
+        message_archive_filename = home+"/.navierstokes/message_archive_"+sinkname+".txt"
+
+        lock = FileLock(message_archive_filename)
+        
+        while not lock.i_am_locking():
+            try:
+                lock.acquire(timeout=10)
+            except LockTimeout:
+                logging.info("Lock acquisition: %s", "Will try again to acquire a file lock on the message archive.")
+                sys.exit()
+                pass
+            pass
+    
+        message_archive_file = open(message_archive_filename, 'a+')
+
+        # generate md5sum from message 
+        messagesToActuallyWrite = []
+        print messagesToWrite[sinkname]
+        for message in messagesToWrite[sinkname]:
+            message_md5sum = hashlib.md5(message.content).hexdigest()
+            # print message_md5sum
+            # see if this message was already written to this sink
+            message_already_written = False
+            for existing_message_md5sum in message_archive_file:
+                # print "   " + existing_message_md5sum
+                if existing_message_md5sum == message_md5sum:
+                    message_already_written = True
+                    break
+                pass
+            
+            if not message_already_written:
+                messagesToActuallyWrite.append( message )
+                message_archive_file.write( message_md5sum + "\n" )
+                pass
+            pass
+
+        print messagesToActuallyWrite
+        sources_and_sinks[sinkname].write( messagesToActuallyWrite )
+ 
+        message_archive_file.close()
+
+        lock.release()
+
         pass
+    
 
 else:
     # Exact mode - take from input, send to output
