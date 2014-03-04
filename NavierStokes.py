@@ -138,6 +138,9 @@ if True == fuzzy:
 
             if message.reply:
                 continue
+
+            if message.direct:
+                continue
         
             if (math.fabs(message.date - current_time))<3600:
                 for other_source in messages:
