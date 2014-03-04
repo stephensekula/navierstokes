@@ -10,6 +10,7 @@ class Message:
         self.author = ""
         self.author_url = ""
         self.reply = 0
+        self.direct = 0
         self.repost = 0
         self.attachments = []
         pass
