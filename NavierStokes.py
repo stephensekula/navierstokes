@@ -142,13 +142,22 @@ if True == fuzzy:
             if message.direct:
                 continue
         
+            if debug:
+                print "============================================================="
+                print "Message to assess for sharing:"
+                print message.content
+                pass
+
             if (math.fabs(message.date - current_time))<3600:
                 for other_source in messages:
                     found_match = False
                     if other_source == source:
                         continue
                     for other_message in messages[other_source] + messagesToWrite[other_source]:
-                        match_ratio = fuzz.WRatio(message.content, other_message.content, force_ascii=True)
+                        match_ratio = fuzz.QRatio(message.content, other_message.content, force_ascii=True)
+                        if debug:
+                            print "   SCORE: %f  ____ " % (match_ratio) + other_message.content
+                            pass
                         if match_ratio > 50:
                             found_match = True
                             break

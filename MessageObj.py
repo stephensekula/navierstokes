@@ -21,6 +21,7 @@ class Message:
         print "DATE:    %s" % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.date)))
         print "ID:      %d" % (self.id)
         print "REPLY?:  %d" % (self.reply)
+        print "DIRECT?: %d" % (self.direct)
         print "REPOST?: %d" % (self.repost)
         print "CONTENT: %s" % (self.content)
         print "ATTACHMENTS: %s" % (str(self.attachments))
