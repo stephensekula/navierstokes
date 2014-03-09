@@ -22,6 +22,7 @@ import os
 import inspect
 import unicodedata
 import time
+import calendar
 import codecs
 
 import requests
@@ -139,7 +140,8 @@ class PumpHandler(SocialHandler):
             #print message.content
             #print pump_obj.published
             t = time.strptime(str(pump_obj.updated), "%Y-%m-%d %H:%M:%S+00:00")
-            message.date = time.mktime(t)
+            #message.date = time.mktime(t)
+            message.date = calendar.timegm(t)
 
             message.author = pump_obj.author.display_name
             message.author_url = pump_obj.author.url

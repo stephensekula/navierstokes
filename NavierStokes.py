@@ -12,6 +12,7 @@ import sys
 import os
 import re
 import time
+import calendar
 import getopt 
 import logging
 import ConfigParser
@@ -117,7 +118,8 @@ if not os.path.exists(home+'/.navierstokes/'):
 
 
 # retrieve messages from source
-current_time = time.mktime(time.gmtime())
+#current_time = time.mktime(time.gmtime())
+current_time = calendar.timegm(time.gmtime())
 
 
 if True == fuzzy:
@@ -134,6 +136,11 @@ if True == fuzzy:
     
     # find all messages within the last hour from one source that are not present in another
     for source in messages:
+        if debug:
+            print "================================================================="
+            print "===== SOURCE: %s" % (source)
+            print "================================================================="
+
         for message in messages[source]:
 
             if message.reply:
@@ -142,11 +149,16 @@ if True == fuzzy:
             if message.direct:
                 continue
         
+            delta_time = math.fabs(message.date - current_time)
+
             if debug:
                 print "============================================================="
                 print "Message to assess for sharing:"
-                print message.content
+                print "    "+message.content
+                print "     Timestamp (UNIX Epoch): %f [Age (s): %f]" % (message.date, delta_time )
                 pass
+
+            
 
             if (math.fabs(message.date - current_time))<3600:
                 for other_source in messages:

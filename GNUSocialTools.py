@@ -18,6 +18,7 @@ import subprocess
 import os
 import re
 import time
+import calendar
 import commands
 
 from MessageObj import Message
@@ -148,7 +149,8 @@ class GNUSocialHandler(SocialHandler):
 
             # date in GMT - convert to US/Central
             t = time.strptime(self.find_element_of_status(dent_xml,"created_at"), "%a %b %d %H:%M:%S +0000 %Y")
-            message.date = time.mktime(t)
+            #message.date = time.mktime(t)
+            message.date = calendar.timegm(t)
             message.repost = self.status_is_retweeted(dent_xml)
             self.messages.append(message)
             pass
