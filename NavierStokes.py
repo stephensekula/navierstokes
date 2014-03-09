@@ -154,11 +154,14 @@ if True == fuzzy:
                     if other_source == source:
                         continue
                     for other_message in messages[other_source] + messagesToWrite[other_source]:
-                        match_ratio = fuzz.QRatio(message.content, other_message.content, force_ascii=True)
+                        if other_message.content == None:
+                            continue
+                        #match_ratio = fuzz.QRatio(message.content, other_message.content, force_ascii=True)
+                        match_ratio = fuzz.token_set_ratio(message.content, other_message.content, force_ascii=True)
                         if debug:
                             print "   SCORE: %f  ____ " % (match_ratio) + other_message.content
                             pass
-                        if match_ratio > 50:
+                        if match_ratio > 80:
                             found_match = True
                             break
                         pass
