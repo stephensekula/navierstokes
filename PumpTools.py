@@ -13,6 +13,9 @@ the same instance. It uses PyPump 0.4 to do all of this
 from SocialHandler import *
 from pypump import PyPump, Client
 from pypump.models.image import Image
+from pypump.models.collection import Collection
+from pypump.models.collection import Public
+from pypump.models.person import Person
 from pypump.exception import PyPumpException
 
 from MessageObj import Message
@@ -100,6 +103,24 @@ class PumpHandler(SocialHandler):
                     continue
             except AttributeError:
                 print "The arrtribute \"deleted\" does not exist . . . continuing anyway . . . "
+                pass
+
+            # Determine if this message was directed to someone on Pump.io and thus
+            # isn't intended for sharing outside the network.
+            to_list = getattr(activity, "to", [])
+            if len(to_list) > 0:
+                # was "Public" among the "To:" recipients? Then we can go on; otherwise,
+                # skip this message
+                is_public = False
+                for person in to_list:
+                    if isinstance(person, Collection):
+                        if person.id.find("public") == -1:
+                            is_public = True
+                            pass
+                        pass
+                    pass
+                if not(is_public):
+                    message.direct = 1
                 pass
 
             if isinstance( pump_obj, Image):
