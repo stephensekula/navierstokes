@@ -13,6 +13,7 @@ the same instance. It uses PyPump 0.4 to do all of this
 from SocialHandler import *
 from pypump import PyPump, Client
 from pypump.models.image import Image
+from pypump.exception import PyPumpException
 
 from MessageObj import Message
 
@@ -33,9 +34,18 @@ class PumpHandler(SocialHandler):
         self.credentials = credentials
         self.tokens = tokens
 
+        self.pump = None
+        self.me = None
 
-        self.pump = self.CreatePumpClient(self.webfinger, self.credentials, self.tokens)
-        self.me   = self.pump.Person(self.webfinger)
+        try:
+            self.pump = self.CreatePumpClient(self.webfinger, self.credentials, self.tokens)
+            self.me   = self.pump.Person(self.webfinger)
+        except PyPumpException:
+            print "Unable to initiate a connection to the pump server. Pump.io will be skipped."
+            self.pump = None
+            self.me = None
+            print self.pump
+            pass
 
         self.messages = []
 
@@ -68,6 +78,9 @@ class PumpHandler(SocialHandler):
 
     def gather(self):
         """ Gather messages from the pump """
+
+        if not self.pump:
+            return []
 
         for activity in self.me.outbox.major[:20]:
             pump_obj    = activity.obj
@@ -154,6 +167,9 @@ class PumpHandler(SocialHandler):
 
 
     def write(self, messages = []):
+
+        if not self.pump:
+            return
 
         for message in messages:
             if len(message.attachments)==0:
