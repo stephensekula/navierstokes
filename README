@@ -1,17 +1,40 @@
-NavierStokes
+#NavierStokes
 ====================
 
 Purpose: a system for synchronizing information between federated social networks.
 
-Requirements
+##Requirements
 ============
 
 * cliaspora-0.1.7.tgz (Diaspora access) (https://freeshell.de/~mk/projects/cliaspora.html)
-* PyPump (pump.io access)
+** NOTE BENE! You must install a patch to the last release of Cliaspora! The patch
+   makes it possible for Cliaspora to post text along with a file upload.
+* PyPump 0.5 (pump.io access)
 * cURL (GNU Social access)
 
+##Installation
+============
 
-Example navierstokes.cfg file
+1) Unpack the tarball. This automatically creates the navierstokes/ application directory
+
+2) You should create a configuration file for NavierStokes:
+
+~/.navierstokes/navierstokes.cfg
+
+The syntax for the file is explained below.
+
+3) If you intend to bridge between Pump.io and other networks, you must use PyPump to 
+register a client (e.g. NavierStokesApp) on Pump.io. Follow their instructions for getting 
+the client credentials and tokens. Enter those into the ~/.navierstokes/navierstokes.cfg file (see example below).
+PyPump docs: https://pypump.readthedocs.org/en/latest/
+
+4) Make sure Cliaspora is available in the PATH environment variable, or Diaspora interactions
+will fail.
+
+
+
+
+##Example navierstokes.cfg file
 =============================
 
 [gnusocial]
