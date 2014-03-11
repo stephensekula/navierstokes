@@ -74,6 +74,18 @@ class DiasporaHandler(SocialHandler):
                         pass
                     messages.append(msg)
                     pass
+                elif line.find("POST-ID:") != -1:
+                    # we are in a message, but this is a reshare. Handle the first line
+                    # carefully!
+                    original_author_match = re.search('<(.*)> on .*', line, re.DOTALL)
+                    if original_author_match:
+                        # found the original author. Mark this message as a repost
+                        # and credit the original author
+                        original_author_name = original_author_match.group(1)
+                        msg.SetContent(msg.content + "RT %s: " % (original_author_name))
+                        msg.repost = 1
+                        pass
+
                 else:
                     # we are in a message - get a line and add to content.
                     # watch for hyphenated line-break words
@@ -99,7 +111,7 @@ class DiasporaHandler(SocialHandler):
             os.system('cliaspora session new %s "%s"' % (self.webfinger, password))
             pass
         
-        text = commands.getoutput('cliaspora show mystream | preconv | groff -Tascii')
+        text = commands.getoutput('cliaspora show mystream | sed -e \'s/\.br/\.nf \.nh/\' | preconv | groff -Tascii')
         
         self.messages = self.ParseStream(text)
 
