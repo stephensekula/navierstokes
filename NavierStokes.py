@@ -188,15 +188,14 @@ for source in messages:
                         break
                     pass
                 
+                if debug:
+                    print best_match_text
+                    pass
+
                 if not found_match:
                     if message.repost:
                         message.content = 'RT ' + message.content
                         pass
-                    
-                    if debug:
-                        print best_match_text
-                        pass
-                    
                     
                     messagesToWrite[other_source].append(message)
                     pass
