@@ -18,6 +18,8 @@ from pypump.models.collection import Public
 from pypump.models.person import Person
 from pypump.exception import PyPumpException
 
+from requests.exceptions import ConnectionError
+
 from MessageObj import Message
 
 import sys
@@ -48,8 +50,13 @@ class PumpHandler(SocialHandler):
             print "Unable to initiate a connection to the pump server. Pump.io will be skipped."
             self.pump = None
             self.me = None
-            print self.pump
             pass
+        except ConnectionError:
+            print "The connection to the pump server has timed out. Pump.io will be skipped."
+            self.pump = None
+            self.me = None
+            pass
+            
 
         self.messages = []
 
@@ -111,16 +118,20 @@ class PumpHandler(SocialHandler):
             if len(to_list) > 0:
                 # was "Public" among the "To:" recipients? Then we can go on; otherwise,
                 # skip this message
-                is_public = False
+                is_public = True
                 for person in to_list:
-                    if isinstance(person, Collection):
-                        if person.id.find("public") == -1:
+                    if isinstance(person, Person):
+                        is_public = False
+                    elif isinstance(person, Collection):
+                        if person.id.find("public") != -1:
                             is_public = True
-                            pass
+                            break
                         pass
                     pass
+                
                 if not(is_public):
                     message.direct = 1
+
                 pass
 
             if isinstance( pump_obj, Image):
