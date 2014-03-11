@@ -222,9 +222,9 @@ for sinkname in sources_and_sinks:
     
     lock = FileLock(message_archive_filename)
     lock_try_count = 0
-    max_lock_try_count = 5
+    max_lock_try_count = 6
     obtained_lock = False
-    while (not lock.i_am_locking()) and lock_try_count < max_lock_try_count:
+    while (not lock.i_am_locking()) and lock_try_count <= max_lock_try_count:
         try:
             lock.acquire(timeout=10)
         except LockTimeout:
@@ -236,17 +236,17 @@ for sinkname in sources_and_sinks:
             obtained_lock = True
             break
 
-        elif lock_try_count == max_lock_try_count-2:
+        elif lock_try_count == max_lock_try_count-1:
             # let's see if the lock needs cleaning
             lock_creation_time = os.path.getctime(message_archive_filename+".lock")
             lock_creation_delta = math.fabs(current_time - lock_creation_time)
             logging.info("Lock file creation time: %s" , "%f seconds ago" % (lock_creation_delta))
-            if lock_creation_delta > 60:
+            if lock_creation_delta > 600:
                 os.remove(message_archive_filename+".lock")
                 pass
             pass
 
-        elif lock_try_count == max_lock_try_count-1:
+        elif lock_try_count == max_lock_try_count:
             logging.info("Unable to resolve lock problem. %s", "Exiting")
             break
             pass
@@ -254,6 +254,7 @@ for sinkname in sources_and_sinks:
         pass
 
     if not obtained_lock:
+        logging.info("Failed to acquire lock; %s", "moving onto another target")
         continue
     
     
