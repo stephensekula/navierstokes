@@ -1,0 +1,47 @@
+--- cliaspora-0.1.7/cliaspora.c	2013-10-21 15:17:12.000000000 -0500
++++ cliaspora-0.1.7.1/cliaspora.c	2014-03-01 22:34:13.908946004 -0600
+@@ -117,7 +117,7 @@
+ 	char *root_handle;
+ } post_t;
+ 
+-static int	 upload(session_t *, const char *, char * const *);
++static int	 upload(session_t *, const char *, const char *, char * const *);
+ static int	 upload_file(session_t *, const char *);
+ static int	 close_session(session_t *);
+ static int	 read_stream(session_t *, const char *);
+@@ -313,7 +313,7 @@
+ 		    get_aspect_id(sp, argv[1]) == -1) {
+ 			errx(EXIT_FAILURE, "Unknown aspect '%s'", argv[1]);
+ 		}
+-		if (upload(sp, argv[1], &argv[2]) == -1)
++		if (upload(sp, argv[1], argv[2], &argv[3]) == -1)
+ 			errx(EXIT_FAILURE, "Failed to upload file(s).");
+ 	} else if (strcmp(argv[0], "reshare") == 0) {
+ 		if (argc < 2)
+@@ -837,12 +837,12 @@
+ }
+ 
+ static int
+-upload(session_t *sp, const char *aspect, char * const *files)
++upload(session_t *sp, const char *aspect, const char * msg, char * const *files)
+ {
+ 	int	   aid, i, j, n, ret, status, id[24];
+-	char	   *rq, idstr[24], lst[sizeof(id) * (20 + 3) / sizeof(int)];
++	char	   *rq, *p, idstr[24], lst[sizeof(id) * (20 + 3) / sizeof(int)];
+ 	ssl_conn_t *cp;
+-	const char tmpl[] = "{\"status_message\":{\"text\":\"\","	\
++	const char tmpl[] = "{\"status_message\":{\"text\":\"%s\","	\
+ 			    "\"provider_display_name\":\"cliaspora\"}," \
+ 			    "\"aspect_ids\":\"%s\",\"photos\":[%s]}";
+ 
+@@ -866,7 +866,9 @@
+ 		    i < n - 1 ? "\"%d\"," : "\"%d\"", id[i]);
+ 		j = strlen(lst);
+ 	}
+-	if ((rq = strduprintf(tmpl, idstr, lst)) == NULL)
++	if ((p = json_escape_str(msg)) == NULL)
++		return (-1);
++	if ((rq = strduprintf(tmpl, p, idstr, lst)) == NULL)
+ 		return (-1);
+ 	if ((cp = ssl_connect(sp->host, sp->port)) == NULL) {
+ 		free(rq); return (-1);
