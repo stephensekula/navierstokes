@@ -148,6 +148,9 @@ for source in messages:
         
         if message.direct:
             continue
+
+        if message.content == None:
+            continue
         
         delta_time = math.fabs(message.date - current_time)
         
