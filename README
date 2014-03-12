@@ -9,8 +9,47 @@ Purpose: a system for synchronizing information between federated social network
 * cliaspora-0.1.7.tgz (Diaspora access) (https://freeshell.de/~mk/projects/cliaspora.html)
 ** NOTE BENE! You must install a patch to the last release of Cliaspora! The patch
    makes it possible for Cliaspora to post text along with a file upload.
+** the patch is part of this package. It is applied as follows:
+*** cd cliaspora-0.1.7/
+*** patch -p1 < ../navierstokes/cliaspora-file_upload_text-0.1.7.patch
+*** make
+*** sudo make install
 * PyPump 0.5 (pump.io access)
+** git clone https://github.com/xray7224/PyPump.git
+** cd PyPump
+** git fetch
+** git checkout v0.5
 * cURL (GNU Social access)
+* FuzzyWuzzy Python fuzzy text-matching libraries
+** https://github.com/seatgeek/fuzzywuzzy
+** git clone https://github.com/seatgeek/fuzzywuzzy.git
+** cd fuzzywuzzy
+** python setup.py install
+
+In general, here are the Python libraries needed to make this package operate:
+
+abc
+calendar
+codecs
+commands
+copy
+fuzzywuzzy
+getopt
+hashlib
+inspect
+lockfile
+logging
+math
+os
+os.path
+pypump
+re
+requests
+subprocess
+sys
+time
+unicodedata
+xml.dom.minidom
 
 ##Installation
 ============
@@ -32,9 +71,12 @@ PyPump docs: https://pypump.readthedocs.org/en/latest/
 will fail.
 
 
-
-
 ##Example navierstokes.cfg file
+
+Be sure to make this .cfg file only readable by you:
+
+> chmod 600 ~/.navierstokes/navierstokes.cfg
+
 =============================
 
 [gnusocial]
@@ -53,3 +95,17 @@ client_tokens: XXXXXXXXXXXXXXXXXX
 type: diaspora
 webfinger: user@diaspora.server
 password: XXXXXXXXXXXXXXXXXXX
+
+
+##Running NavierStokes
+
+Once you have written a .cfg file (and, if you use pump.io, registered a pump.io client using PyPump), 
+you can try executing NavierStokes manually:
+
+> python ./NavierStokes.py 
+
+If you get errors, try tunning in Debug Mode and see what you can learn:
+
+> python ./NavierStokes.py -d
+
+If you get any errors that are unrelated to passwords, logging into, report them to steve@hub.polari.us.
