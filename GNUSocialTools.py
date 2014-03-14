@@ -152,6 +152,9 @@ class GNUSocialHandler(SocialHandler):
             #message.date = time.mktime(t)
             message.date = calendar.timegm(t)
             message.repost = self.status_is_retweeted(dent_xml)
+            if message.repost:
+                message.SetContent( "RT " + message.content )
+                pass
             self.messages.append(message)
             pass
 

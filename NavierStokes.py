@@ -196,10 +196,6 @@ for source in messages:
                     pass
 
                 if not found_match:
-                    if message.repost:
-                        message.content = 'RT ' + message.content
-                        pass
-                    
                     messagesToWrite[other_source].append(message)
                     pass
                 pass
