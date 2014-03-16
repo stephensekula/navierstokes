@@ -3,7 +3,7 @@ FacebookTools.py
 Author: Stephen J. Sekula
 Created: Mar. 13, 2013
 
-* GNUSocialHandler:
+* FacebookHandler:
 Inherits from: SocialHandler
 Purpose: to gather messages from a Facebook instance, and write messages to
 the same instance. It uses FBCMD to do its work.
@@ -23,10 +23,11 @@ from MessageObj import Message
 
 
 class FacebookHandler(SocialHandler):
-    """ a class to read and post to a GNU Social feed """
-    def __init__(self,username="",sharelevel=""):
+    """ a class to read and post to a Facebook feed """
+    def __init__(self,username="",sharelevel="public",album="latest"):
         self.username = username
         self.sharelevel = sharelevel
+        self.album = album
         self.messages = []
         self.debug = False
 
@@ -43,6 +44,8 @@ class FacebookHandler(SocialHandler):
     def gather(self):
         if not self.active:
             return []
+
+        self.messages = []
 
         messages_text = commands.getoutput('fbcmd fstream "%s" 25' % (self.username))
 
@@ -61,6 +64,7 @@ class FacebookHandler(SocialHandler):
                     in_message = True
                     
                     msg = Message()
+                    msg.source = "Facebook"
 
                     # we need to find the start of the actual message
                     message_text_match = re.search('.*attach post  (.*)',line,re.DOTALL)
@@ -100,12 +104,15 @@ class FacebookHandler(SocialHandler):
                 pass
             pass
 
+        self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
+
         if self.debug:
             print "********************** Facebook Handler **********************\n"
             print "Here are the messages I gathered from the Facebook server:\n"
             for message in self.messages:
                 message.Print()
                 pass
+            print "**************************************************************\n"
         
         return self.messages
     
@@ -138,11 +145,29 @@ class FacebookHandler(SocialHandler):
             if not do_write:
                 continue
             
-            command = "fbcmd STATUS \'%s\'" % (text)
-
             success = False
             self.msg(0,"writing to Facebook")
-            results = commands.getoutput(command)
+            if len(message.attachments) > 0:
+                if self.debug:
+                    self.msg(0,"   Posting a photo.")
+                    pass
+
+                for attachment in message.attachments:
+                    command = "fbcmd ADDPIC %s \'%s\' \'%s\'" % (attachment, self.album, text)
+                    if self.debug:
+                        self.msg(0, "   " + command)
+                        pass
+                    results = commands.getoutput(command)
+                    pass
+                pass
+            else:
+                command = "fbcmd STATUS \'%s\'" % (text)
+                if self.debug:
+                    self.msg(0, "   " + command)
+                    pass
+                results = commands.getoutput(command)
+                pass
+
             write_count += 1
             pass
 

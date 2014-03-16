@@ -109,6 +109,7 @@ for section in config.sections():
         pass
     elif config.get(section, "type") == "facebook":
         sources_and_sinks[section] = FacebookTools.FacebookHandler(username=config.get(section, "username"), \
+                                                                       album=config.get(section, "album"), \
                                                                        sharelevel=config.get(section, "sharelevel"))
         pass
     pass
@@ -179,23 +180,53 @@ for source in messages:
                 
                 if other_source == source:
                     continue
-                for other_message in messages[other_source] + messagesToWrite[other_source]:
+
+                # see if this message is already present in the messages to be written
+                # to the other source. If so, see if we should replace that one
+                # with this one, which may be better (e.g. have attachments, etc.)
+                message_already_written_index = -1
+                for other_message in messagesToWrite[other_source]:
+                    message_already_written_index += 1
                     if other_message.content == None:
                         continue
 
-                    #if math.fabs(other_message.date - current_time) > six_hours:
-                    #    continue
-
-                    #match_ratio = fuzz.QRatio(message.content, other_message.content, force_ascii=True)
                     match_ratio = fuzz.token_set_ratio(message.content, other_message.content, force_ascii=True)
                     if match_ratio >= best_match_score:
                         best_match_score = match_ratio
                         best_match_text = "   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content
                         pass
+
                     if match_ratio > 80:
+                        # check if this message is better quality than the one already scheduled to be 
+                        # written
                         found_match = True
-                        break
+                        if other_message.source == "Diaspora":
+                            # Cliaspora loses attachments. Maybe replace with this message.
+                            if debug:
+                                print "Replacing message from Disapora with message from %s" % (message.source)
+                                pass
+
+                            messagesToWrite[other_source][message_already_written_index] = message
+                            pass
+                        pass
                     pass
+
+                if not found_match:
+                    for other_message in messages[other_source] + messagesToWrite[other_source]:
+                        if other_message.content == None:
+                            continue
+
+                        match_ratio = fuzz.token_set_ratio(message.content, other_message.content, force_ascii=True)
+                        if match_ratio >= best_match_score:
+                            best_match_score = match_ratio
+                            best_match_text = "   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content
+                            pass
+                        if match_ratio > 80:
+                            found_match = True
+                            break
+                        pass
+                    pass
+
                 
                 if debug:
                     print best_match_text
@@ -267,7 +298,6 @@ for sinkname in sources_and_sinks:
         print "File lock on %s accomplished..." % (message_archive_filename)
         pass
     
-    message_archive_file = open(message_archive_filename, 'a+')
     
     # generate md5sum from message 
     if debug:
@@ -290,35 +320,41 @@ for sinkname in sources_and_sinks:
         # print message_md5sum
         # see if this message was already written to this sink
         message_already_written = False
+        message_archive_file = open(message_archive_filename, 'r')
         for existing_message_md5sum in message_archive_file:
             # print "   " + existing_message_md5sum
             if existing_message_md5sum == message_md5sum:
                 message_already_written = True
                 break
             pass
+        message_archive_file.close()
         
-        if not message_already_written:
+
+        if message_already_written:
+            if debug:
+                print "   This MD5 sum is not unique; the message will not be written again."
+                pass
+            pass
+        else:
             if debug:
                 print "   According to the MD5 sum check, this message is new..."
                 pass
             messagesToActuallyWrite.append( message )
             if not debug:
+                message_archive_file = open(message_archive_filename, 'a')
                 message_archive_file.write( message_md5sum + "\n" )
-                pass
-            pass
-        else:
-            if debug:
-                print "   This MD5 sum is not unique; the message will not be written again."
+                message_archive_file.close()
                 pass
             pass
         pass
     
     if debug:
-        print messagesToActuallyWrite
+        for message in messagesToActuallyWrite:
+            message.Print()
+            pass
     else:
         sources_and_sinks[sinkname].write( messagesToActuallyWrite )
         pass
-    message_archive_file.close()
     
     lock.release()
     

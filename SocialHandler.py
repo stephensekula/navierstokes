@@ -88,7 +88,12 @@ class SocialHandler(object):
         pid = os.getpid()
 
         htmlfile = open('/tmp/%d_msg.html' % (pid),'w')
-        htmlfile.write( unicodedata.normalize('NFKD', msg_clean).encode('ascii','ignore') )
+        try:
+            htmlfile.write( msg_clean )
+        except UnicodeEncodeError:
+            htmlfile.write( unicodedata.normalize('NFKD', msg_clean).encode('ascii','ignore') )
+            pass
+
         htmlfile.close()
         
         txt = commands.getoutput('/usr/bin/lynx --dump -width 2048 -nolist /tmp/%d_msg.html' % (pid))

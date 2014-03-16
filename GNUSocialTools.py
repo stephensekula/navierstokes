@@ -106,6 +106,8 @@ class GNUSocialHandler(SocialHandler):
 
     def gather(self):
 
+        self.messages = []
+
         # Get the XML file from the web
         xml_file_contents = commands.getoutput('curl -s -u \'%s:%s\' https://%s/api/statuses/user_timeline/%s.xml?count=20' % (self.username,self.password,self.site,self.username))
 
@@ -127,6 +129,7 @@ class GNUSocialHandler(SocialHandler):
             if dent_author != self.username:
                 continue
             message = Message()
+            message.source = "GNU Social"
             message.SetContent(dent_text)
             message.author = dent_author
             message.reply = True if self.find_element_of_status(dent_xml,"in_reply_to_status_id") != "" else False

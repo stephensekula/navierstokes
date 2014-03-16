@@ -54,6 +54,7 @@ class DiasporaHandler(SocialHandler):
                     in_message = True
                     # create a new message object
                     msg = Message()
+                    msg.source = "Diaspora"
                     # parse the timestamp and the post ID
                     matches = re.search('(2.*Z) POST-ID: ([0-9]+).*', line, re.DOTALL)
                     if matches:
@@ -70,9 +71,6 @@ class DiasporaHandler(SocialHandler):
                     msg.SetContent( msg.content.replace('arx-iv','arxiv') )
                     msg.SetContent( msg.content.replace('arX-iv','arXiv') )
 
-                    if self.debug:
-                        msg.Print()
-                        pass
                     messages.append(msg)
                     pass
                 elif line.find("POST-ID:") != -1:
@@ -105,6 +103,8 @@ class DiasporaHandler(SocialHandler):
         
 
     def gather(self):
+
+        self.messages = []
 
         response = os.system('cliaspora status')
         if response == 256:

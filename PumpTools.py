@@ -90,6 +90,8 @@ class PumpHandler(SocialHandler):
     def gather(self):
         """ Gather messages from the pump """
 
+        self.messages = []
+
         if not self.pump:
             return []
 
@@ -98,6 +100,8 @@ class PumpHandler(SocialHandler):
             pump_obj_id = activity.id
 
             message = Message()
+
+            message.source = "Pump.io"
 
             # get the text into decent shape
             text = pump_obj.content
