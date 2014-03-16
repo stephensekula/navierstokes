@@ -13,6 +13,7 @@ class Message:
         self.direct = 0
         self.repost = 0
         self.attachments = []
+        self.public = 0
         pass
 
     def Print(self):
@@ -21,6 +22,7 @@ class Message:
         print "DATE:    %s" % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.date)))
         print "ID:      %d" % (self.id)
         print "REPLY?:  %d" % (self.reply)
+        print "PUBLIC?: %d" % (self.public)
         print "DIRECT?: %d" % (self.direct)
         print "REPOST?: %d" % (self.repost)
         print "CONTENT: %s" % (self.content)

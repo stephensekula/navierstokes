@@ -3,7 +3,10 @@ __metaclass__  = abc.ABCMeta
 
 
 import sys
+import os
 import logging
+import unicodedata
+import commands
 
 class SocialHandler(object):
     def __init__(self):
@@ -61,3 +64,35 @@ class SocialHandler(object):
         return new_text
 
 
+    def which(self,program):
+        import os
+        def is_exe(fpath):
+            return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+        fpath, fname = os.path.split(program)
+        if fpath:
+            if is_exe(program):
+                return program
+        else:
+            for path in os.environ["PATH"].split(os.pathsep):
+                path = path.strip('"')
+                exe_file = os.path.join(path, program)
+                if is_exe(exe_file):
+                    return exe_file
+                    
+        return None
+    
+    def HTMLConvert(self, msg ):
+        msg_clean = msg.replace('<hr>','<p>')
+        
+        pid = os.getpid()
+
+        htmlfile = open('/tmp/%d_msg.html' % (pid),'w')
+        htmlfile.write( unicodedata.normalize('NFKD', msg_clean).encode('ascii','ignore') )
+        htmlfile.close()
+        
+        txt = commands.getoutput('/usr/bin/lynx --dump -width 2048 -nolist /tmp/%d_msg.html' % (pid))
+
+        os.system('rm -f /tmp/%d_msg.html' % (pid))
+
+        return txt

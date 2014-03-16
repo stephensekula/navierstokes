@@ -118,19 +118,24 @@ class PumpHandler(SocialHandler):
             if len(to_list) > 0:
                 # was "Public" among the "To:" recipients? Then we can go on; otherwise,
                 # skip this message
-                is_public = True
+                is_direct = False
+                is_public = False
                 for person in to_list:
                     if isinstance(person, Person):
-                        is_public = False
+                        is_direct = True
                     elif isinstance(person, Collection):
                         if person.id.find("public") != -1:
+                            is_direct = False
                             is_public = True
                             break
                         pass
                     pass
                 
-                if not(is_public):
+                if is_direct:
                     message.direct = 1
+                if is_public:
+                    message.public = 1
+                    pass
 
                 pass
 

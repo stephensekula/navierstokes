@@ -120,9 +120,8 @@ class GNUSocialHandler(SocialHandler):
         
         highest_id = 0
         for dent_xml in dents_xml:
+         
             dent_text = self.find_element_of_status(dent_xml,"text")
-
-                
 
             dent_author = self.status_author_name(dent_xml)
             if dent_author != self.username:
@@ -131,6 +130,10 @@ class GNUSocialHandler(SocialHandler):
             message.SetContent(dent_text)
             message.author = dent_author
             message.reply = True if self.find_element_of_status(dent_xml,"in_reply_to_status_id") != "" else False
+
+            #dent_source = self.find_element_of_status(dent_xml,"source")
+            #if dent_source == "NavierStokesApp":
+            #    message.
 
             # if the dent has a @ at the beginning, it was meant to be a direct
             # message to someone on GNU social and should not be broadcast
@@ -172,21 +175,6 @@ class GNUSocialHandler(SocialHandler):
 
         return self.messages
     
-    def HTMLConvert(self, msg ):
-        msg_clean = msg.replace('<hr>','<p>')
-        
-        pid = os.getpid()
-
-        htmlfile = open('/tmp/%d_msg.html' % (pid),'w')
-        htmlfile.write( msg_clean )
-        htmlfile.close()
-        
-        txt = commands.getoutput('/usr/bin/lynx --dump -width 2048 -nolist /tmp/%d_msg.html' % (pid))
-
-        os.system('rm -f /tmp/%d_msg.html' % (pid))
-
-        return txt
-
 
     def write(self, messages):
         for message in messages:

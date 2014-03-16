@@ -23,11 +23,12 @@ import commands
 import codecs
 
 class DiasporaHandler(SocialHandler):
-    def __init__(self, webfinger, password):
+    def __init__(self, webfinger, password, aspect="public"):
         self.webfinger = webfinger
         self.password = password
         self.usermap = {}
         self.messages = []
+        self.aspect = aspect
 
         self.debug = False
 
@@ -148,10 +149,15 @@ class DiasporaHandler(SocialHandler):
                 os.system('cliaspora session new %s \'%s\'' % (self.webfinger, self.password))
                 pass
             
+            aspect = self.aspect
+            if message.public:
+                aspect = "public"
+                pass
+
             if len(message.attachments) > 0:
                 for attachment in message.attachments:
                     # to post an image, first upload it then comment on it.
-                    os.system('cliaspora upload public "%s" %s' % (notice_text,attachment))
+                    os.system('cliaspora upload "%s" "%s" %s' % (aspect,notice_text,attachment))
                     # get the POST-ID of this image
                     #post_id = commands.getoutput("cliaspora show activity | grep \"POST-ID\" | head -1")
                     #post_id = post_id.replace('\n','')
@@ -160,7 +166,7 @@ class DiasporaHandler(SocialHandler):
                     pass
                 pass
             else:
-                os.system('cat /tmp/diaspora | cliaspora post public')
+                os.system('cat /tmp/diaspora | cliaspora post "%s"' % (aspect))
                 pass
             pass
 

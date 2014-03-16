@@ -30,6 +30,7 @@ from requests_oauthlib import OAuth1
 import GNUSocialTools
 import PumpTools
 import DiasporaTools
+import FacebookTools
 
 from MessageObj import Message
 
@@ -103,7 +104,12 @@ for section in config.sections():
         pass
     elif config.get(section, "type") == "diaspora":
         sources_and_sinks[section] = DiasporaTools.DiasporaHandler(webfinger=config.get(section, "webfinger"), \
-                                                                       password=config.get(section, "password"))
+                                                                       password=config.get(section, "password"), \
+                                                                       aspect=config.get(section,"aspect"))
+        pass
+    elif config.get(section, "type") == "facebook":
+        sources_and_sinks[section] = FacebookTools.FacebookHandler(username=config.get(section, "username"), \
+                                                                       sharelevel=config.get(section, "sharelevel"))
         pass
     pass
 
@@ -177,8 +183,8 @@ for source in messages:
                     if other_message.content == None:
                         continue
 
-                    if math.fabs(other_message.date - current_time) > six_hours:
-                        continue
+                    #if math.fabs(other_message.date - current_time) > six_hours:
+                    #    continue
 
                     #match_ratio = fuzz.QRatio(message.content, other_message.content, force_ascii=True)
                     match_ratio = fuzz.token_set_ratio(message.content, other_message.content, force_ascii=True)

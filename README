@@ -20,11 +20,15 @@ Purpose: a system for synchronizing information between federated social network
 ** git fetch
 ** git checkout v0.5
 * cURL (GNU Social access)
+* LYNX (for converting HTML to plain text - some social networks don't understand HTML)
 * FuzzyWuzzy Python fuzzy text-matching libraries
 ** https://github.com/seatgeek/fuzzywuzzy
 ** git clone https://github.com/seatgeek/fuzzywuzzy.git
 ** cd fuzzywuzzy
 ** python setup.py install
+* FBCMD
+** http://fbcmd.dtompkins.com/
+** This is needed if you want to bridge to Facebook.
 
 In general, here are the Python libraries needed to make this package operate:
 
@@ -95,6 +99,12 @@ client_tokens: XXXXXXXXXXXXXXXXXX
 type: diaspora
 webfinger: user@diaspora.server
 password: XXXXXXXXXXXXXXXXXXX
+aspect: public
+
+[facebook]
+type: facebook
+username: My Name On Facebook
+sharelevel: Public
 
 
 ##Running NavierStokes
