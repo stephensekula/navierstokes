@@ -317,11 +317,19 @@ for sinkname in sources_and_sinks:
             message_md5sum = hashlib.md5(message.content.encode('utf-8')).hexdigest()
             pass
 
+        if debug:
+            logging.info("MD5 sum of current message: %s", message_md5sum)
+            pass
+
         # print message_md5sum
         # see if this message was already written to this sink
         message_already_written = False
         message_archive_file = open(message_archive_filename, 'r')
         for existing_message_md5sum in message_archive_file:
+            existing_message_md5sum = existing_message_md5sum.rstrip('\n')
+            if debug:
+                logging.info("   ==> MD5 sum of existing posted message: %s", existing_message_md5sum)
+                pass
             # print "   " + existing_message_md5sum
             if existing_message_md5sum == message_md5sum:
                 message_already_written = True
