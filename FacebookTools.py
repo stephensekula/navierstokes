@@ -18,6 +18,7 @@ import re
 import time
 import calendar
 import commands
+import unicodedata
 
 from MessageObj import Message
 
@@ -104,6 +105,81 @@ class FacebookHandler(SocialHandler):
                 pass
             pass
 
+        # handle images - they don't show up in the fstream
+        messages_text = commands.getoutput('fbcmd opics "%s"' % (self.username))
+
+        in_message = False
+        msg = Message()
+
+        photo_pid_column = -1
+        text_column = -1
+
+        first_line_pattern = re.compile('^%s\s+([0-9]+_[0-9]+)(\s.*)' % (self.username))
+
+        for line in messages_text.split('\n'):
+
+            line = str(line)
+            #line = unicode(line).encode('unicode_escape')
+            
+            #try:
+            #    line = unicodedata.normalize('NFKD', line).encode('ascii','ignore')
+            #except TypeError:
+            #    line = line
+            #    pass
+
+            if line.find("NAME") != 1 and line.find("PID") != -1 and line.find("CAPTION") != -1:
+                continue
+
+            # new messages begin with a PID. To determine the column containing
+            # the PID, we need to do some math.
+        
+            # Stephen Sekula  100000196682628_1073741900  Tracking down bug
+            first_line_pattern_match = first_line_pattern.search(line)
+            if first_line_pattern_match != None and photo_pid_column == -1:
+                # we found the key line of the output - find the column where the PID starts
+                pid = first_line_pattern_match.group(1)
+                photo_pid_column = line.find(pid)
+                pass
+
+            pid_pattern = re.search('^.*?  ([0-9]+_[0-9]+)\s.*', line, re.DOTALL)
+            pid_match = re.search("[0-9]", line[photo_pid_column],re.DOTALL)
+            if pid_match:
+                pid = pid_pattern.group(1)
+                if not in_message:
+                    # we found the first line of a photo message.
+                    msg = Message()
+                    msg.source = "Facebook"
+                    
+                    # we need to find the start of the actual message
+                    text_column = photo_pid_column+len(pid)
+                    msg.content = msg.content + line[text_column:].lstrip()
+                    
+                    in_message = True
+                    pass
+                else:
+                    # we found the start of the next message. close the last one
+                    
+                    # check if the message has any content before saving
+                    if re.search(".*[A-Za-z0-9].*",msg.content,re.DOTALL) != None:
+                        self.messages.append(msg)
+                        pass
+
+                    msg = Message()
+                    msg.source = "Facebook"
+
+
+                    msg.content = str(msg.content) + line[text_column:].lstrip()
+                    in_message = True
+                    pass
+                pass
+            else:
+                # we are still in the last message - keep doing things
+
+                msg.content = str(msg.content + " " + line[text_column:].lstrip())
+
+                pass
+            pass
+
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
@@ -122,7 +198,7 @@ class FacebookHandler(SocialHandler):
             self.msg(0,"Facebook handler not active; no messages will be posted")
             return
 
-        self.msg(0,"   Share level is: %s" % (self.sharelevel))
+        self.msg(0,"Share level is: %s" % (self.sharelevel))
 
         write_count = 0
 
@@ -131,15 +207,17 @@ class FacebookHandler(SocialHandler):
             do_write = False
             
             text = self.HTMLConvert(message.content)
+            text = text.replace('"','\\"')
+
 
             if self.sharelevel == "All":
                 do_write = True
             elif self.sharelevel.find("Public") != -1 and message.public == 1:
-                self.msg(0,"   Unable to share message, as it is not public.")
+                self.msg(0,"Unable to share message, as it is not public.")
                 do_write = True
                 pass
             else:
-                self.msg(0,"   Unable to share message for unknown reasons.")
+                self.msg(0,"Unable to share message for unknown reasons.")
                 pass
 
             if not do_write:
@@ -153,7 +231,7 @@ class FacebookHandler(SocialHandler):
                     pass
 
                 for attachment in message.attachments:
-                    command = "fbcmd ADDPIC %s \'%s\' \'%s\'" % (attachment, self.album, text)
+                    command = "fbcmd ADDPIC %s \"%s\" \"%s\"" % (attachment, self.album, text)
                     if self.debug:
                         self.msg(0, "   " + command)
                         pass
@@ -161,7 +239,7 @@ class FacebookHandler(SocialHandler):
                     pass
                 pass
             else:
-                command = "fbcmd STATUS \'%s\'" % (text)
+                command = "fbcmd STATUS \"%s\"" % (text)
                 if self.debug:
                     self.msg(0, "   " + command)
                     pass
