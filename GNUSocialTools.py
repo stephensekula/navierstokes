@@ -159,7 +159,7 @@ class GNUSocialHandler(SocialHandler):
             message.date = calendar.timegm(t)
             message.repost = self.status_is_retweeted(dent_xml)
             if message.repost:
-                message.SetContent( "RT " + message.content )
+                message.SetContent( "<a href=\"%s\">From GNU Social</a> : " % (self.find_element_of_status(dent_xml,"uri")) + message.content )
                 pass
             self.messages.append(message)
             pass

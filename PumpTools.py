@@ -191,7 +191,7 @@ class PumpHandler(SocialHandler):
             #if str(message.author) != str(self.me):
             if message.author != self.me.display_name:
                 message.repost = True
-                message.SetContent( "RT from %s: " % (message.author) + message.content )
+                message.SetContent( "RT from <a href=\"%s\">%s</a>: " % (message.author_url,message.author) + message.content )
                 pass
 
             self.messages.append(message)

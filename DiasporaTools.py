@@ -81,7 +81,7 @@ class DiasporaHandler(SocialHandler):
                         # found the original author. Mark this message as a repost
                         # and credit the original author
                         original_author_name = original_author_match.group(1)
-                        msg.SetContent(msg.content + "RT %s: " % (original_author_name))
+                        msg.SetContent(msg.content + "From %s on Diaspora: " % (original_author_name))
                         msg.repost = 1
                         pass
 

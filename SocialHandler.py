@@ -34,6 +34,12 @@ class SocialHandler(object):
     def write(self,message=""):
         """ This method posts a message to a social network """
 
+    def reshare_text(self, owner="someone"):
+        """ This method returns common text that can be used to
+        prepend to a reshared post"""
+        text = "RT from %s" % (owner)
+        return text
+
     def msg(self,level=0,text=""):
         level_text = "INFO"
         message = "%s: %s" % (self.__class__.__name__, text)
