@@ -152,7 +152,7 @@ class FacebookHandler(SocialHandler):
                     
                     # we need to find the start of the actual message
                     text_column = photo_pid_column+len(pid)
-                    msg.content = msg.content + line[text_column:].lstrip()
+                    msg.content = str(msg.content) + line[text_column:].lstrip()
                     
                     in_message = True
                     pass
