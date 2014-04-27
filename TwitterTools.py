@@ -76,6 +76,10 @@ class TwitterHandler(SocialHandler):
                     pass
                 message.repost = True if (message_text[0:2] == "RT") else False
 
+                if message.repost:
+                    message.SetContent( "From <a href=\"https://twitter.com/%s\">Twitter</a>: " % (username) + message.content )
+                    pass
+
                 self.messages.append( message )
 
                 pass
