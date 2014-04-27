@@ -67,7 +67,7 @@ class TwitterHandler(SocialHandler):
                 message.source = "Twitter"
                 message.SetContent(message_text)
                 message.author = username
-                message.reply = True if (message_text[0] == "@" or message_text[0:2] == ".@") else False
+                message.reply = True if (message_text[0] == "@" or message_text[1] == "@") else False
                 message.direct = True if (message_text[0] == "@") else False
                 if message.reply or message.direct:
                     message.public = False
