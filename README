@@ -29,6 +29,10 @@ Purpose: a system for synchronizing information between federated social network
 * FBCMD
 ** http://fbcmd.dtompkins.com/
 ** This is needed if you want to bridge to Facebook.
+* t (Ruby Gem for interacting with Twitter)
+** This is needed if you want to bridge to Twitter.
+** http://rubygems.org/gems/t
+** gem install t (requires Ruby 1.9 or greater)
 
 In general, here are the Python libraries needed to make this package operate:
 
@@ -75,6 +79,7 @@ PyPump docs: https://pypump.readthedocs.org/en/latest/
 will fail.
 
 
+
 ##Example navierstokes.cfg file
 
 Be sure to make this .cfg file only readable by you:
@@ -106,6 +111,9 @@ type: facebook
 username: My Name On Facebook
 sharelevel: Public
 
+[twitter]
+type: twitter
+sharelevel: Public
 
 ##Running NavierStokes
 
