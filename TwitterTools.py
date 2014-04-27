@@ -25,9 +25,10 @@ from MessageObj import Message
 
 class TwitterHandler(SocialHandler):
     """ a class to read and post to a GNU Social feed """
-    def __init__(self):
+    def __init__(self,sharelevel="Public"):
         self.messages = []
         self.debug = False
+        self.sharelevel = sharelevel
         pass
 
 
@@ -36,6 +37,48 @@ class TwitterHandler(SocialHandler):
     def gather(self):
 
         self.messages = []
+
+        whoami = commands.getoutput('t whoami | grep "Screen name"')
+
+        matches = re.search('.*Screen name.*?@(.*)$', whoami, re.DOTALL)
+        username = "";
+        if matches:
+            username = matches.group(1)
+            username = username.rstrip('\n')
+        else:
+            return []
+        
+
+
+        text = commands.getoutput('t timeline -c @%s' % (username))
+
+        for line in text.split('\n'):
+            # 437607107773206528,2014-02-23 15:17:19 +0000,drsekula,message text
+            matches = re.search('(.*?),(.*?),(.*?),(.*)', line, re.DOTALL)
+
+            if matches:
+                if matches.group(1) == "ID":
+                    continue
+                message_text = matches.group(4)
+                message = Message()
+                message.id = int(matches.group(1))
+                message_time_text = time.strptime(matches.group(2), "%Y-%m-%d %H:%M:%S +0000")
+                message.date = calendar.timegm(message_time_text)
+                message.source = "Twitter"
+                message.SetContent(message_text)
+                message.author = username
+                message.reply = True if (message_text[0] == "@" or message_text[0:2] == ".@") else False
+                message.direct = True if (message_text[0] == "@") else False
+                message.public = 1
+                message.repost = True if (message_text[0:2] == "RT") else False
+
+                self.messages.append( message )
+
+                pass
+            pass
+        
+        
+
 
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
@@ -46,11 +89,16 @@ class TwitterHandler(SocialHandler):
                 message.Print()
                 pass
 
+            pass
+
         return self.messages
     
 
     def write(self, messages):
         for message in messages:
+
+            if self.sharelevel == "Public" and not message.public:
+                continue
         
             success = False
             self.msg(0,"writing to Twitter")
@@ -69,6 +117,11 @@ class TwitterHandler(SocialHandler):
 
 
             command = "t update \"%s\"" % (text)
+
+            if len(message.attachments) > 0:
+                command += " -f %s" % (message.attachments[0])
+                pass
+
             if self.debug:
                 self.msg(level=0,text=command)
                 pass

@@ -114,7 +114,7 @@ for section in config.sections():
                                                                        sharelevel=config.get(section, "sharelevel"))
         pass
     elif config.get(section, "type") == "twitter":
-        sources_and_sinks[section] = TwitterTools.TwitterHandler()
+        sources_and_sinks[section] = TwitterTools.TwitterHandler(sharelevel=config.get(section, "sharelevel"))
         pass
     pass
 
