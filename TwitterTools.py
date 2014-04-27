@@ -69,7 +69,11 @@ class TwitterHandler(SocialHandler):
                 message.author = username
                 message.reply = True if (message_text[0] == "@" or message_text[0:2] == ".@") else False
                 message.direct = True if (message_text[0] == "@") else False
-                message.public = 1
+                if message.reply or message.direct:
+                    message.public = False
+                else:
+                    message.public = True
+                    pass
                 message.repost = True if (message_text[0:2] == "RT") else False
 
                 self.messages.append( message )
