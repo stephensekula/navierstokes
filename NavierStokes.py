@@ -31,6 +31,7 @@ import GNUSocialTools
 import PumpTools
 import DiasporaTools
 import FacebookTools
+import TwitterTools
 
 from MessageObj import Message
 
@@ -111,6 +112,9 @@ for section in config.sections():
         sources_and_sinks[section] = FacebookTools.FacebookHandler(username=config.get(section, "username"), \
                                                                        album=config.get(section, "album"), \
                                                                        sharelevel=config.get(section, "sharelevel"))
+        pass
+    elif config.get(section, "type") == "twitter":
+        sources_and_sinks[section] = TwitterTools.TwitterHandler()
         pass
     pass
 
