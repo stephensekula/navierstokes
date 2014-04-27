@@ -74,7 +74,7 @@ class TwitterHandler(SocialHandler):
                 else:
                     message.public = True
                     pass
-                message.repost = True if (message_text.find(" RT ") != -1) else False
+                message.repost = True if (message_text.find("RT ") != -1) else False
 
                 if message.repost:
                     message.SetContent( "From <a href=\"https://twitter.com/%s\">Twitter</a>: " % (username) + message.content )
