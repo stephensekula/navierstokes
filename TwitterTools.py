@@ -65,7 +65,7 @@ class TwitterHandler(SocialHandler):
                 message_time_text = time.strptime(matches.group(2), "%Y-%m-%d %H:%M:%S +0000")
                 message.date = calendar.timegm(message_time_text)
                 message.source = "Twitter"
-                message.SetContent(message_text)
+                message.SetContent(self.TextToHtml(message_text))
                 message.author = username
                 message.reply = True if (message_text[0] == "@" or message_text[1] == "@") else False
                 message.direct = True if (message_text[0] == "@" or message_text[1] == "@") else False
@@ -98,6 +98,7 @@ class TwitterHandler(SocialHandler):
                 pass
 
             pass
+
 
         return self.messages
     

@@ -88,18 +88,20 @@ class FacebookHandler(SocialHandler):
                 if hit_likes_or_comments:
                     # we have finished the message content. Close it.
                     in_message = False
+                    msg.content = self.TextToHtml(msg.content)
                     self.messages.append( msg )
                     pass
                 elif hit_next:
                     # we are in the next message - close the last and start a new one
                     in_message = False
+                    msg.content = self.TextToHtml(msg.content)
                     self.messages.append( msg )
                     pass
                 else:
                     # we are still in the last message - keep doing things
                     message_text_match = re.search('.*?(\S.*)',line, re.DOTALL)
                     if message_text_match != None:
-                        msg.content = msg.content + " " + message_text_match.group(1)
+                        msg.content = msg.content + message_text_match.group(1)
                         pass
                     
                 pass
@@ -119,13 +121,6 @@ class FacebookHandler(SocialHandler):
         for line in messages_text.split('\n'):
 
             line = str(line)
-            #line = unicode(line).encode('unicode_escape')
-            
-            #try:
-            #    line = unicodedata.normalize('NFKD', line).encode('ascii','ignore')
-            #except TypeError:
-            #    line = line
-            #    pass
 
             if line.find("NAME") != 1 and line.find("PID") != -1 and line.find("CAPTION") != -1:
                 continue
@@ -158,7 +153,8 @@ class FacebookHandler(SocialHandler):
                     pass
                 else:
                     # we found the start of the next message. close the last one
-                    
+                    msg.content = self.TextToHtml(msg.content)
+       
                     # check if the message has any content before saving
                     if re.search(".*[A-Za-z0-9].*",msg.content,re.DOTALL) != None:
                         self.messages.append(msg)
@@ -189,7 +185,7 @@ class FacebookHandler(SocialHandler):
                 message.Print()
                 pass
             print "**************************************************************\n"
-        
+
         return self.messages
     
 

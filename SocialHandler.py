@@ -7,6 +7,7 @@ import os
 import logging
 import unicodedata
 import commands
+import re
 
 class SocialHandler(object):
     def __init__(self):
@@ -107,3 +108,12 @@ class SocialHandler(object):
         os.system('rm -f /tmp/%d_msg.html' % (pid))
 
         return txt
+
+
+    def TextToHtml(self, msg ):
+        # Convert links to HTML in a text message
+        pattern = re.compile('(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)')
+
+        newmsg = pattern.sub(r'<a href="\1">\1</a>', msg)
+
+        return newmsg
