@@ -16,6 +16,7 @@ import subprocess
 import os
 import re
 import time
+import datetime
 import calendar
 import commands
 import unicodedata
@@ -41,6 +42,8 @@ class FacebookHandler(SocialHandler):
             pass
 
         pass
+ 
+
 
     def gather(self):
         if not self.active:
@@ -48,10 +51,30 @@ class FacebookHandler(SocialHandler):
 
         self.messages = []
 
-        messages_text = commands.getoutput('fbcmd fstream "%s" 25' % (self.username))
+        # enforce printing of date and formatting of date
+        commands.getoutput('fbcmd SAVEPREF -stream_dateformat=\'Y D M d H:i Z\'')
+        commands.getoutput('fbcmd SAVEPREF -stream_show_date=1')
+        commands.getoutput('fbcmd SAVEPREF -pic_dateformat=\'Y D M d H:i Z\'')
+        commands.getoutput('fbcmd SAVEPREF -pic_show_date=1')
+        commands.getoutput('fbcmd SAVEPREF -stream_show_attachments=1')
+
+        # first, determine my user name on Facebook (full name)
+        # this is needed for filtering wall posts to only include those
+        # posted by me (the current fbcmd user)
+
+        fbcmd_whoami_text = commands.getoutput('fbcmd whoami')
+        matches = re.search('^[0-9]+  (.*)', fbcmd_whoami_text, re.DOTALL)
+        username = ""
+        if matches:
+            username = matches.group(1)
+            pass
+
+        messages_text = commands.getoutput('fbcmd fstream =me 25')
 
         in_message = False
         msg = Message()
+
+        inlink = False
 
         for line in messages_text.split('\n'):
 
@@ -59,13 +82,21 @@ class FacebookHandler(SocialHandler):
 
             if not in_message:
                 matches = (re.search('^\[[0-9]+\].*', line, re.DOTALL) != None)
-                matches = matches and (line[0:len(self.username)+10].find(self.username) != -1)
+                matches = matches and (line[0:len(username)+10].find(username) != -1)
 
                 if matches:
                     in_message = True
-                    
+
                     msg = Message()
                     msg.source = "Facebook"
+
+                    # find date of message
+                    message_date_match = re.search('%s  ([0-9].*?:[0-9][0-9]) ([-,\+][0-9]+)  ' % (username),line,re.DOTALL)
+                    if message_date_match:
+                        t = (datetime.datetime.strptime(message_date_match.group(1), '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(message_date_match.group(2)))).timetuple()
+                        msg.date = calendar.timegm(t)
+                        pass
+
 
                     # we need to find the start of the actual message
                     message_text_match = re.search('.*attach post  (.*)',line,re.DOTALL)
@@ -77,6 +108,12 @@ class FacebookHandler(SocialHandler):
                         pass
                     if message_text_match != None:
                         msg.content =  message_text_match.group(1)
+                        if re.search('http\S+$',message_text_match.group(1),re.DOTALL) != None:
+                            inlink = True
+                            pass
+                        else:
+                            inlink = False
+                            pass
                     else:
                         print "PROBLEM:"
                         print line
@@ -84,31 +121,77 @@ class FacebookHandler(SocialHandler):
                     pass
             else:
                 hit_likes_or_comments = (line.find(':likes') != -1) or (line.find(':comment') != -1)
+                hit_link = (line.find(':link') != -1)
+                hit_name = (line.find(':name') != -1)
+                hit_caption = (line.find(':caption') != -1)
+                hit_desc = (line.find(':desc') != -1)
                 hit_next  = (re.search('^\[[0-9]+\].*', line, re.DOTALL) != None)
                 if hit_likes_or_comments:
                     # we have finished the message content. Close it.
                     in_message = False
                     msg.content = self.TextToHtml(msg.content)
                     self.messages.append( msg )
+                    inlink = False
                     pass
                 elif hit_next:
                     # we are in the next message - close the last and start a new one
                     in_message = False
                     msg.content = self.TextToHtml(msg.content)
                     self.messages.append( msg )
+                    if msg.content.find('Nazi') != -1:
+                        sys.exit()
+                    inlink = False
+                    pass
+                elif hit_name or hit_link or hit_caption or hit_desc:
+                    message_text_match = re.search('.*?:(link|caption|name|desc).*?(\S.*)',line, re.DOTALL)
+                    if msg.content.find("Shared from Facebook:") == -1:
+                        msg.content = "Shared from Facebook: " + msg.content
+                        pass
+                    if message_text_match != None:
+                        msg.content = msg.content + "\n\n" + message_text_match.group(2)
+                        pass
                     pass
                 else:
                     # we are still in the last message - keep doing things
                     message_text_match = re.search('.*?(\S.*)',line, re.DOTALL)
+                    spacer = ""
+
                     if message_text_match != None:
-                        msg.content = msg.content + message_text_match.group(1)
+                        if inlink:
+                            spacer = ""
+                            
+                            # see if we continue to be in a link at the end of this line
+                            if re.search('.*\s.*', message_text_match.group(1),re.DOTALL) != None:
+                                # this line contains whitespace - the URL must end in here
+                                inlink = False
+                            else:
+                                # the url continues unbroken by whitespace
+                                inlink = True
+                                pass
+                            pass
+
+                        else:
+                            spacer = " "
+
+                            # see if a link begins in this line
+                            if re.search('http\S+$', message_text_match.group(1),re.DOTALL) != None:
+                                inlink = True
+                            else:
+                                inlink = False
+                                spacer = " "
+                                pass
+                            
+                            pass
+                        
+
+                        msg.content = msg.content + spacer + message_text_match.group(1)
                         pass
                     
                 pass
             pass
 
         # handle images - they don't show up in the fstream
-        messages_text = commands.getoutput('fbcmd opics "%s"' % (self.username))
+        messages_text = commands.getoutput('fbcmd opics =me')
 
         in_message = False
         msg = Message()
@@ -116,7 +199,7 @@ class FacebookHandler(SocialHandler):
         photo_pid_column = -1
         text_column = -1
 
-        first_line_pattern = re.compile('^%s\s+([0-9]+_[0-9]+)(\s.*)' % (self.username))
+        first_line_pattern = re.compile('^%s\s+([0-9]+_[0-9]+)\s+([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2} [-,\+][0-9]+)(\s.*)' % (username))
 
         for line in messages_text.split('\n'):
 
@@ -128,11 +211,12 @@ class FacebookHandler(SocialHandler):
             # new messages begin with a PID. To determine the column containing
             # the PID, we need to do some math.
         
-            # Stephen Sekula  100000196682628_1073741900  Tracking down bug
+            # Stephen Sekula  100000196682628_1073741900  2014 Sun May 11 14:23  Tracking down bug
             first_line_pattern_match = first_line_pattern.search(line)
             if first_line_pattern_match != None and photo_pid_column == -1:
                 # we found the key line of the output - find the column where the PID starts
                 pid = first_line_pattern_match.group(1)
+                datetext = first_line_pattern_match.group(2)
                 photo_pid_column = line.find(pid)
                 pass
 
@@ -145,8 +229,15 @@ class FacebookHandler(SocialHandler):
                     msg = Message()
                     msg.source = "Facebook"
                     
+                    # find date of message
+                    message_date_match = re.search('  ([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}) ([-,\+][0-9]+)  ',line,re.DOTALL)
+                    if message_date_match:
+                        t = (datetime.datetime.strptime(message_date_match.group(1), '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(message_date_match.group(2)))).timetuple()
+                        msg.date = calendar.timegm(t)
+                        pass
+
                     # we need to find the start of the actual message
-                    text_column = photo_pid_column+len(pid)
+                    text_column = photo_pid_column+len(pid)+2+len(datetext)
                     msg.content = str(msg.content) + line[text_column:].lstrip()
                     
                     in_message = True
@@ -163,6 +254,11 @@ class FacebookHandler(SocialHandler):
                     msg = Message()
                     msg.source = "Facebook"
 
+                    message_date_match = re.search('  ([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2})  ',line,re.DOTALL)
+                    if message_date_match:
+                        t = time.strptime(message_date_match.group(1), "%Y %a %b %d %H:%M")
+                        msg.date = calendar.timegm(t)
+                        pass
 
                     msg.content = str(msg.content) + line[text_column:].lstrip()
                     in_message = True

@@ -109,6 +109,7 @@ aspect: public
 [facebook]
 type: facebook
 username: My Name On Facebook
+album: Timeline Photos
 sharelevel: Public
 
 [twitter]
