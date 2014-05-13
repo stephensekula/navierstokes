@@ -79,71 +79,71 @@ class FacebookHandler(SocialHandler):
         for line in messages_text.split('\n'):
 
             # new messages begin with [number].
+            matches = (re.search('^\[[0-9]+\].*', line, re.DOTALL) != None)
+            matches = matches and (line[0:len(username)+10].find(username) != -1)
+            
+            if matches:
 
-            if not in_message:
-                matches = (re.search('^\[[0-9]+\].*', line, re.DOTALL) != None)
-                matches = matches and (line[0:len(username)+10].find(username) != -1)
-
-                if matches:
-                    in_message = True
-
-                    msg = Message()
-                    msg.source = "Facebook"
-
-                    # find date of message
-                    message_date_match = re.search('%s  ([0-9].*?:[0-9][0-9]) ([-,\+][0-9]+)  ' % (username),line,re.DOTALL)
-                    if message_date_match:
-                        t = (datetime.datetime.strptime(message_date_match.group(1), '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(message_date_match.group(2)))).timetuple()
-                        msg.date = calendar.timegm(t)
-                        pass
-
-
-                    # we need to find the start of the actual message
-                    message_text_match = re.search('.*attach post  (.*)',line,re.DOTALL)
-                    if message_text_match == None:
-                        message_text_match = re.search('.*link post  (.*)',line,re.DOTALL)
-                        pass
-                    if message_text_match == None:
-                        message_text_match = re.search('.*photo post  (.*)',line,re.DOTALL)
-                        pass
-                    if message_text_match != None:
-                        msg.content =  message_text_match.group(1)
-                        if re.search('http\S+$',message_text_match.group(1),re.DOTALL) != None:
-                            inlink = True
-                            pass
-                        else:
-                            inlink = False
-                            pass
-                    else:
-                        print "PROBLEM:"
-                        print line
-                        pass
+                if in_message == True:
+                    # we need to close and save the old message before beginning a new one
+                    msg.content = self.TextToHtml(msg.content)
+                    self.messages.append( msg )
+                    inlink = False
                     pass
-            else:
+                
+                # Start a new message
+                in_message = True
+                
+                msg = Message()
+                msg.source = "Facebook"
+                
+                # find date of message
+                message_date_match = re.search('%s  ([0-9].*?:[0-9][0-9]) ([-,\+][0-9]+)  ' % (username),line,re.DOTALL)
+                if message_date_match:
+                    t = (datetime.datetime.strptime(message_date_match.group(1), '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(message_date_match.group(2)))).timetuple()
+                    msg.date = calendar.timegm(t)
+                    pass
+                
+                
+                # we need to find the start of the actual message
+                message_text_match = re.search('.*attach post  (.*)',line,re.DOTALL)
+                if message_text_match == None:
+                    message_text_match = re.search('.*link post  (.*)',line,re.DOTALL)
+                    pass
+                if message_text_match == None:
+                    message_text_match = re.search('.*photo post  (.*)',line,re.DOTALL)
+                    pass
+                if message_text_match != None:
+                    msg.content =  message_text_match.group(1)
+                    if re.search('http\S+$',message_text_match.group(1),re.DOTALL) != None:
+                        inlink = True
+                        pass
+                    else:
+                        inlink = False
+                        pass
+                else:
+                    print "PROBLEM:"
+                    print line
+                    pass
+                pass
+
+            elif in_message:
                 hit_likes_or_comments = (line.find(':likes') != -1) or (line.find(':comment') != -1)
                 hit_link = (line.find(':link') != -1)
                 hit_name = (line.find(':name') != -1)
                 hit_caption = (line.find(':caption') != -1)
                 hit_desc = (line.find(':desc') != -1)
-                hit_next  = (re.search('^\[[0-9]+\].*', line, re.DOTALL) != None)
-                if hit_likes_or_comments:
+                hit_blankline = (re.search('^$',line) != None)
+                if hit_likes_or_comments or hit_blankline:
                     # we have finished the message content. Close it.
                     in_message = False
                     msg.content = self.TextToHtml(msg.content)
                     self.messages.append( msg )
                     inlink = False
                     pass
-                elif hit_next:
-                    # we are in the next message - close the last and start a new one
-                    in_message = False
-                    msg.content = self.TextToHtml(msg.content)
-                    self.messages.append( msg )
-                    if msg.content.find('Nazi') != -1:
-                        sys.exit()
-                    inlink = False
-                    pass
                 elif hit_name or hit_link or hit_caption or hit_desc:
                     message_text_match = re.search('.*?:(link|caption|name|desc).*?(\S.*)',line, re.DOTALL)
+                    msg.repost = 1
                     if msg.content.find("Shared from Facebook:") == -1:
                         msg.content = "Shared from Facebook: " + msg.content
                         pass
@@ -281,6 +281,7 @@ class FacebookHandler(SocialHandler):
                 message.Print()
                 pass
             print "**************************************************************\n"
+
 
         return self.messages
     
