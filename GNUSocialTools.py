@@ -131,6 +131,7 @@ class GNUSocialHandler(SocialHandler):
             message = Message()
             message.source = "GNU Social"
             message.SetContent(dent_text)
+            message.content = self.TextToHtml(message.content)
             message.author = dent_author
             message.reply = True if self.find_element_of_status(dent_xml,"in_reply_to_status_id") != "" else False
 

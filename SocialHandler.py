@@ -112,8 +112,17 @@ class SocialHandler(object):
 
     def TextToHtml(self, msg ):
         # Convert links to HTML in a text message
-        pattern = re.compile('(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)')
+        
+        # First, determine if there is HTML already present
+        newmsg = msg
+        if msg.find('<a') != -1:
+            newmsg = msg
+        else:
+            pattern = re.compile('(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)')
 
-        newmsg = pattern.sub(r'<a href="\1">\1</a>', msg)
+            newmsg = pattern.sub(r'<a href="\1">\1</a>', msg)
+            
+            pass
 
         return newmsg
+        
