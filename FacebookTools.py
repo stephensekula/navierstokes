@@ -68,7 +68,12 @@ class FacebookHandler(SocialHandler):
         if matches:
             username = matches.group(1)
             pass
-
+        
+        if username == "":
+            self.msg(0,"Unable to determine your Facebook user name")
+            return self.messages;
+        
+            
         messages_text = commands.getoutput('fbcmd fstream =me 25')
 
         in_message = False
@@ -81,7 +86,7 @@ class FacebookHandler(SocialHandler):
             # new messages begin with [number].
             matches = (re.search('^\[[0-9]+\].*', line, re.DOTALL) != None)
             matches = matches and (line[0:len(username)+10].find(username) != -1)
-            
+        
             if matches:
 
                 if in_message == True:
@@ -281,7 +286,6 @@ class FacebookHandler(SocialHandler):
                 message.Print()
                 pass
             print "**************************************************************\n"
-
 
         return self.messages
     
