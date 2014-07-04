@@ -27,7 +27,6 @@ from MessageObj import Message
 class FacebookHandler(SocialHandler):
     """ a class to read and post to a Facebook feed """
     def __init__(self,username="",sharelevel="public",album="latest"):
-        self.username = username
         self.sharelevel = sharelevel
         self.album = album
         self.messages = []
@@ -49,6 +48,8 @@ class FacebookHandler(SocialHandler):
         if not self.active:
             return []
 
+        self.msg(0, "Gathering messages.")
+
         self.messages = []
 
         # enforce printing of date and formatting of date
@@ -67,9 +68,7 @@ class FacebookHandler(SocialHandler):
         username = ""
         if matches:
             username = matches.group(1)
-            pass
-        
-        if username == "":
+        else:
             self.msg(0,"Unable to determine your Facebook user name")
             return self.messages;
         
@@ -314,6 +313,7 @@ class FacebookHandler(SocialHandler):
                 do_write = True
                 pass
             else:
+                self.msg(0,message.content)
                 self.msg(0,"Unable to share message for unknown reasons.")
                 pass
 

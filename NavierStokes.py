@@ -109,9 +109,8 @@ for section in config.sections():
                                                                        aspect=config.get(section,"aspect"))
         pass
     elif config.get(section, "type") == "facebook":
-        sources_and_sinks[section] = FacebookTools.FacebookHandler(username=config.get(section, "username"), \
-                                                                       album=config.get(section, "album"), \
-                                                                       sharelevel=config.get(section, "sharelevel"))
+        sources_and_sinks[section] = FacebookTools.FacebookHandler(album=config.get(section, "album"), \
+                                                                   sharelevel=config.get(section, "sharelevel"))
         pass
     elif config.get(section, "type") == "twitter":
         sources_and_sinks[section] = TwitterTools.TwitterHandler(sharelevel=config.get(section, "sharelevel"))

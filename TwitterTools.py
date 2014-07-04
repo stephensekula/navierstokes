@@ -38,6 +38,8 @@ class TwitterHandler(SocialHandler):
 
         self.messages = []
 
+        self.msg(0, "Gathering messages.")
+
         whoami = commands.getoutput('t whoami | grep "Screen name"')
 
         matches = re.search('.*Screen name.*?@(.*)$', whoami, re.DOTALL)

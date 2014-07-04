@@ -92,6 +92,8 @@ class PumpHandler(SocialHandler):
 
         self.messages = []
 
+        self.msg(0, "Gathering messages.")
+
         if not self.pump:
             return []
 
