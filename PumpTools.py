@@ -106,9 +106,13 @@ class PumpHandler(SocialHandler):
             message.source = "Pump.io"
 
             # get the text into decent shape
-            text = pump_obj.content
-            #message.content = unicodedata.normalize('NFKD', unicode(text)).encode('ascii','ignore')
-            #message.content = unicode(text).encode("utf-8")
+            text = ""
+            if not pump_obj.content:
+                text = ""
+            else:
+                text = pump_obj.content
+                pass
+
             message.SetContent(text)
             
             try:
@@ -173,7 +177,13 @@ class PumpHandler(SocialHandler):
                 #print ".summary: %s" % (pump_obj.summary)
                 #print ".content: %s" % (pump_obj.content)
 
-                message.SetContent( pump_obj.content )
+                text = ""
+                if not pump_obj.content:
+                    message.SetContent("")
+                else:
+                    message.SetContent(pump_obj.content)
+                    pass
+
                 if message.content == '':
                     message.content = 'An image...'
                     pass
