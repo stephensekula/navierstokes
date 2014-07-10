@@ -50,12 +50,43 @@ if not os.path.exists(home+'/.navierstokes/'):
     os.makedirs(home+'/.navierstokes/')
     pass
 
+# Check if a PID file already exists
+path_to_pidfile = home + '/.navierstokes/navierstokes.pid'
+pid_is_running = False
+if os.path.exists( path_to_pidfile ):
+    # see if this PID is _actually_ running
+    pid = int(open(path_to_pidfile).read())
+
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        pid_is_running = False
+    else:
+        pid_is_running = True
+        pass
+
+    if pid_is_running:
+        logging.info("This program is already running, and should not be run twice.")
+        sys.exit()
+    else:
+        os.remove(path_to_pidfile)
+        logging.info("An old PID file was present, but the program is not running.")
+        logging.info("Removing the old PID file and running the program anew.")
+        open(path_to_pidfile, 'w').write(str(os.getpid()))
+        pass
+else:
+    open(path_to_pidfile, 'w').write(str(os.getpid()))
+    pass
+
+    
+
 # Parse command line options
 try:
     opts, args = getopt.getopt(sys.argv[1:], "dhi:o:", ["debug","help", "input=", "output="])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
+    os.remove(path_to_pidfile)
     sys.exit(2)
     pass
 output = None
@@ -66,6 +97,7 @@ fuzzy = False
 
 for o, a in opts:
     if o in ("-h", "--help"):
+        os.remove(path_to_pidfile)
         sys.exit()
     elif o in ("-d", "--debug"):
         debug = True
@@ -370,3 +402,6 @@ for sinkname in sources_and_sinks:
     lock.release()
     
     pass
+
+# We are done. Remove the PID file
+os.remove(path_to_pidfile)
