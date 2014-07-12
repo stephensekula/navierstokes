@@ -268,6 +268,8 @@ for source in messages:
                     pass
 
                 if not found_match:
+                    logging.info("Message to consider: \n%s", message.Print())
+                    logging.info("  %s", best_match_text)
                     messagesToWrite[other_source].append(message)
                     pass
                 pass
@@ -382,6 +384,7 @@ for sinkname in sources_and_sinks:
             if debug:
                 print "   According to the MD5 sum check, this message is new..."
                 pass
+            
             messagesToActuallyWrite.append( message )
             if not debug:
                 message_archive_file = open(message_archive_filename, 'a')
@@ -396,6 +399,10 @@ for sinkname in sources_and_sinks:
             message.Print()
             pass
     else:
+        for message in messagesToActuallyWrite:
+            logging.info("New message to write: \n%s", message.Print())
+            pass
+
         sources_and_sinks[sinkname].write( messagesToActuallyWrite )
         pass
     
