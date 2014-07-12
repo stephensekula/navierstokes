@@ -157,7 +157,7 @@ class DiasporaHandler(SocialHandler):
             if len(message.attachments) > 0:
                 for attachment in message.attachments:
                     # to post an image, first upload it then comment on it.
-                    os.system('cliaspora upload "%s" "%s" %s' % (aspect,notice_text,attachment))
+                    os.system('echo "%s" | cliaspora -m upload "%s" %s' % (notice_text,aspect,attachment))
                     # get the POST-ID of this image
                     #post_id = commands.getoutput("cliaspora show activity | grep \"POST-ID\" | head -1")
                     #post_id = post_id.replace('\n','')

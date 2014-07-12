@@ -268,7 +268,8 @@ for source in messages:
                     pass
 
                 if not found_match:
-                    logging.info("Message to consider: \n%s", message.Print())
+                    logging.info("Message to consider")
+                    message.Print()
                     logging.info("  %s", best_match_text)
                     messagesToWrite[other_source].append(message)
                     pass
@@ -400,7 +401,8 @@ for sinkname in sources_and_sinks:
             pass
     else:
         for message in messagesToActuallyWrite:
-            logging.info("New message to write: \n%s", message.Print())
+            logging.info("New message to write:")
+            message.Print()
             pass
 
         sources_and_sinks[sinkname].write( messagesToActuallyWrite )
