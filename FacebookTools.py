@@ -107,7 +107,9 @@ class FacebookHandler(SocialHandler):
                     t = (datetime.datetime.strptime(message_date_match.group(1), '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(message_date_match.group(2)))).timetuple()
                     msg.date = calendar.timegm(t)
                     pass
-                
+                else:
+                    self.msg(3,"Unable to obtain message date and time")
+                    pass
                 
                 # we need to find the start of the actual message
                 message_text_match = re.search('.*attach post  (.*)',line,re.DOTALL)
@@ -203,7 +205,8 @@ class FacebookHandler(SocialHandler):
         photo_pid_column = -1
         text_column = -1
 
-        first_line_pattern = re.compile('^%s\s+([0-9]+_[0-9]+)\s+([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2} [-,\+][0-9]+)(\s.*)' % (username))
+        first_line_pattern = re.compile('^%s\s+([0-9]+_[0-9]+)\s+([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}) ([-,\+][0-9]+)(\s.*)' % (username))
+        message_line_pattern = re.compile('^.*\s+([0-9]+_[0-9]+)\s+([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}) ([-,\+][0-9]+)(\s.*)')
 
         for line in messages_text.split('\n'):
 
@@ -220,7 +223,6 @@ class FacebookHandler(SocialHandler):
             if first_line_pattern_match != None and photo_pid_column == -1:
                 # we found the key line of the output - find the column where the PID starts
                 pid = first_line_pattern_match.group(1)
-                datetext = first_line_pattern_match.group(2)
                 photo_pid_column = line.find(pid)
                 pass
 
@@ -234,14 +236,23 @@ class FacebookHandler(SocialHandler):
                     msg.source = "Facebook"
                     
                     # find date of message
-                    message_date_match = re.search('  ([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}) ([-,\+][0-9]+)  ',line,re.DOTALL)
+
+                    message_date_match = message_line_pattern.search(line)
+                    datetext = ""
+                    dateoffset = ""
                     if message_date_match:
-                        t = (datetime.datetime.strptime(message_date_match.group(1), '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(message_date_match.group(2)))).timetuple()
+                        datetext = message_date_match.group(2)
+                        dateoffset = message_date_match.group(3)
+
+                        t = (datetime.datetime.strptime(datetext, '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(dateoffset))).timetuple()
                         msg.date = calendar.timegm(t)
+                        pass
+                    else:
+                        self.msg(3,"Unable to determine date and time of photo.")
                         pass
 
                     # we need to find the start of the actual message
-                    text_column = photo_pid_column+len(pid)+2+len(datetext)
+                    text_column = photo_pid_column+len(pid)+2+len(datetext)+1+len(dateoffset)
                     msg.content = str(msg.content) + line[text_column:].lstrip()
                     
                     in_message = True
@@ -258,10 +269,20 @@ class FacebookHandler(SocialHandler):
                     msg = Message()
                     msg.source = "Facebook"
 
-                    message_date_match = re.search('  ([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2})  ',line,re.DOTALL)
+                    # Find date of message
+                    message_date_match = message_line_pattern.search(line)
+
+                    datetext = ""
+                    dateoffset = ""
                     if message_date_match:
-                        t = time.strptime(message_date_match.group(1), "%Y %a %b %d %H:%M")
+                        datetext = message_date_match.group(2)
+                        dateoffset = message_date_match.group(3)
+
+                        t = (datetime.datetime.strptime(datetext, '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(dateoffset))).timetuple()
                         msg.date = calendar.timegm(t)
+                        pass
+                    else:
+                        self.msg(3,"Unable to determine date and time of photo.")
                         pass
 
                     msg.content = str(msg.content) + line[text_column:].lstrip()
