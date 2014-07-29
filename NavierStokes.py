@@ -269,7 +269,7 @@ for source in messages:
 
                 if not found_match:
                     logging.info("Message to consider")
-                    message.Print()
+                    logging.info(message.content)
                     logging.info("  %s", best_match_text)
                     messagesToWrite[other_source].append(message)
                     pass
