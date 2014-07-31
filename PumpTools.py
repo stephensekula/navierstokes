@@ -99,6 +99,7 @@ class PumpHandler(SocialHandler):
 
         for activity in self.me.outbox.major[:20]:
             pump_obj    = activity.obj
+
             pump_obj_id = activity.id
 
             message = Message()
@@ -107,11 +108,16 @@ class PumpHandler(SocialHandler):
 
             # get the text into decent shape
             text = ""
-            if not pump_obj.content:
-                text = ""
-            else:
-                text = pump_obj.content
-                pass
+
+            try:
+                if not pump_obj.content:
+                    text = ""
+                else:
+                    text = pump_obj.content
+                    pass
+            except AttributeError:
+                continue
+                
 
             message.SetContent(text)
             
