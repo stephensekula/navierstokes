@@ -73,7 +73,7 @@ class FacebookHandler(SocialHandler):
             return self.messages;
         
             
-        messages_text = commands.getoutput('fbcmd fstream =me 25')
+        messages_text = commands.getoutput('fbcmd fstream =me 120')
 
         in_message = False
         msg = Message()
