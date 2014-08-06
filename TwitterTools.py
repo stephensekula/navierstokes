@@ -54,13 +54,19 @@ class TwitterHandler(SocialHandler):
 
         text = commands.getoutput('t timeline -c @%s' % (username))
 
+        message = Message()
+
         for line in text.split('\n'):
             # 437607107773206528,2014-02-23 15:17:19 +0000,drsekula,message text
             matches = re.search('(.*?),(.*?),(.*?),(.*)', line, re.DOTALL)
 
             if matches:
+                
+                # the first line of t output is just header information
                 if matches.group(1) == "ID":
                     continue
+
+
                 message_text = matches.group(4)
                 message = Message()
                 message.id = int(matches.group(1))
@@ -85,6 +91,11 @@ class TwitterHandler(SocialHandler):
                 self.messages.append( message )
 
                 pass
+
+            else:
+                # this might just be another line in a multi-line message in Twitter
+                message.content += "\n" + line;
+
             pass
         
         
