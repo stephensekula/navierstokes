@@ -6,14 +6,7 @@ Purpose: a system for synchronizing information between federated social network
 ##Requirements
 ============
 
-* cliaspora-0.1.7.tgz (Diaspora access) (https://freeshell.de/~mk/projects/cliaspora.html)
-** NOTE BENE! You must install a patch to the last release of Cliaspora! The patch
-   makes it possible for Cliaspora to post text along with a file upload.
-** the patch is part of this package. It is applied as follows:
-*** cd cliaspora-0.1.7/
-*** patch -p1 < ../navierstokes/cliaspora-file_upload_text-0.1.7.patch
-*** make
-*** sudo make install
+* cliaspora-0.1.9.tgz (Diaspora access) (https://freeshell.de/~mk/projects/cliaspora.html)
 * PyPump 0.5 (pump.io access)
 ** git clone https://github.com/xray7224/PyPump.git
 ** cd PyPump
