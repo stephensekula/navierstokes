@@ -121,7 +121,7 @@ class DiasporaHandler(SocialHandler):
             print "********************** Diaspora Handler **********************\n"
             print "Here are the messages I gathered from the Diaspora server:\n"
             for message in self.messages:
-                message.Print()
+                print message.Printable()
                 pass
 
         return self.messages

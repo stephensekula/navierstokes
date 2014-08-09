@@ -397,12 +397,12 @@ for sinkname in sources_and_sinks:
     
     if debug:
         for message in messagesToActuallyWrite:
-            message.Print()
+            print message.Printable()
             pass
     else:
         for message in messagesToActuallyWrite:
             logging.info("New message to write:")
-            message.Print()
+            print message.Printable()
             pass
 
         sources_and_sinks[sinkname].write( messagesToActuallyWrite )

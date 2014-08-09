@@ -177,7 +177,7 @@ class GNUSocialHandler(SocialHandler):
             print "********************** GNU Social Handler **********************\n"
             print "Here are the messages I gathered from the GNU Social server:\n"
             for message in self.messages:
-                message.Print()
+                print message.Printable()
                 pass
 
         # cleanup

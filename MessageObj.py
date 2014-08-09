@@ -18,26 +18,25 @@ class Message:
         self.source = ""
         pass
 
-    def Print(self):
-        print "======================== MESSAGE OBJECT ========================"
-        print "FROM:    %s" % (self.author)
+    def Printable(self):
+        printable = ""
+        printable += "======================== MESSAGE OBJECT ========================\n"
+        printable += "FROM:    %s\n" % (self.author)
         
-        print "DATE:    %s" % ((datetime.datetime.fromtimestamp(time.mktime(time.localtime(self.date)))).strftime('%Y %B %d %H:%M:%S'))
-        print "ID:      %d" % (self.id)
-        print "SOURCE:  %s" % (self.source)
-        print "REPLY?:  %d" % (self.reply)
-        print "PUBLIC?: %d" % (self.public)
-        print "DIRECT?: %d" % (self.direct)
-        print "REPOST?: %d" % (self.repost)
-        print "CONTENT: %s" % (self.content)
-        print "ATTACHMENTS: %s" % (str(self.attachments))
+        printable += "DATE:    %s\n" % ((datetime.datetime.fromtimestamp(time.mktime(time.localtime(self.date)))).strftime('%Y %B %d %H:%M:%S'))
+        printable += "ID:      %d\n" % (self.id)
+        printable += "SOURCE:  %s\n" % (self.source)
+        printable += "REPLY?:  %d\n" % (self.reply)
+        printable += "PUBLIC?: %d\n" % (self.public)
+        printable += "DIRECT?: %d\n" % (self.direct)
+        printable += "REPOST?: %d\n" % (self.repost)
+        printable += "CONTENT: %s\n" % (self.content)
+        printable += "ATTACHMENTS: %s\n" % (str(self.attachments))
+
+        return printable
+
+    def Print(self):
+        print self.Printable()
         
     def SetContent(self, text):
         self.content = text
-        # if all(ord(c) < 128 for c in text):
-        #    self.content = text
-        # else:
-        #    print text
-        #    self.content = unicode(text).encode("ascii")
-        #    pass
-        # pass

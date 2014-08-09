@@ -302,7 +302,7 @@ class FacebookHandler(SocialHandler):
             print "********************** Facebook Handler **********************\n"
             print "Here are the messages I gathered from the Facebook server:\n"
             for message in self.messages:
-                message.Print()
+                print message.Printable()
                 pass
             print "**************************************************************\n"
 

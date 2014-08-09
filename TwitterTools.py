@@ -107,7 +107,7 @@ class TwitterHandler(SocialHandler):
             print "********************** Twitter Handler **********************\n"
             print "Here are the messages I gathered from the Twitter account:\n"
             for message in self.messages:
-                message.Print()
+                print message.Printable()
                 pass
 
             pass
