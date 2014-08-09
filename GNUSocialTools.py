@@ -18,8 +18,10 @@ import subprocess
 import os
 import re
 import time
+import datetime
 import calendar
 import commands
+
 
 from MessageObj import Message
 
@@ -156,10 +158,12 @@ class GNUSocialHandler(SocialHandler):
                     pass
                 pass
 
-            # date in GMT - convert to US/Central
-            t = time.strptime(self.find_element_of_status(dent_xml,"created_at"), "%a %b %d %H:%M:%S +0000 %Y")
-            #message.date = time.mktime(t)
-            message.date = calendar.timegm(t)
+            # Remove offset from timestamp and handle it separately - strptime cannot reliably handle %z in Python
+            gs_msg_timestamp = self.find_element_of_status(dent_xml,"created_at")
+            gs_msg_notz = gs_msg_timestamp[0:19]+" "+gs_msg_timestamp[26:]
+            gs_msg_tzonly = gs_msg_timestamp[20:24]
+            t = datetime.datetime.strptime(gs_msg_notz, "%a %b %d %H:%M:%S %Y") - datetime.timedelta(seconds=int(gs_msg_tzonly))
+            message.date = calendar.timegm(t.timetuple())
             message.repost = self.status_is_retweeted(dent_xml)
             if message.repost:
                 message.SetContent( "<a href=\"%s\">From GNU Social</a> : " % (self.find_element_of_status(dent_xml,"uri")) + message.content )

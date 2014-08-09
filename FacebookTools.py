@@ -15,7 +15,6 @@ import sys
 import subprocess
 import os
 import re
-import time
 import datetime
 import calendar
 import commands

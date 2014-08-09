@@ -16,7 +16,7 @@ import sys
 import subprocess
 import os
 import re
-import time
+import datetime
 import calendar
 import commands
 
@@ -70,8 +70,8 @@ class TwitterHandler(SocialHandler):
                 message_text = matches.group(4)
                 message = Message()
                 message.id = int(matches.group(1))
-                message_time_text = time.strptime(matches.group(2), "%Y-%m-%d %H:%M:%S +0000")
-                message.date = calendar.timegm(message_time_text)
+                message_time_text = datetime.datetime.strptime(matches.group(2), "%Y-%m-%d %H:%M:%S +0000")
+                message.date = calendar.timegm(message_time_text.timetuple())
                 message.source = "Twitter"
                 message.SetContent(self.TextToHtml(message_text))
                 message.author = username

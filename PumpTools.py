@@ -26,7 +26,7 @@ import sys
 import os
 import inspect
 import unicodedata
-import time
+import datetime
 import calendar
 import codecs
 
@@ -195,12 +195,8 @@ class PumpHandler(SocialHandler):
                     pass
                 message.attachments.append("/tmp/{0}".format(local_img_name) )
 
-            # 2013-12-18 17:56:37+00:00
-            #print message.content
-            #print pump_obj.published
-            t = time.strptime(str(pump_obj.updated), "%Y-%m-%d %H:%M:%S+00:00")
-            #message.date = time.mktime(t)
-            message.date = calendar.timegm(t)
+            t = datetime.datetime.strptime(str(pump_obj.updated), "%Y-%m-%d %H:%M:%S+00:00")
+            message.date = calendar.timegm(t.timetuple())
 
             message.author = pump_obj.author.display_name
             message.author_url = pump_obj.author.url

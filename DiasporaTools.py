@@ -17,8 +17,8 @@ from MessageObj import Message
 import subprocess
 import os
 import re
-import time
 import calendar
+import datetime
 import commands
 import codecs
 
@@ -58,8 +58,7 @@ class DiasporaHandler(SocialHandler):
                     # parse the timestamp and the post ID
                     matches = re.search('(2.*Z) POST-ID: ([0-9]+).*', line, re.DOTALL)
                     if matches:
-                        #msg.date = time.mktime(time.strptime(matches.group(1),"%Y-%m-%dT%H:%M:%SZ"))
-                        msg.date = calendar.timegm(time.strptime(matches.group(1),"%Y-%m-%dT%H:%M:%SZ"))
+                        msg.date = calendar.timegm(datetime.datetime.strptime(matches.group(1),"%Y-%m-%dT%H:%M:%SZ").timetuple())
                         msg.id = int(matches.group(2))
                         pass
                     pass

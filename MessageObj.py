@@ -1,3 +1,4 @@
+import datetime
 import time
 import codecs
 
@@ -20,7 +21,8 @@ class Message:
     def Print(self):
         print "======================== MESSAGE OBJECT ========================"
         print "FROM:    %s" % (self.author)
-        print "DATE:    %s" % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.date)))
+        
+        print "DATE:    %s" % ((datetime.datetime.fromtimestamp(time.mktime(time.localtime(self.date)))).strftime('%Y %B %d %H:%M:%S'))
         print "ID:      %d" % (self.id)
         print "SOURCE:  %s" % (self.source)
         print "REPLY?:  %d" % (self.reply)
