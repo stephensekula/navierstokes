@@ -131,6 +131,7 @@ class PumpHandler(SocialHandler):
             # Determine if this message was directed to someone on Pump.io and thus
             # isn't intended for sharing outside the network.
             to_list = getattr(activity, "to", [])
+            skip_this_message = True
             if len(to_list) > 0:
                 # was "Public" among the "To:" recipients? Then we can go on; otherwise,
                 # skip this message
@@ -143,10 +144,15 @@ class PumpHandler(SocialHandler):
                         if person.id.find("public") != -1:
                             is_direct = False
                             is_public = True
+                            skip_this_message = False
                             break
+
+                        if person.id.find("followers") != -1:
+                            skip_this_message = False
+
                         pass
-                    pass
-                
+                    pass 
+
                 if is_direct:
                     message.direct = 1
                 if is_public:
@@ -155,6 +161,21 @@ class PumpHandler(SocialHandler):
 
                 pass
 
+
+            cc_list = getattr(activity, "cc", [])
+            if len(cc_list) > 0:
+                for person in cc_list:
+                    if isinstance(person, Collection):
+                        if person.id.find("followers") != -1:
+                            skip_this_message = False
+                            pass
+                        pass
+                    pass
+                pass
+
+            if skip_this_message:
+                continue;
+                
             if isinstance( pump_obj, Image):
                 img_url = pump_obj.original.url
 
