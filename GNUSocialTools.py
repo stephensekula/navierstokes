@@ -114,7 +114,7 @@ class GNUSocialHandler(SocialHandler):
         self.msg(0, "Gathering messages.")
 
         # Get the XML file from the web
-        xml_file_contents = commands.getoutput('curl -s -u \'%s:%s\' https://%s/api/statuses/user_timeline/%s.xml?count=20' % (Self.username,self.password,self.site,self.username))
+        xml_file_contents = commands.getoutput('curl -s -u \'%s:%s\' https://%s/api/statuses/user_timeline/%s.xml?count=20' % (self.username,self.password,self.site,self.username))
 
         pid = os.getpid()
         
