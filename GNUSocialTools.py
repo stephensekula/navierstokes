@@ -191,13 +191,12 @@ class GNUSocialHandler(SocialHandler):
 
         for message in messages:
 
-            do_write = False
-        
             self.msg(0,"writing to GNU Social")
             self.msg(0,"Share level is: %s" % (self.sharelevel))
 
             data = ""
 
+            do_write = False
             if self.sharelevel == "All":
                 do_write = True
             elif self.sharelevel.find("Public") != -1 and message.public == 1:
@@ -207,6 +206,7 @@ class GNUSocialHandler(SocialHandler):
             else:
                 self.msg(0,message.content)
                 self.msg(0,"Unable to share message for unknown reasons.")
+                do_write = False
                 pass
 
             if not do_write:

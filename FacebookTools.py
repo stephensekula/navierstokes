@@ -321,12 +321,12 @@ class FacebookHandler(SocialHandler):
             self.msg(0,"writing to Facebook")
             self.msg(0,"Share level is: %s" % (self.sharelevel))
 
-            do_write = False
             
             text = self.HTMLConvert(message.content)
             text = text.replace('"','\\"')
 
 
+            do_write = False
             if self.sharelevel == "All":
                 do_write = True
             elif self.sharelevel.find("Public") != -1 and message.public == 1:
@@ -336,6 +336,7 @@ class FacebookHandler(SocialHandler):
             else:
                 self.msg(0,message.content)
                 self.msg(0,"Unable to share message for unknown reasons.")
+                do_write = False
                 pass
 
             if not do_write:

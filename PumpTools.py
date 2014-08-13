@@ -250,7 +250,25 @@ class PumpHandler(SocialHandler):
         if not self.pump:
             return
 
+
         for message in messages:
+
+            do_write = False
+            if self.sharelevel == "All":
+                do_write = True
+            elif self.sharelevel.find("Public") != -1 and message.public == 1:
+                self.msg(0,"Unable to share message, as it is not public.")
+                do_write = True
+                pass
+            else:
+                self.msg(0,message.content)
+                self.msg(0,"Unable to share message for unknown reasons.")
+                do_write = False
+                pass
+
+            if not do_write:
+                continue
+
             if len(message.attachments)==0:
                 new_note = self.pump.Note(message.content)
                 new_note.send()

@@ -144,6 +144,7 @@ class DiasporaHandler(SocialHandler):
             else:
                 self.msg(0,message.content)
                 self.msg(0,"Unable to share message for unknown reasons.")
+                do_write = False
                 pass
 
             if not do_write:
