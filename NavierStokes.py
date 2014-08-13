@@ -125,6 +125,7 @@ for section in config.sections():
     if config.get(section, "type") == "gnusocial":
         sources_and_sinks[section] = GNUSocialTools.GNUSocialHandler(site=config.get(section, "site"), \
                                                                          username=config.get(section, "username"), \
+                                                                         sharelevel=config.get(section,"sharelevel"), \
                                                                          password=config.get(section, "password"))
         pass
     elif config.get(section, "type") == "pump.io":
@@ -133,12 +134,14 @@ for section in config.sections():
 
         sources_and_sinks[section] = PumpTools.PumpHandler(webfinger=config.get(section, "webfinger"), \
                                                                credentials=client_credentials, \
-                                                               tokens=client_tokens)
+                                                               tokens=client_tokens, \
+                                                               sharelevel=config.get(section,"sharelevel"))
         pass
     elif config.get(section, "type") == "diaspora":
         sources_and_sinks[section] = DiasporaTools.DiasporaHandler(webfinger=config.get(section, "webfinger"), \
                                                                        password=config.get(section, "password"), \
-                                                                       aspect=config.get(section,"aspect"))
+                                                                       aspect=config.get(section,"aspect"),
+                                                                       sharelevel=config.get(section,"sharelevel"))
         pass
     elif config.get(section, "type") == "facebook":
         sources_and_sinks[section] = FacebookTools.FacebookHandler(album=config.get(section, "album"), \

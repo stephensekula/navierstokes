@@ -28,11 +28,12 @@ from MessageObj import Message
 
 class GNUSocialHandler(SocialHandler):
     """ a class to read and post to a GNU Social feed """
-    def __init__(self,username="",password="",site=""):
+    def __init__(self,username="",password="",site="",sharelevel="Public"):
         self.username = username
         self.password = password
         self.site     = site
         self.messages = []
+        self.sharelevel = sharelevel
         self.debug = False
         pass
 
@@ -187,12 +188,29 @@ class GNUSocialHandler(SocialHandler):
     
 
     def write(self, messages):
+
         for message in messages:
+
+            do_write = False
         
-            success = False
             self.msg(0,"writing to GNU Social")
+            self.msg(0,"Share level is: %s" % (self.sharelevel))
+
             data = ""
 
+            if self.sharelevel == "All":
+                do_write = True
+            elif self.sharelevel.find("Public") != -1 and message.public == 1:
+                self.msg(0,"Unable to share message, as it is not public.")
+                do_write = True
+                pass
+            else:
+                self.msg(0,message.content)
+                self.msg(0,"Unable to share message for unknown reasons.")
+                pass
+
+            if not do_write:
+                continue
 
             text = self.HTMLConvert(message.content)
 

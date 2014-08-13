@@ -25,7 +25,7 @@ from MessageObj import Message
 
 class FacebookHandler(SocialHandler):
     """ a class to read and post to a Facebook feed """
-    def __init__(self,username="",sharelevel="public",album="latest"):
+    def __init__(self,username="",sharelevel="Public",album="latest"):
         self.sharelevel = sharelevel
         self.album = album
         self.messages = []
@@ -314,11 +314,12 @@ class FacebookHandler(SocialHandler):
             self.msg(0,"Facebook handler not active; no messages will be posted")
             return
 
-        self.msg(0,"Share level is: %s" % (self.sharelevel))
-
         write_count = 0
 
         for message in messages:
+
+            self.msg(0,"writing to Facebook")
+            self.msg(0,"Share level is: %s" % (self.sharelevel))
 
             do_write = False
             
@@ -340,8 +341,6 @@ class FacebookHandler(SocialHandler):
             if not do_write:
                 continue
             
-            success = False
-            self.msg(0,"writing to Facebook")
             if len(message.attachments) > 0:
                 if self.debug:
                     self.msg(0,"   Posting a photo.")

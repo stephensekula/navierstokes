@@ -23,12 +23,13 @@ import commands
 import codecs
 
 class DiasporaHandler(SocialHandler):
-    def __init__(self, webfinger, password, aspect="public"):
+    def __init__(self, webfinger, password, aspect="public", sharelevel="Public"):
         self.webfinger = webfinger
         self.password = password
         self.usermap = {}
         self.messages = []
         self.aspect = aspect
+        self.sharelevel = sharelevel
 
         self.debug = False
 
@@ -130,6 +131,24 @@ class DiasporaHandler(SocialHandler):
     def write(self, messages=[]):
         
         for message in messages:
+
+            self.msg(0,"writing to Diaspora")
+
+            do_write = False
+            if self.sharelevel == "All":
+                do_write = True
+            elif self.sharelevel.find("Public") != -1 and message.public == 1:
+                self.msg(0,"Unable to share message, as it is not public.")
+                do_write = True
+                pass
+            else:
+                self.msg(0,message.content)
+                self.msg(0,"Unable to share message for unknown reasons.")
+                pass
+
+            if not do_write:
+                continue
+
             notice_text = message.content
 
             # user mapping
