@@ -118,7 +118,7 @@ class SocialHandler(object):
         if msg.find('<a') != -1:
             newmsg = msg
         else:
-            pattern = re.compile('(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)')
+            pattern = re.compile('(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*,]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)')
 
             newmsg = pattern.sub(r'<a href="\1">\1</a>', msg)
             

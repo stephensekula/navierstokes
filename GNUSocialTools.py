@@ -114,7 +114,7 @@ class GNUSocialHandler(SocialHandler):
         self.msg(0, "Gathering messages.")
 
         # Get the XML file from the web
-        xml_file_contents = commands.getoutput('curl -s -u \'%s:%s\' https://%s/api/statuses/user_timeline/%s.xml?count=20' % (self.username,self.password,self.site,self.username))
+        xml_file_contents = commands.getoutput('curl -s -u \'%s:%s\' https://%s/api/statuses/user_timeline/%s.xml?count=20' % (Self.username,self.password,self.site,self.username))
 
         pid = os.getpid()
         
@@ -128,6 +128,10 @@ class GNUSocialHandler(SocialHandler):
         highest_id = 0
         for dent_xml in dents_xml:
          
+            dent_source = self.find_element_of_status(dent_xml,"source")
+            #if dent_source == "activity":
+            #    continue
+
             dent_text = self.find_element_of_status(dent_xml,"text")
 
             dent_author = self.status_author_name(dent_xml)
