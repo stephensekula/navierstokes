@@ -6,7 +6,7 @@ Created: Dec. 23, 2013
 * PumpHandler:
 Inherits from: SocialHandler
 Purpose: to gather messages from a pump.io instance, and write messages to
-the same instance. It uses PyPump 0.4 to do all of this
+the same instance. It uses PyPump 0.5 to do all of this
 (https://github.com/xray7224/PyPump)
 """
 
@@ -258,12 +258,11 @@ class PumpHandler(SocialHandler):
             if self.sharelevel == "All":
                 do_write = True
             elif self.sharelevel.find("Public") != -1 and message.public == 1:
-                self.msg(0,"Unable to share message, as it is not public.")
                 do_write = True
                 pass
             else:
                 self.msg(0,message.content)
-                self.msg(0,"Unable to share message for unknown reasons.")
+                self.msg(0,"Unable to share message based on sharelevel settings.")
                 do_write = False
                 pass
 
