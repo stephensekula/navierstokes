@@ -35,10 +35,11 @@ from requests_oauthlib import OAuth1
 
 class PumpHandler(SocialHandler):
     
-    def __init__(self,webfinger,credentials,tokens):
+    def __init__(self,webfinger,credentials,tokens,sharelevel="Public"):
         self.webfinger = webfinger
         self.credentials = credentials
         self.tokens = tokens
+        self.sharelevel = sharelevel
 
         self.pump = None
         self.me = None
