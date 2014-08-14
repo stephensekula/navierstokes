@@ -26,6 +26,7 @@ Purpose: a system for synchronizing information between federated social network
 ** This is needed if you want to bridge to Twitter.
 ** http://rubygems.org/gems/t
 ** gem install t (requires Ruby 1.9 or greater)
+* txt2html: this is needed for HTML-izing text
 
 In general, here are the Python libraries needed to make this package operate:
 
@@ -86,18 +87,22 @@ type: gnusocial
 site: gnusocial.server.url
 username: myname
 password: XXXXXXXXXXXXXXXX
+sharelevel: Public
 
 [pump.io]
 type: pump.io
 webfinger: user@pump.server
 client_credentials: XXXXXXXXXXXXXXXXXXXXxx
 client_tokens: XXXXXXXXXXXXXXXXXX
+sharelevel: All
 
 [diaspora]
 type: diaspora
 webfinger: user@diaspora.server
 password: XXXXXXXXXXXXXXXXXXX
 aspect: public
+sharelevel: All
+
 
 [facebook]
 type: facebook
