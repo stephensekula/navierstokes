@@ -126,7 +126,7 @@ class SocialHandler(object):
         # Convert using tool
         html_message = ""
         try:
-            html_message = subprocess.check_output(["txt2html", "--infile /tmp/txt2html_%d.txt" % (pid)])
+            html_message = subprocess.check_output(["txt2html", "--infile", "/tmp/txt2html_%d.txt" % (pid)])
         except subprocess.CalledProcessError:
             print "There was a problem trying to call the txt2html program - make sure it is installed correctly."
             sys.exit(-1)
@@ -134,12 +134,10 @@ class SocialHandler(object):
             
         # excerpt the content of the <body> tags
         
-        body_begin = html_message.find('<body>') + 5
+        body_begin = html_message.find('<body>') + 6
         body_end   = html_message.find('</body>')
 
         html_message = html_message[body_begin:body_end]
-
-        print html_message
 
         return html_message
         
