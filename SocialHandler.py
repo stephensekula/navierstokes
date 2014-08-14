@@ -4,6 +4,7 @@ __metaclass__  = abc.ABCMeta
 
 import sys
 import os
+import subprocess
 import logging
 import unicodedata
 import commands
@@ -112,17 +113,33 @@ class SocialHandler(object):
 
     def TextToHtml(self, msg ):
         # Convert links to HTML in a text message
-        
-        # First, determine if there is HTML already present
-        newmsg = msg
-        if msg.find('<a') != -1:
-            newmsg = msg
-        else:
-            pattern = re.compile('(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[\(\)!*,]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)')
+        # Relied on external tool, txt2html
 
-            newmsg = pattern.sub(r'<a href="\1">\1</a>', msg)
-            
+        # write message to file for conversion
+        pid = os.getpid()
+        text_file = open("/tmp/txt2html_%d.txt" % (pid), "w")
+
+        text_file.write(msg)
+
+        text_file.close();
+
+        # Convert using tool
+        html_message = ""
+        try:
+            html_message = subprocess.check_output(["txt2html", "--infile /tmp/txt2html_%d.txt" % (pid)])
+        except subprocess.CalledProcessError:
+            print "There was a problem trying to call the txt2html program - make sure it is installed correctly."
+            sys.exit(-1)
             pass
+            
+        # excerpt the content of the <body> tags
+        
+        body_begin = html_message.find('<body>') + 5
+        body_end   = html_message.find('</body>')
 
-        return newmsg
+        html_message = html_message[body_begin:body_end]
+
+        print html_message
+
+        return html_message
         
