@@ -37,8 +37,8 @@ class PumpHandler(SocialHandler):
     
     def __init__(self,webfinger,credentials,tokens,sharelevel="Public"):
         self.webfinger = webfinger
-        self.credentials = credentials
-        self.tokens = tokens
+        self.credentials = [s.strip() for s in credentials] #get rid of any stray spaces in the credentials/tokens
+        self.tokens = [s.strip() for s in tokens]        
         self.sharelevel = sharelevel
 
         self.pump = None
