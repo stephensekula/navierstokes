@@ -89,9 +89,39 @@ class SocialHandler(object):
                     return exe_file
                     
         return None
+
+    def changeLinksToURLs(self, msg):
+        prefx       = '<a href='
+        linkClose   = '">'
+        postfx      = '</a>'
+ 
+        if not prefx in msg:
+            return msg    
+        #<a href="http://www.thisisalink.com/foo/bar.html">this is some link text</a>
+        #to
+        #this is some link msg http://www.thisisalink.com/foo/bar.html
+
+        pos = 0        
+        while True:
+            pos = msg.find(prefx,pos)
+            if pos < 0:
+                break
+                
+            htmlText = msg[pos:msg.find(postfx,pos) + len(postfx)]
+             
+            link = htmlText[htmlText.find(prefx)+len(prefx)+1:htmlText.find(linkClose)]
+            linkmsg = htmlText[htmlText.find(linkClose)+len(linkClose):htmlText.find(postfx)]
+             
+            outText = linkmsg + ' ' + link
+             
+            msg = msg.replace(htmlText, outText)
     
+            pass
+
+        return msg
+
     def HTMLConvert(self, msg ):
-        msg_clean = msg.replace('<hr>','<p>')
+        msg_clean = self.changeLinksToURLs(msg)
         
         pid = os.getpid()
 
