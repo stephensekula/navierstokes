@@ -117,6 +117,7 @@ class TwitterHandler(SocialHandler):
     
 
     def write(self, messages):
+
         for message in messages:
 
             do_write = False
@@ -126,14 +127,15 @@ class TwitterHandler(SocialHandler):
                 do_write = True
                 pass
             else:
-                self.msg(0,message.content)
-                self.msg(0,"Unable to share message based on sharelevel settings.")
                 do_write = False
                 pass
 
             if not do_write:
+                self.msg(0,message.content)
+                self.msg(0,"Unable to share above message based on sharelevel settings.")
                 continue
-        
+
+       
             success = False
             self.msg(0,"writing to Twitter")
 
