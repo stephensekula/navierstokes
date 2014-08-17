@@ -154,7 +154,7 @@ for section in config.sections():
 
 if debug == True:
     for handler in sources_and_sinks:
-        logging.info("Seting %s to debug mode", handler)
+        logging.info("Setting %s to debug mode", handler)
         sources_and_sinks[handler].debug = debug
         pass
 
