@@ -9,6 +9,8 @@ import logging
 import unicodedata
 import commands
 import re
+import URLShortener
+
 
 class SocialHandler(object):
     def __init__(self):
@@ -25,6 +27,9 @@ class SocialHandler(object):
 
         # debug flag
         self.debug = False
+
+        # shorten URLs in message content?
+        self.do_url_shortening = False
         
         return
 
@@ -111,8 +116,11 @@ class SocialHandler(object):
              
             link = htmlText[htmlText.find(prefx)+len(prefx)+1:htmlText.find(linkClose)]
             linkmsg = htmlText[htmlText.find(linkClose)+len(linkClose):htmlText.find(postfx)]
-             
+
             outText = linkmsg + ' ' + link
+
+            if linkmsg == link:
+                outText = link
              
             msg = msg.replace(htmlText, outText)
     
@@ -170,4 +178,34 @@ class SocialHandler(object):
         html_message = html_message[body_begin:body_end]
 
         return html_message
+
+
+    def ShortenURLs(self, text):
+        # convert all links in HTML to shortened links using a shortening service
+        print text
+
+        # Get all URLs from this text string
+
+        found_urls = re.findall('(?:http[s]*://|www.)[^"\'<> ]+', text, re.MULTILINE)
+
+        if len(found_urls) == 0:
+            return text
+
+        url_shortener = URLShortener.URLShortener()
+
+        new_text = text
+
+        for url in found_urls:
+            shortened_url = url_shortener.getUR1ca(url)
+            
+            new_text = new_text.replace(url, shortened_url)
+
+            pass
+
+        return new_text
+        
+            
+            
+            
+
         

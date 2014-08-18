@@ -29,12 +29,11 @@ from MessageObj import Message
 class GNUSocialHandler(SocialHandler):
     """ a class to read and post to a GNU Social feed """
     def __init__(self,username="",password="",site="",sharelevel="Public"):
+        SocialHandler.__init__(self)
         self.username = username
         self.password = password
         self.site     = site
-        self.messages = []
         self.sharelevel = sharelevel
-        self.debug = False
         pass
 
     # functions for handling XML

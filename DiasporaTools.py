@@ -24,14 +24,12 @@ import codecs
 
 class DiasporaHandler(SocialHandler):
     def __init__(self, webfinger, password, aspect="public", sharelevel="Public"):
+        SocialHandler.__init__(self)
         self.webfinger = webfinger
         self.password = password
         self.usermap = {}
-        self.messages = []
         self.aspect = aspect
         self.sharelevel = sharelevel
-
-        self.debug = False
 
         pass
 

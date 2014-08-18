@@ -127,6 +127,8 @@ for section in config.sections():
                                                                          username=config.get(section, "username"), \
                                                                          sharelevel=config.get(section,"sharelevel"), \
                                                                          password=config.get(section, "password"))
+
+
         pass
     elif config.get(section, "type") == "pump.io":
         client_credentials = config.get(section, "client_credentials").split(',')
@@ -151,6 +153,16 @@ for section in config.sections():
         sources_and_sinks[section] = TwitterTools.TwitterHandler(sharelevel=config.get(section, "sharelevel"))
         pass
     pass
+
+
+    do_url_shortening = False
+    try:
+        do_url_shortening = True if (config.get(section, "shortenurls") == "True") else False
+    except ConfigParser.NoOptionError:
+        do_url_shortening = True
+        pass
+    sources_and_sinks[section].do_url_shortening = do_url_shortening
+
 
 if debug == True:
     for handler in sources_and_sinks:

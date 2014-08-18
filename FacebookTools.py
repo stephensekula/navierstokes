@@ -26,10 +26,9 @@ from MessageObj import Message
 class FacebookHandler(SocialHandler):
     """ a class to read and post to a Facebook feed """
     def __init__(self,username="",sharelevel="Public",album="latest"):
+        SocialHandler.__init__(self)
         self.sharelevel = sharelevel
         self.album = album
-        self.messages = []
-        self.debug = False
 
         
         # check that fbcmd is installed

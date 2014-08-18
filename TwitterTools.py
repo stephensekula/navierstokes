@@ -26,8 +26,7 @@ from MessageObj import Message
 class TwitterHandler(SocialHandler):
     """ a class to read and post to a GNU Social feed """
     def __init__(self,sharelevel="Public"):
-        self.messages = []
-        self.debug = False
+        SocialHandler.__init__(self)
         self.sharelevel = sharelevel
         pass
 
@@ -151,6 +150,10 @@ class TwitterHandler(SocialHandler):
                 print "---- END OF LINE ----"
                 pass
 
+            if self.do_url_shortening:
+                text = self.ShortenURLs(text)
+                print text
+                pass
 
             command = "t update \"%s\"" % (text)
 

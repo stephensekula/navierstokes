@@ -36,6 +36,7 @@ from requests_oauthlib import OAuth1
 class PumpHandler(SocialHandler):
     
     def __init__(self,webfinger,credentials,tokens,sharelevel="Public"):
+        SocialHandler.__init__(self)
         self.webfinger = webfinger
         self.credentials = [s.strip() for s in credentials] #get rid of any stray spaces in the credentials/tokens
         self.tokens = [s.strip() for s in tokens]        
@@ -58,11 +59,6 @@ class PumpHandler(SocialHandler):
             self.me = None
             pass
             
-
-        self.messages = []
-
-        self.debug = False
-        
         pass
 
     def simple_verifier(url):
