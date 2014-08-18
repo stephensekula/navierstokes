@@ -32,6 +32,7 @@ import PumpTools
 import DiasporaTools
 import FacebookTools
 import TwitterTools
+import RSSTools
 
 from MessageObj import Message
 
@@ -122,6 +123,10 @@ config.read(home+'/.navierstokes/navierstokes.cfg')
 
 for section in config.sections():
     logging.info("Configuring a handler named %s", section)
+    if config.get(section, "type") == "rss":
+        sources_and_sinks[section] = RSSTools.RSSHandler(feed_url=config.get(section, "feed_url"))
+
+        pass
     if config.get(section, "type") == "gnusocial":
         sources_and_sinks[section] = GNUSocialTools.GNUSocialHandler(site=config.get(section, "site"), \
                                                                          username=config.get(section, "username"), \
