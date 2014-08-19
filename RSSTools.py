@@ -56,7 +56,11 @@ class RSSHandler(SocialHandler):
 
             msg.date = calendar.timegm(entry.updated_parsed)
 
-            msg.content = "Shared from RSS: " + entry.title + " " + entry.summary + " " + entry.link + "\n" + "( Feed URL: %s )" % (self.feed_url)
+            msg.content = "<p>Shared from RSS:</p>\n" + \
+                          "<p><b>\"%s\"</b></p>\n" % entry.title + \
+                          "<p>%s</p>\n" % entry.summary + \
+                          "<p>%s</p>\n" % entry.link + \
+                          "( Feed URL: %s )" % (self.feed_url)
     
             msg.author = entry.author
         
