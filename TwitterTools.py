@@ -20,6 +20,8 @@ import datetime
 import calendar
 import commands
 
+import URLShortener
+
 from MessageObj import Message
 
 
@@ -87,6 +89,7 @@ class TwitterHandler(SocialHandler):
                     message.SetContent( "From <a href=\"https://twitter.com/%s\">Twitter</a>: " % (username) + message.content )
                     pass
 
+
                 self.messages.append( message )
 
                 pass
@@ -94,6 +97,7 @@ class TwitterHandler(SocialHandler):
             else:
                 # this might just be another line in a multi-line message in Twitter
                 message.content += "\n" + line;
+                pass
 
             pass
         

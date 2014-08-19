@@ -33,6 +33,7 @@ import DiasporaTools
 import FacebookTools
 import TwitterTools
 import RSSTools
+import URLShortener
 
 from MessageObj import Message
 
@@ -362,11 +363,23 @@ for sinkname in sources_and_sinks:
         print "Checking MD5 sum of this message against that of messages already written..."
         pass
 
-    messagesToActuallyWrite = []
 
     if debug:
         print messagesToWrite[sinkname]
         pass
+
+
+    # Clean up tracking links from messages
+    for message in messagesToWrite[sinkname]:
+        found_urls = re.findall('(?:http[s]*://|www.)[^"\'<> ]+', message.content, re.MULTILINE)
+        for url in found_urls:
+            new_url = URLShortener.ExpandShortURL(url)
+            message.content = message.content.replace(url,new_url)
+            pass
+        pass
+
+    messagesToActuallyWrite = []
+
 
     for message in messagesToWrite[sinkname]:
         try:

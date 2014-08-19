@@ -265,11 +265,15 @@ class PumpHandler(SocialHandler):
             if not do_write:
                 continue
 
+                
+            # strip the annoying, tracking t.co links
+            text = message.content
+
             if len(message.attachments)==0:
-                new_note = self.pump.Note(message.content)
+                new_note = self.pump.Note(text)
                 new_note.send()
             else:
-                new_note = self.pump.Image(display_name="",content=message.content)
+                new_note = self.pump.Image(display_name="",content=text)
                 for attachment in message.attachments:
                     new_note.from_file(attachment)
                     pass
