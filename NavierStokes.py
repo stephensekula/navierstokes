@@ -20,6 +20,7 @@ import codecs
 import math
 import copy
 import hashlib
+from sets import Set
 
 from os.path import expanduser
 from lockfile import FileLock,LockTimeout
@@ -371,8 +372,9 @@ for sinkname in sources_and_sinks:
 
     # Clean up tracking links from messages
     for message in messagesToWrite[sinkname]:
-        found_urls = re.findall('(?:http[s]*://|www.)[^"\'<> ]+', message.content, re.MULTILINE)
-        for url in found_urls:
+        found_urls = re.findall('(?:http[s]{0,1}://|www.)[^"\'<> ]+', message.content, re.MULTILINE)
+        unique_urls = list(Set(found_urls))
+        for url in unique_urls:
             new_url = URLShortener.ExpandShortURL(url)
             message.content = message.content.replace(url,new_url)
             pass
