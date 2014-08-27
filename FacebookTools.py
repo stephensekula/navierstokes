@@ -100,12 +100,14 @@ class FacebookHandler(SocialHandler):
                 msg.source = "Facebook"
                 
                 # find date of message
-                message_date_match = re.search('%s  ([0-9].*?:[0-9][0-9]) ([-,\+][0-9]+)  ' % (username),line,re.DOTALL)
+                message_date_match = re.search('%s.*?([0-9]{4,4} .*?:[0-9][0-9]) ([-,\+][0-9]+)  ' % (username),line,re.DOTALL)
                 if message_date_match:
                     t = (datetime.datetime.strptime(message_date_match.group(1), '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(message_date_match.group(2)))).timetuple()
                     msg.date = calendar.timegm(t)
                     pass
                 else:
+                    self.msg(0,username)
+                    self.msg(0,line)
                     self.msg(3,"Unable to obtain message date and time")
                     pass
                 
