@@ -30,6 +30,18 @@ class SocialHandler(object):
 
         # shorten URLs in message content?
         self.do_url_shortening = False
+
+        # check that lynx is installed and accessible
+        lynx_check = ""
+        try:
+            lynx_check = subprocess.check_output(["lynx", "--help"])
+        except subprocess.CalledProcessError:
+            self.msg(3, "Lynx is required, but I cannot run it. Make sure it is installed and located in the PATH.")
+            pass
+        except OSError:
+            self.msg(3, "Lynx is required, but I cannot run it. Make sure it is installed and located in the PATH.")
+            pass
+        
         
         return
 
