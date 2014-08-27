@@ -170,6 +170,14 @@ for section in config.sections():
         pass
     sources_and_sinks[section].do_url_shortening = do_url_shortening
 
+    max_message_age = 3600
+    try:
+        max_message_age = config.get(section, "max_message_age")
+    except ConfigParser.NoOptionError:
+        max_message_age = 3600
+        pass
+    sources_and_sinks[section].max_message_age = max_message_age
+
 
 if debug == True:
     for handler in sources_and_sinks:
@@ -225,9 +233,9 @@ for source in messages:
             print "     Timestamp (UNIX Epoch): %f [Age (s): %f]" % (message.date, delta_time )
             pass
         
+        max_message_age = float(sources_and_sinks[source].max_message_age)
         
-        
-        if (math.fabs(message.date - current_time))<one_hour:
+        if (math.fabs(message.date - current_time))<max_message_age:
     
             for other_source in messages:
 
