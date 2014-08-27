@@ -34,6 +34,13 @@ class GNUSocialHandler(SocialHandler):
         self.password = password
         self.site     = site
         self.sharelevel = sharelevel
+
+        # Check for problems with the configuration
+        if self.site.find('http') == -1:
+            self.msg(2,'The GNU Social site name must include the preceding http or https in the URL.')
+            sys.exit(-1)
+            pass
+
         pass
 
     # functions for handling XML
@@ -81,11 +88,6 @@ class GNUSocialHandler(SocialHandler):
             pass
         return name
     
-    """
-    <attachments type="array">
-    <enclosure mimetype="image/jpeg" size="1545095" url="https://chirp.cooleysekula.net//file/steve-20131221T161113-6v2c3ew.jpeg"/>
-    </attachments>
-    """
 
     def status_attachment(self,status):
         attachments = []
