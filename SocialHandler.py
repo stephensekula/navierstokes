@@ -31,6 +31,9 @@ class SocialHandler(object):
         # shorten URLs in message content?
         self.do_url_shortening = False
 
+        # time limit for considering posts in this service (seconds)
+        self.max_message_age = 3600
+
         # check that lynx is installed and accessible
         lynx_check = ""
         try:
