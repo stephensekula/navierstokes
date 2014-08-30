@@ -213,7 +213,13 @@ class SocialHandler(object):
         for url in found_urls:
             shortened_url = url_shortener.getUR1ca(url)
             
-            new_text = new_text.replace(url, shortened_url)
+            try:
+                new_text = new_text.replace(url, shortened_url)
+            except UnicodeDecodeError:
+                url = url.encode('utf-8')
+                shortened_url = shortened_url.encode('utf-8')
+                new_text = new_text.replace(url, shortened_url)
+                pass
 
             pass
 

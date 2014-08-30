@@ -142,24 +142,7 @@ class TwitterHandler(SocialHandler):
             success = False
             self.msg(0,"writing to Twitter")
 
-            text = self.HTMLConvert(message.content)
-
-            text = text.lstrip(' ')
-            text = text.rstrip('\n')
-            text = text.replace('"','\\"')
-
-            if self.debug:
-                print "Message text after HTML -> ascii conversion:"
-                print text
-                print "---- END OF LINE ----"
-                pass
-
-            if self.do_url_shortening:
-                text = self.ShortenURLs(text)
-                print text
-                pass
-
-            command = "t update \"%s\"" % (text)
+            command = "t update \"%s\"" % (message.content)
 
             if len(message.attachments) > 0:
                 command += " -f %s" % (message.attachments[0])

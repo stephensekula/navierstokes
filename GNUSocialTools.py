@@ -216,21 +216,10 @@ class GNUSocialHandler(SocialHandler):
             if not do_write:
                 continue
 
-            text = self.HTMLConvert(message.content)
-
-            text = text.lstrip(' ')
-            text = text.rstrip('\n')
-
-            if self.debug:
-                print "Message text after HTML -> ascii conversion:"
-                print text
-                print "---- END OF LINE ----"
-                pass
-
             pid = os.getpid()
 
             fout = open('/tmp/%d_statusnet_text.txt' % (pid),'w')
-            fout.write('source=NavierStokesApp&status='+text)
+            fout.write('source=NavierStokesApp&status='+message.content)
             fout.close()
 
             data += " -d @/tmp/%d_statusnet_text.txt" % (pid)
@@ -243,7 +232,7 @@ class GNUSocialHandler(SocialHandler):
 
 
                 fout = open('/tmp/%d_statusnet_text.txt' % (pid),'w')
-                fout.write(text)
+                fout.write(message.content)
                 fout.close()
 
                 data =  " -F source=NavierStokesApp"

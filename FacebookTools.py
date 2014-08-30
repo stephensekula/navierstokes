@@ -323,10 +323,6 @@ class FacebookHandler(SocialHandler):
             self.msg(0,"Share level is: %s" % (self.sharelevel))
 
             
-            text = self.HTMLConvert(message.content)
-            text = text.replace('"','\\"')
-
-
             do_write = False
             if self.sharelevel == "All":
                 do_write = True
@@ -348,7 +344,7 @@ class FacebookHandler(SocialHandler):
                     pass
 
                 for attachment in message.attachments:
-                    command = "fbcmd ADDPIC %s \"%s\" \"%s\"" % (attachment, self.album, text)
+                    command = "fbcmd ADDPIC %s \"%s\" \"%s\"" % (attachment, self.album, message.content)
                     if self.debug:
                         self.msg(0, "   " + command)
                         pass
@@ -356,7 +352,7 @@ class FacebookHandler(SocialHandler):
                     pass
                 pass
             else:
-                command = "fbcmd STATUS \"%s\"" % (text)
+                command = "fbcmd STATUS \"%s\"" % (message.content)
                 if self.debug:
                     self.msg(0, "   " + command)
                     pass

@@ -20,6 +20,7 @@ import codecs
 import math
 import copy
 import hashlib
+import unicodedata
 from sets import Set
 
 from os.path import expanduser
@@ -271,7 +272,7 @@ for source in messages:
                                 print "Replacing message from Disapora with message from %s" % (message.source)
                                 pass
 
-                            messagesToWrite[other_source][message_already_written_index] = message
+                            messagesToWrite[other_source][message_already_written_index] = copy.deepcopy(message)
                             pass
                         pass
                     pass
@@ -301,7 +302,7 @@ for source in messages:
                     logging.info("Message to consider")
                     logging.info(message.content)
                     logging.info("  %s", best_match_text)
-                    messagesToWrite[other_source].append(message)
+                    messagesToWrite[other_source].append(copy.deepcopy(message))
                     pass
                 pass
             pass
@@ -378,14 +379,64 @@ for sinkname in sources_and_sinks:
         pass
 
 
-    # Clean up tracking links from messages
+    # Message modificaton - remove tracking links, remove HTML, etc. as appropriate
     for message in messagesToWrite[sinkname]:
+        if debug:
+            print "====================================================================="
+            print " MESSAGE CLEANUP FOR %s " % (sinkname)
+            print "====================================================================="
+            
         found_urls = re.findall('(?:http[s]{0,1}://|www.)[^"\'<> ]+', message.content, re.MULTILINE)
         unique_urls = list(Set(found_urls))
         for url in unique_urls:
             new_url = URLShortener.ExpandShortURL(url)
-            message.content = message.content.replace(url,new_url)
+            try:
+                message.content = message.content.replace(url,new_url)
+            except UnicodeDecodeError:
+                url = url.encode('utf-8')
+                new_url = new_url.encode('utf-8')
+                message.content = message.content.replace(url,new_url)
+                pass
             pass
+
+
+        if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler or \
+           type(sources_and_sinks[sinkname]) == GNUSocialTools.GNUSocialHandler or \
+           type(sources_and_sinks[sinkname]) == FacebookTools.FacebookHandler:
+            message.content = sources_and_sinks[sinkname].HTMLConvert(message.content)
+
+        if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler or \
+           type(sources_and_sinks[sinkname]) == GNUSocialTools.GNUSocialHandler:
+            message.content = message.content.lstrip(' ')
+            message.content = message.content.rstrip('\n')
+            
+
+        if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler or \
+           type(sources_and_sinks[sinkname]) == FacebookTools.FacebookHandler:
+            message.content = message.content.replace('"','\\"')
+            
+
+        if sources_and_sinks[sinkname].do_url_shortening:
+            message.content = sources_and_sinks[sinkname].ShortenURLs(message.content)
+            pass
+            
+        try:
+            message.content = message.content.encode('utf-8')
+        except UnicodeDecodeError:
+            message.content = message.content.decode('iso-8859-1') 
+            pass
+
+
+        if type(sources_and_sinks[sinkname]) == FacebookTools.FacebookHandler:
+            # fbcmd just cannot handle unicode...
+            message.content = unicodedata.normalize('NFKD', unicode(message.content)).encode('ascii','ignore')
+
+        if debug:
+            print "Message text after cleanup:"
+            print message.content
+            print "------------------------------- END OF LINE -------------------------------"
+            pass
+
         pass
 
     messagesToActuallyWrite = []
@@ -422,7 +473,7 @@ for sinkname in sources_and_sinks:
                 print "   According to the MD5 sum check, this message is new..."
                 pass
             
-            messagesToActuallyWrite.append( message )
+            messagesToActuallyWrite.append( copy.deepcopy(message) )
             if not debug:
                 message_archive_file = open(message_archive_filename, 'a')
                 message_archive_file.write( message_md5sum + "\n" )
