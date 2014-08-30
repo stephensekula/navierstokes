@@ -197,7 +197,6 @@ class SocialHandler(object):
 
     def ShortenURLs(self, text):
         # convert all links in HTML to shortened links using a shortening service
-        print text
 
         # Get all URLs from this text string
 
