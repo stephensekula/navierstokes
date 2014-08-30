@@ -6,6 +6,7 @@
 import requests
 import logging
 import pycurl
+import json
 try:
     from io import BytesIO
 except ImportError:
@@ -66,12 +67,22 @@ def ExpandShortURL(short_url):
     return original_url
 
 
+
 class URLShortener(object):
-    def __init__(self):
+    def __init__(self, serviceType ='ur1.ca', serviceURL = 'http://ur1.ca', key = ''):      
         # Eventually, this will allow the user to specify the shortening service.
         # For now, ur1.ca is hard-coded.
         # So init() does nothing.
         pass
+        self.serviceTypes = ['ur1','shortenizer']
+        
+        if not serviceType in self.serviceTypes:
+            print "invalid serviceTYpe: ", serviceType
+            sys.exit(1)
+            
+        self.service = serviceType
+        self.serviceURL = serviceURL
+        self.key = key
         
     def getURLfromUR1caResponse(self, response):
         #response:
@@ -109,7 +120,7 @@ class URLShortener(object):
 
         while tries < 5:
             payload = {'longurl':longurl}
-            r = requests.post('http://ur1.ca', data=payload)
+            r = requests.post(self.serviceURL, data=payload)
             if r.status_code == 200:
                 break
             tries += 1
@@ -126,4 +137,104 @@ class URLShortener(object):
             return longurl
         else:
             return shortURL
+    
+    def getURLfromShortenizerResponse(self, response):
+        #JSON response:        
+        #{
+        #    'longURL': 'http://somelong.url/foo.bar'
+        #    'shortURL': 'http://sho.rt/xyzf'
+        #}
+        response = json.loads(response)
+        try:
+            shortURL = response['shortURL']
+        except:
+            shortURL = 'errror'
+            return response['error']
+        print shortURL
         
+        return shortURL
+    
+    def getShortenizer(self, longurl, vanityTerm=False):
+        #  this sample POSTs to the shortenizer api and then gets the 
+        #  returned shortened short url from the JSON repsonse
+        print 'shortenizing'
+        if not self.serviceURL:
+            #error
+            print 'error, no serviceURL'            
+        if serviceURL[-1] != '/':
+            self.serviceURL += '/'
+        if not '/api/' in self.serviceURL:
+            self.serviceURL += 'api/shorten/'
+
+        payload = {'longurl':longurl, 'key':self.key, 'term':vanityTerm}
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        r = requests.post(self.serviceURL, data=json.dumps(payload), headers=headers)
+        #print "response: \n", r.text, "---/response -- \n"
+        
+        shortURL = self.getURLfromShortenizerResponse(r.text)
+        return shortURL
+            
+    def shorten(self, longurl, vanityTerm=False):         
+        if self.service == 'shortenizer':
+            shortURL = self.getShortenizer(longurl, vanityTerm)
+        else:
+            shortURL = self.getUR1ca(longurl)
+                    
+        print "original URL length: " + str(len(longurl))
+        print "short URL length: " + str(len(shortURL))   
+        if len(longurl) <= len(shortURL):
+            return longurl
+        else:
+            return shortURL        
+            
+if __name__ == '__main__':
+    #syntax for test is ie:
+    # python shortenURL.py -u http://pump.io/tryit.html
+    #python CLIshortenURL_test.py -u https://somelongurl.com/somelong/path/foo.bar -t shortenizer -s http://u.jrobb.org -k mykey
+    import sys
+    import getopt 
+    # Parse command line options
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "s:u:t:v:k:", ["type=", "service=", "url=","vanity=","key="])
+        print "opts: " + str(opts)
+        print "args: " + str(args)
+    except getopt.GetoptError as err:
+        # print help information and exit:
+        print str(err) # will print something like "option -a not recognized"
+        os.remove(path_to_pidfile)
+        sys.exit(2)
+        pass
+    
+    serviceURL = 'http://ur1.ca'
+    vanityTerm = ''
+    key = ''
+    serviceType = 'ur1'
+    for o, a in opts:
+        if o in ("-u", "--url"):
+            longurl = a
+        elif o in ("-t", "--type"):
+            serviceType = a
+        elif o in ("-s", "--service"):
+            serviceURL = a
+        elif o in ("-v", "--vanity"):
+            vanityTerm = a
+        elif o in ("-k", "--key"):
+            key = a
+        else:
+            assert False, "unhandled option"
+            pass
+        pass
+        
+    print "serviceTYpe: ", serviceType
+    print "longurl: ", longurl
+    print "serviceURL: ", serviceURL
+    print "term: ", vanityTerm
+    print "key: ", key
+    
+    myurl = URLShortener(serviceType, serviceURL, key)
+    if not longurl:
+        print "error, no url, something's not right"
+    else:
+        #output the shortened URL
+        print myurl.shorten(longurl, vanityTerm)
+    
