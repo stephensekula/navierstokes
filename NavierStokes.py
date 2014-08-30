@@ -230,7 +230,7 @@ for source in messages:
         if debug:
             print "============================================================="
             print "Message to assess for sharing:"
-            print "    "+message.content
+            print "    "+message.content.encode("iso-8859-1")
             print "     Timestamp (UNIX Epoch): %f [Age (s): %f]" % (message.date, delta_time )
             pass
         
@@ -269,7 +269,7 @@ for source in messages:
                         if other_message.source == "Diaspora":
                             # Cliaspora loses attachments. Maybe replace with this message.
                             if debug:
-                                print "Replacing message from Disapora with message from %s" % (message.source)
+                                print "Replacing message from Disapora with message from %s" % (message.source.encode("iso-8859-1"))
                                 pass
 
                             messagesToWrite[other_source][message_already_written_index] = copy.deepcopy(message)
@@ -295,7 +295,7 @@ for source in messages:
 
                 
                 if debug:
-                    print best_match_text
+                    print best_match_text.encode("iso-8859-1")
                     pass
 
                 if not found_match:
@@ -433,7 +433,7 @@ for sinkname in sources_and_sinks:
 
         if debug:
             print "Message text after cleanup:"
-            print message.content
+            print message.content.encode("iso-8859-1")
             print "------------------------------- END OF LINE -------------------------------"
             pass
 
@@ -484,12 +484,12 @@ for sinkname in sources_and_sinks:
     
     if debug:
         for message in messagesToActuallyWrite:
-            print message.Printable()
+            print message.Printable().encode("iso-8859-1")
             pass
     else:
         for message in messagesToActuallyWrite:
             logging.info("New message to write:")
-            print message.Printable()
+            print message.Printable().encode("iso-8859-1")
             pass
 
         sources_and_sinks[sinkname].write( messagesToActuallyWrite )

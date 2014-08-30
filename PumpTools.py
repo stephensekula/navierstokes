@@ -236,7 +236,7 @@ class PumpHandler(SocialHandler):
             print "********************** Pump.io Handler **********************\n"
             print "Here are the messages I gathered from the pump.io server:\n"
             for message in self.messages:
-                print message.Printable()
+                print message.Printable().encode("iso-8859-1")
                 pass
             
         return self.messages

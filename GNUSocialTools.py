@@ -183,7 +183,7 @@ class GNUSocialHandler(SocialHandler):
             print "********************** GNU Social Handler **********************\n"
             print "Here are the messages I gathered from the GNU Social server:\n"
             for message in self.messages:
-                print message.Printable()
+                print message.Printable().encode("iso-8859-1")
                 pass
 
         # cleanup
@@ -261,7 +261,7 @@ class GNUSocialHandler(SocialHandler):
 
             results = commands.getoutput(command)
             if results.find("error") != -1:
-                print results
+                print results.encode("iso-8859-1")
                 if results.find("Maximum notice size") != -1:
                     self.msg(level=2,text="Message too long to post to GNU Social - skipping...")
                 else:
