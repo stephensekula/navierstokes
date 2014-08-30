@@ -6,6 +6,14 @@ It employs “fuzzy text matching”, as well as a record of posts that have alr
 
 NavierStokes considers only posts made in the last hour when it scans the streams from different social networks. It won't re-post something that is 6 hours or 6 days old.
 
+Developers
+
+Created by Stephen Sekula. Developers of this code are as follows:
+
+* Jon Robbins (https://io.jrobb.org/jrobb)
+* Stephen Sekula (https://hub.polari.us)
+
+
 License
 
 Copyright 2014, Stephen Jacob Sekula https://hub.polari.us/steve
