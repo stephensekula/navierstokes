@@ -230,7 +230,7 @@ for source in messages:
         if debug:
             print "============================================================="
             print "Message to assess for sharing:"
-            print "    "+message.content.encode("iso-8859-1")
+            print message.Printable()
             print "     Timestamp (UNIX Epoch): %f [Age (s): %f]" % (message.date, delta_time )
             pass
         
@@ -368,9 +368,8 @@ for sinkname in sources_and_sinks:
         pass
     
     
-    # generate md5sum from message 
     if debug:
-        print "Checking MD5 sum of this message against that of messages already written..."
+        print "Checking id code of this message against that of messages already written..."
         pass
 
 
@@ -443,20 +442,12 @@ for sinkname in sources_and_sinks:
 
 
     for message in messagesToWrite[sinkname]:
-        try:
-            message_md5sum = hashlib.md5(message.content).hexdigest()
-        except UnicodeEncodeError:
-            message_md5sum = hashlib.md5(message.content.encode('utf-8')).hexdigest()
-            pass
-
-        # print message_md5sum
         # see if this message was already written to this sink
         message_already_written = False
         message_archive_file = open(message_archive_filename, 'r')
-        for existing_message_md5sum in message_archive_file:
-            existing_message_md5sum = existing_message_md5sum.rstrip('\n')
-            # print "   " + existing_message_md5sum
-            if existing_message_md5sum == message_md5sum:
+        for existing_message_id in message_archive_file:
+            existing_message_id = existing_message_id.rstrip('\n')
+            if existing_message_id == message.id:
                 message_already_written = True
                 break
             pass
@@ -465,18 +456,18 @@ for sinkname in sources_and_sinks:
 
         if message_already_written:
             if debug:
-                print "   This MD5 sum is not unique; the message will not be written again."
+                print "   This message ID sum is not unique; the message will not be written again."
                 pass
             pass
         else:
             if debug:
-                print "   According to the MD5 sum check, this message is new..."
+                print "   According to the message ID sum check, this message is new..."
                 pass
             
             messagesToActuallyWrite.append( copy.deepcopy(message) )
             if not debug:
                 message_archive_file = open(message_archive_filename, 'a')
-                message_archive_file.write( message_md5sum + "\n" )
+                message_archive_file.write( message.id + "\n" )
                 message_archive_file.close()
                 pass
             pass
@@ -484,12 +475,12 @@ for sinkname in sources_and_sinks:
     
     if debug:
         for message in messagesToActuallyWrite:
-            print message.Printable().encode("iso-8859-1")
+            print message.Printable()
             pass
     else:
         for message in messagesToActuallyWrite:
             logging.info("New message to write:")
-            print message.Printable().encode("iso-8859-1")
+            print message.Printable()
             pass
 
         sources_and_sinks[sinkname].write( messagesToActuallyWrite )
