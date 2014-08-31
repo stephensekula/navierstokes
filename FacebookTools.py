@@ -89,6 +89,7 @@ class FacebookHandler(SocialHandler):
                 if in_message == True:
                     # we need to close and save the old message before beginning a new one
                     msg.content = self.TextToHtml(msg.content)
+                    msg.id = self.generate_id(msg.content)
                     self.messages.append( msg )
                     inlink = False
                     pass
@@ -144,6 +145,7 @@ class FacebookHandler(SocialHandler):
                     # we have finished the message content. Close it.
                     in_message = False
                     msg.content = self.TextToHtml(msg.content)
+                    msg.id = self.generate_id(msg.content)
                     self.messages.append( msg )
                     inlink = False
                     pass
@@ -260,7 +262,8 @@ class FacebookHandler(SocialHandler):
                 else:
                     # we found the start of the next message. close the last one
                     msg.content = self.TextToHtml(msg.content)
-       
+                    msg.id = self.generate_id(msg.content)
+                    
                     # check if the message has any content before saving
                     if re.search(".*[A-Za-z0-9].*",msg.content,re.DOTALL) != None:
                         self.messages.append(msg)
@@ -303,7 +306,7 @@ class FacebookHandler(SocialHandler):
             print "********************** Facebook Handler **********************\n"
             print "Here are the messages I gathered from the Facebook server:\n"
             for message in self.messages:
-                print message.Printable().encode("iso-8859-1")
+                print message.Printable()
                 pass
             print "**************************************************************\n"
 

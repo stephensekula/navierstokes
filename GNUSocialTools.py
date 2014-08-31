@@ -145,6 +145,8 @@ class GNUSocialHandler(SocialHandler):
             message.author = dent_author
             message.reply = True if self.find_element_of_status(dent_xml,"in_reply_to_status_id") != "" else False
 
+            message.id = int(self.find_element_of_status(dent_xml,'id'))
+
             #dent_source = self.find_element_of_status(dent_xml,"source")
             #if dent_source == "NavierStokesApp":
             #    message.
@@ -183,7 +185,7 @@ class GNUSocialHandler(SocialHandler):
             print "********************** GNU Social Handler **********************\n"
             print "Here are the messages I gathered from the GNU Social server:\n"
             for message in self.messages:
-                print message.Printable().encode("iso-8859-1")
+                print message.Printable()
                 pass
 
         # cleanup

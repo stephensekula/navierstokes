@@ -110,7 +110,7 @@ class TwitterHandler(SocialHandler):
             print "********************** Twitter Handler **********************\n"
             print "Here are the messages I gathered from the Twitter account:\n"
             for message in self.messages:
-                print message.Printable().encode("iso-8859-1")
+                print message.Printable()
                 pass
 
             pass
