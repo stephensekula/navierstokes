@@ -1,6 +1,7 @@
 import datetime
 import time
 import codecs
+import unicodedata
 
 class Message:
     def __init__(self):
@@ -33,7 +34,10 @@ class Message:
         printable += "CONTENT: %s\n" % (self.content)
         printable += "ATTACHMENTS: %s\n" % (str(self.attachments))
 
-        return printable
+        if type(printable) == unicode:
+            return unicodedata.normalize('NFKD', printable).encode('ascii','ignore')
+        else:
+            return printable
 
     def Print(self):
         print self.Printable()
