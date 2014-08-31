@@ -9,6 +9,7 @@ import logging
 import unicodedata
 import commands
 import re
+import hashlib
 import URLShortener
 
 
@@ -83,6 +84,20 @@ class SocialHandler(object):
             sys.exit()
         
         return
+
+    def generate_id(self,text):
+        # generate an ID for a message from input text by generating
+        # an MD5 checksum from the text
+
+        try:
+            message_md5sum = hashlib.md5(text).hexdigest()
+        except UnicodeEncodeError:
+            message_md5sum = hashlib.md5(text.encode('utf-8')).hexdigest()
+            pass
+
+        return int(message_md5sum, 16)
+        
+        
 
     def map_users(self, text=""):
         new_text = text
