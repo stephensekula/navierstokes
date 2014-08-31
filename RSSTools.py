@@ -54,13 +54,33 @@ class RSSHandler(SocialHandler):
             msg.reply  = False
             msg.direct = False
 
+            msg.id     = self.generate_id(entry.link)
+
             msg.date = calendar.timegm(entry.updated_parsed)
 
-            msg.content = "<p>Shared from RSS:</p>\n" + \
-                          "<p><b>\"%s\"</b></p>\n" % entry.title + \
-                          "<p>%s</p>\n" % entry.summary + \
-                          "<p>%s</p>\n" % entry.link + \
-                          "( Feed URL: %s )" % (self.feed_url)
+            msg.content = "<p>Shared from RSS:</p>\n"
+            try:
+                msg.content += "<p><b>\"%s\"</b></p>\n" % entry.title
+            except AttributeError:
+                pass
+            
+            try:
+                msg.content += "<p>%s</p>\n" % entry.summary 
+            except AttributeError:
+                try:
+                    msg.content += "<p>%s ... </p>\n" % entry.content[:500]
+                except AttributeError:
+                    pass
+            
+            try:
+                msg.content += "<p>%s</p>\n" % entry.link
+            except AttributeError:
+                pass
+            
+            try:
+                msg.content += "( Feed URL: %s )" % (self.feed_url)
+            except AttributeError:
+                pass
     
             msg.author = entry.author
         
