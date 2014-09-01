@@ -162,15 +162,15 @@ for section in config.sections():
         sources_and_sinks[section] = TwitterTools.TwitterHandler(sharelevel=config.get(section, "sharelevel"))
         pass
     elif section.lower() == 'urlshortening':
-		try: 
-			urlShorteningConfig['service'] = config.get(section, "service")
-			urlShorteningConfig['url'] = config.get(section, "serviceURL")
-			urlShorteningConfig['key'] = config.get(section, "serviceKey")
+        try: 
+            urlShorteningConfig['service'] = config.get(section, "service")
+            urlShorteningConfig['url'] = config.get(section, "serviceURL")
+            urlShorteningConfig['key'] = config.get(section, "serviceKey")
         except:
-			#default to ur1.ca
-			urlShorteningConfig['service'] = 'ur1'
-			urlShorteningConfig['url'] = 'http://ur1.ca'
-			urlShorteningConfig['key'] = False
+            #default to ur1.ca
+            urlShorteningConfig['service'] = 'ur1'
+            urlShorteningConfig['url'] = 'http://ur1.ca'
+            urlShorteningConfig['key'] = False
         continue
     pass
 
@@ -209,13 +209,13 @@ current_time = calendar.timegm(time.gmtime())
 messages = {}
 messagesToWrite = {}
 
-for name in sources_and_sinks:	
+for name in sources_and_sinks:  
     messagesToWrite[name] = []
     messages[name] = []
     messages[name] = copy.deepcopy(sources_and_sinks[name].gather())
     
     if sources_and_sinks[name].do_url_shortening:
-		sources_and_sinks[name].urlShorteningConfig = urlShorteningConfig
+        sources_and_sinks[name].urlShorteningConfig = urlShorteningConfig
     pass
 
 one_hour = 3600
@@ -331,7 +331,7 @@ if debug:
     pass
 
 for sinkname in sources_and_sinks:
-	
+    
     logging.info("Writing to sink: %s", sinkname)
     
     message_archive_filename = home+"/.navierstokes/message_archive_"+sinkname+".txt"

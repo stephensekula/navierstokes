@@ -31,8 +31,8 @@ class SocialHandler(object):
         # shorten URLs in message content?
         self.do_url_shortening = False
         
-		# URL shortening config to use
-		self.urlShorteningConfig = {}
+        # URL shortening config to use
+        self.urlShorteningConfig = {}
 
         # time limit for considering posts in this service (seconds)
         self.max_message_age = 3600
