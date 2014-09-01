@@ -127,7 +127,18 @@ config.read(home+'/.navierstokes/navierstokes.cfg')
 
 for section in config.sections():
     logging.info("Configuring a handler named %s", section)
-    if config.get(section, "type") == "rss":
+    if section.lower() == 'urlshortening':
+        try: 
+            urlShorteningConfig['service'] = config.get(section, "service")
+            urlShorteningConfig['url'] = config.get(section, "serviceURL")
+            urlShorteningConfig['key'] = config.get(section, "serviceKey")
+        except:
+            #default to ur1.ca
+            urlShorteningConfig['service'] = 'ur1'
+            urlShorteningConfig['url'] = 'http://ur1.ca'
+            urlShorteningConfig['key'] = False
+        continue
+    elif config.get(section, "type") == "rss":
         sources_and_sinks[section] = RSSTools.RSSHandler(feed_url=config.get(section, "feed_url"))
 
         pass
@@ -161,17 +172,6 @@ for section in config.sections():
     elif config.get(section, "type") == "twitter":
         sources_and_sinks[section] = TwitterTools.TwitterHandler(sharelevel=config.get(section, "sharelevel"))
         pass
-    elif section.lower() == 'urlshortening':
-        try: 
-            urlShorteningConfig['service'] = config.get(section, "service")
-            urlShorteningConfig['url'] = config.get(section, "serviceURL")
-            urlShorteningConfig['key'] = config.get(section, "serviceKey")
-        except:
-            #default to ur1.ca
-            urlShorteningConfig['service'] = 'ur1'
-            urlShorteningConfig['url'] = 'http://ur1.ca'
-            urlShorteningConfig['key'] = False
-        continue
     pass
 
 
