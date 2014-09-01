@@ -160,7 +160,9 @@ class GNUSocialHandler(SocialHandler):
             for dent_attachment in dent_attachments:
                 if dent_attachment.find(self.site) != -1:
                     filename = dent_attachment.split('/')[-1]
-                    os.system('curl -s -o /tmp/%s %s' % ( filename, dent_attachment ))
+                    if not os.path.exists('/tmp/%s' % (filename)):
+                        os.system('curl -s -o /tmp/%s %s' % ( filename, dent_attachment ))
+                        pass
                     
                     message.attachments.append( '/tmp/%s' % (filename) )
                     pass
@@ -263,7 +265,6 @@ class GNUSocialHandler(SocialHandler):
 
             results = commands.getoutput(command)
             if results.find("error") != -1:
-                print results.encode("iso-8859-1")
                 if results.find("Maximum notice size") != -1:
                     self.msg(level=2,text="Message too long to post to GNU Social - skipping...")
                 else:
