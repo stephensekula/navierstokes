@@ -30,6 +30,9 @@ class SocialHandler(object):
 
         # shorten URLs in message content?
         self.do_url_shortening = False
+        
+		# URL shortening config to use
+		self.urlShorteningConfig = {}
 
         # time limit for considering posts in this service (seconds)
         self.max_message_age = 3600
@@ -205,12 +208,12 @@ class SocialHandler(object):
         if len(found_urls) == 0:
             return text
 
-        url_shortener = URLShortener.URLShortener()
+        url_shortener = URLShortener.URLShortener(self.urlShorteningConfig['service'],self.urlShorteningConfig['url'], self.urlShorteningConfig['key'])
 
         new_text = text
 
         for url in found_urls:
-            shortened_url = url_shortener.getUR1ca(url)
+            shortened_url = url_shortener.shorten(url)
             
             try:
                 new_text = new_text.replace(url, shortened_url)
