@@ -43,7 +43,6 @@ from MessageObj import Message
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 
-
 FORMAT = "%(asctime)-15s %(message)s"
 logging.basicConfig(format=FORMAT,level=logging.INFO)
 
@@ -444,16 +443,18 @@ for sinkname in sources_and_sinks:
     for message in messagesToWrite[sinkname]:
         # see if this message was already written to this sink
         message_already_written = False
+
         message_archive_file = open(message_archive_filename, 'r')
         for existing_message_id in message_archive_file:
             existing_message_id = existing_message_id.rstrip('\n')
-            if existing_message_id == message.id:
+
+            if str(existing_message_id) == str(message.id):
                 message_already_written = True
                 break
             pass
+
         message_archive_file.close()
         
-
         if message_already_written:
             if debug:
                 print "   This message ID sum is not unique; the message will not be written again."
@@ -472,6 +473,7 @@ for sinkname in sources_and_sinks:
                 pass
             pass
         pass
+
     
     if debug:
         for message in messagesToActuallyWrite:
