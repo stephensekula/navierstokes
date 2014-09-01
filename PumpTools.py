@@ -102,6 +102,7 @@ class PumpHandler(SocialHandler):
             message = Message()
 
             message.source = "Pump.io"
+            message.id = self.generate_id(pump_obj_id)
 
             # get the text into decent shape
             text = ""
