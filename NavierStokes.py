@@ -467,7 +467,7 @@ for sinkname in sources_and_sinks:
             messagesToActuallyWrite.append( copy.deepcopy(message) )
             if not debug:
                 message_archive_file = open(message_archive_filename, 'a')
-                message_archive_file.write( message.id + "\n" )
+                message_archive_file.write( str(message.id) + "\n" )
                 message_archive_file.close()
                 pass
             pass
