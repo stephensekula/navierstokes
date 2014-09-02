@@ -74,6 +74,7 @@ class URLShortener(object):
         serviceTypes = ['ur1','shortenizer']                
         defaults = {'service':'ur1', 'url':'http://ur1.ca', 'key':False}
         
+        #check if the service type is in the supported list (/in the dict at all):
         try:
             self.service = urlShorteningConfig['service']
         except KeyError:
@@ -94,10 +95,10 @@ class URLShortener(object):
             self.serviceURL = urlShorteningConfig['url']
             self.key = urlShorteningConfig['key']
         
-        print 'init-ing the URLshortener'
-        print 'serviceType: ', self.service
-        print 'serviceURL: ', self.serviceURL
-        print 'key: ', self.key
+        logging.info('init-ing the URLshortener')
+        logging.info('serviceType: ', self.service)
+        logging.info('serviceURL: ', self.serviceURL)
+        logging.info('key: ', self.key)
         
     def getURLfromUR1caResponse(self, response):
         #response:
