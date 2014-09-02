@@ -129,9 +129,11 @@ feed_url: http://my.blog.example.com/rss/
 
 [urlshortening]
 service: shortenizer
-url: http://u.jrobb.org
-key: pseudosecretKey
-
+serviceURL: http://u.jrobb.org
+serviceKey: pseudosecretKey
+#service: ur1
+#serviceURL: http://ur1.ca
+#serviceKey: False
 
 Note that “sharelevel” means at what level of publicity from other networks you want a notice shared to this one. I've set this, for now, the way I like it. If you set this to “Public”, ONLY notices that are public on other networks will go there. For instance, I only like to share things that are public on pump.io with Facebook and Twitter. Things on Twitter are public by default, so they will ALWAYS be shared with other networks.
 
