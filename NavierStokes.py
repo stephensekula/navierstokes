@@ -117,6 +117,7 @@ for o, a in opts:
 
 
 sources_and_sinks = {}
+urlShorteningConfig = {}
 
 # Use the config file to setup the sources and sinks
 config = ConfigParser.ConfigParser()
@@ -125,7 +126,18 @@ config.read(home+'/.navierstokes/navierstokes.cfg')
 
 for section in config.sections():
     logging.info("Configuring a handler named %s", section)
-    if config.get(section, "type") == "rss":
+    if section.lower() == 'urlshortening':
+        try: 
+            urlShorteningConfig['service'] = config.get(section, "service")
+            urlShorteningConfig['url'] = config.get(section, "serviceURL")
+            urlShorteningConfig['key'] = config.get(section, "serviceKey")
+        except:
+            #default to ur1.ca
+            urlShorteningConfig['service'] = 'ur1'
+            urlShorteningConfig['url'] = 'http://ur1.ca'
+            urlShorteningConfig['key'] = False
+        continue
+    elif config.get(section, "type") == "rss":
         sources_and_sinks[section] = RSSTools.RSSHandler(feed_url=config.get(section, "feed_url"))
 
         pass
@@ -164,9 +176,9 @@ for section in config.sections():
 
     do_url_shortening = False
     try:
-        do_url_shortening = True if (config.get(section, "shortenurls") == "True") else False
+        do_url_shortening = True if (config.get(section, "shortenurls") == "True") else False        
     except ConfigParser.NoOptionError:
-        do_url_shortening = True
+        do_url_shortening = True        
         pass
     sources_and_sinks[section].do_url_shortening = do_url_shortening
 
@@ -196,10 +208,12 @@ current_time = calendar.timegm(time.gmtime())
 messages = {}
 messagesToWrite = {}
 
-for name in sources_and_sinks:
+for name in sources_and_sinks:  
     messagesToWrite[name] = []
     messages[name] = []
     messages[name] = copy.deepcopy(sources_and_sinks[name].gather())
+    
+    sources_and_sinks[name].urlShorteningConfig = urlShorteningConfig
     pass
 
 one_hour = 3600
@@ -315,7 +329,7 @@ if debug:
     pass
 
 for sinkname in sources_and_sinks:
-
+    
     logging.info("Writing to sink: %s", sinkname)
     
     message_archive_filename = home+"/.navierstokes/message_archive_"+sinkname+".txt"
