@@ -132,10 +132,10 @@ for section in config.sections():
             urlShorteningConfig['url'] = config.get(section, "serviceURL")
             urlShorteningConfig['key'] = config.get(section, "serviceKey")
         except:
-            #default to ur1.ca
-            urlShorteningConfig['service'] = 'ur1'
-            urlShorteningConfig['url'] = 'http://ur1.ca'
-            urlShorteningConfig['key'] = False
+			#there was some problem with the section or it wasn't there.
+			#	notify the user (defaults are set in URLShortener.py
+            print 'urlShortening section error or not present: using defaults'
+            
         continue
     elif config.get(section, "type") == "rss":
         sources_and_sinks[section] = RSSTools.RSSHandler(feed_url=config.get(section, "feed_url"))

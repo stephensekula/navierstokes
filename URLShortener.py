@@ -81,7 +81,7 @@ class URLShortener(object):
         
         if not self.service in serviceTypes:
             logging.warn("invalid serviceTYpe: ", self.service)
-            logging.info("defaulting to ur1.ca")
+            logging.info("defaulting urlshortener to ur1.ca")
             urlShorteningConfig = defaults
             self.service = urlShorteningConfig['service']
             
@@ -247,7 +247,9 @@ if __name__ == '__main__':
     print "term: ", vanityTerm
     print "key: ", key
     
-    myurl = URLShortener(serviceType, serviceURL, key)
+    config = {'service':serviceType, 'url':serviceURL, 'key':key}
+    
+    myurl = URLShortener(config)
     if not longurl:
         print "error, no url, something's not right"
     else:
