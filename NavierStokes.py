@@ -214,8 +214,7 @@ for name in sources_and_sinks:
     messages[name] = []
     messages[name] = copy.deepcopy(sources_and_sinks[name].gather())
     
-    if sources_and_sinks[name].do_url_shortening:
-        sources_and_sinks[name].urlShorteningConfig = urlShorteningConfig
+    sources_and_sinks[name].urlShorteningConfig = urlShorteningConfig
     pass
 
 one_hour = 3600
