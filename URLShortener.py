@@ -69,20 +69,33 @@ def ExpandShortURL(short_url):
 
 
 class URLShortener(object):
-    def __init__(self, serviceType ='ur1.ca', serviceURL = 'http://ur1.ca', key = ''):      
-        # Eventually, this will allow the user to specify the shortening service.
-        # For now, ur1.ca is hard-coded.
-        # So init() does nothing.
-        pass
-        self.serviceTypes = ['ur1','shortenizer']
+    def __init__(self, urlShorteningConfig = {}):             
+        #supported url shortening services:
+        serviceTypes = ['ur1','shortenizer']                
+        defaults = {'service':'ur1', 'url':'http://ur1.ca', 'key':False}
         
-        if not serviceType in self.serviceTypes:
-            print "invalid serviceTYpe: ", serviceType
-            sys.exit(1)
+        try:
+            self.service = urlShorteningConfig['service']
+        except KeyError:
+            urlShorteningConfig = defaults
+        
+        if not self.service in serviceTypes:
+            logging.warn("invalid serviceTYpe: ", serviceType)
+            logging.info("defaulting to ur1.ca")
             
-        self.service = serviceType
-        self.serviceURL = serviceURL
-        self.key = key
+        try:
+            self.serviceURL = urlShorteningConfig['url']
+            self.key = urlShorteningConfig['key']
+        except KeyError:
+            urlShorteningConfig = defaults
+            self.service = urlShorteningConfig['service']
+            self.serviceURL = urlShorteningConfig['url']
+            self.key = urlShorteningConfig['key']
+        
+        print 'init-ing the URLshortener'
+        print 'serviceType: ', self.service
+        print 'serviceURL: ', self.serviceURL
+        print 'key: ', self.key
         
     def getURLfromUR1caResponse(self, response):
         #response:
@@ -175,6 +188,7 @@ class URLShortener(object):
         return shortURL
             
     def shorten(self, longurl, vanityTerm=False):         
+        logging.debug('url shortening service: ', self.service)
         if self.service == 'shortenizer':
             shortURL = self.getShortenizer(longurl, vanityTerm)
         else:

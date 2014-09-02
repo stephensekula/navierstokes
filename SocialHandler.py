@@ -208,7 +208,7 @@ class SocialHandler(object):
         if len(found_urls) == 0:
             return text
 
-        url_shortener = URLShortener.URLShortener(self.urlShorteningConfig['service'],self.urlShorteningConfig['url'], self.urlShorteningConfig['key'])
+        url_shortener = URLShortener.URLShortener(self.urlShorteningConfig)
 
         new_text = text
 
