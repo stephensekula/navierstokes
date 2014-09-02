@@ -223,7 +223,10 @@ class GNUSocialHandler(SocialHandler):
             pid = os.getpid()
 
             fout = open('/tmp/%d_statusnet_text.txt' % (pid),'w')
-            fout.write('source=NavierStokesApp&status='+message.content)
+            try:
+                fout.write('source=NavierStokesApp&status='+message.content)
+            except UnicodeEncodeError:
+                fout.write(u'source=NavierStokesApp&status='+message.content)
             fout.close()
 
             data += " -d @/tmp/%d_statusnet_text.txt" % (pid)
