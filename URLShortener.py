@@ -15,51 +15,65 @@ except ImportError:
 FORMAT = "%(asctime)-15s %(message)s"
 logging.basicConfig(format=FORMAT,level=logging.INFO)
 
-headers = {}
-def curl_header_function(header_line):
-    # HTTP standard specifies that headers are encoded in iso-8859-1.
-    # On Python 2, decoding step can be skipped.
-    # On Python 3, decoding step is required.
-    header_line = header_line.decode('iso-8859-1')
+class CurlStorage:
+    def __init__(self):
+        self.contents = ''
+        self.line = 0
+        self.headers = {}
 
-    # Header lines include the first status line (HTTP/1.x ...).
-    # We are going to ignore all lines that don't have a colon in them.
-    # This will botch headers that are split on multiple lines...
-    if ':' not in header_line:
-        return
+    def store(self,header_line):
+        # HTTP standard specifies that headers are encoded in iso-8859-1.
+        # On Python 2, decoding step can be skipped.
+        # On Python 3, decoding step is required.
+        header_line = header_line.decode('iso-8859-1')
+        
+        # Header lines include the first status line (HTTP/1.x ...).
+        # We are going to ignore all lines that don't have a colon in them.
+        # This will botch headers that are split on multiple lines...
+        if ':' not in header_line:
+            return
+            
+        # Break the header line into header name and value.
+        name, value = header_line.split(':', 1)
 
-    # Break the header line into header name and value.
-    name, value = header_line.split(':', 1)
+        # Remove whitespace that may be present.
+        # Header lines include the trailing newline, and there may be whitespace
+        # around the colon.
+        name = name.strip()
+        value = value.strip()
+        
+        # Header names are case insensitive.
+        # Lowercase name here.
+        name = name.lower()
 
-    # Remove whitespace that may be present.
-    # Header lines include the trailing newline, and there may be whitespace
-    # around the colon.
-    name = name.strip()
-    value = value.strip()
+        # Now we can actually record the header name and value.
+        self.headers[name] = value
+    
 
-    # Header names are case insensitive.
-    # Lowercase name here.
-    name = name.lower()
+    def __str__(self):
+        return self.contents
 
-    # Now we can actually record the header name and value.
-    headers[name] = value
 
 def ExpandShortURL(short_url):
     buffer = BytesIO()
+
+    retrieved_body = CurlStorage()
+    retrieved_headers = CurlStorage()
+
     c = pycurl.Curl()
     c.setopt(c.URL, short_url)
 
     c.setopt(c.FOLLOWLOCATION, True)
-    c.setopt(c.WRITEFUNCTION, buffer.write)
     # Set our header function.
-    c.setopt(c.HEADERFUNCTION, curl_header_function)
+    c.setopt(c.WRITEFUNCTION, retrieved_body.store)
+    c.setopt(c.HEADERFUNCTION, retrieved_headers.store)
     c.perform()
 
     c.close()
 
     original_url = short_url
     try:
-        original_url = headers["location"]
+        original_url = retrieved_headers.headers["location"]
     except KeyError:
         original_url = short_url
 
