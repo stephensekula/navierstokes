@@ -10,7 +10,9 @@ import unicodedata
 import commands
 import re
 import hashlib
+import copy
 import URLShortener
+from sets import Set
 
 
 class SocialHandler(object):
@@ -126,25 +128,28 @@ class SocialHandler(object):
         return None
 
     def changeLinksToURLs(self, msg):
-        prefx       = '<a href='
+        prefx       = '<a href="'
         linkClose   = '">'
         postfx      = '</a>'
  
+        new_msg = ""
+        new_msg += msg
+
         if not prefx in msg:
-            return msg    
+            return new_msg    
         #<a href="http://www.thisisalink.com/foo/bar.html">this is some link text</a>
         #to
         #this is some link msg http://www.thisisalink.com/foo/bar.html
 
         pos = 0        
         while True:
-            pos = msg.find(prefx,pos)
+            pos = new_msg.find(prefx,pos)
             if pos < 0:
                 break
                 
-            htmlText = msg[pos:msg.find(postfx,pos) + len(postfx)]
+            htmlText = new_msg[pos:new_msg.find(postfx,pos) + len(postfx)]
              
-            link = htmlText[htmlText.find(prefx)+len(prefx)+1:htmlText.find(linkClose)]
+            link = htmlText[htmlText.find(prefx)+len(prefx):htmlText.find(linkClose)]
             linkmsg = htmlText[htmlText.find(linkClose)+len(linkClose):htmlText.find(postfx)]
 
             outText = linkmsg + ' ' + link
@@ -152,11 +157,11 @@ class SocialHandler(object):
             if linkmsg == link:
                 outText = link
              
-            msg = msg.replace(htmlText, outText)
+            new_msg = new_msg.replace(htmlText, outText)
     
             pass
 
-        return msg
+        return new_msg
 
     def HTMLConvert(self, msg ):
         msg_clean = self.changeLinksToURLs(msg)
@@ -213,16 +218,16 @@ class SocialHandler(object):
     def ShortenURLs(self, text):
         # convert all links in HTML to shortened links using a shortening service
 
-        # Get all URLs from this text string
+        # Get all unique URLs from this text string
 
-        found_urls = re.findall('(?:http[s]*://|www.)[^"\'<> ]+', text, re.MULTILINE)
+        found_urls = list(Set(re.findall('(?:http[s]*://|www.)[^"\'<> ]+', text, re.MULTILINE)))
 
         if len(found_urls) == 0:
             return text
 
         url_shortener = URLShortener.URLShortener()
 
-        new_text = text
+        new_text = copy.deepcopy(text)
 
         for url in found_urls:
             shortened_url = url_shortener.getUR1ca(url)
