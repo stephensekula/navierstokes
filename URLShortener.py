@@ -80,8 +80,10 @@ class URLShortener(object):
             urlShorteningConfig = defaults
         
         if not self.service in serviceTypes:
-            logging.warn("invalid serviceTYpe: ", serviceType)
+            logging.warn("invalid serviceTYpe: ", self.service)
             logging.info("defaulting to ur1.ca")
+            urlShorteningConfig = defaults
+            self.service = urlShorteningConfig['service']
             
         try:
             self.serviceURL = urlShorteningConfig['url']
@@ -174,7 +176,7 @@ class URLShortener(object):
         if not self.serviceURL:
             #error
             print 'error, no serviceURL'            
-        if serviceURL[-1] != '/':
+        if self.serviceURL[-1] != '/':
             self.serviceURL += '/'
         if not '/api/' in self.serviceURL:
             self.serviceURL += 'api/shorten/'
