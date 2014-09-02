@@ -19,7 +19,6 @@ import ConfigParser
 import codecs
 import math
 import copy
-import hashlib
 import unicodedata
 from sets import Set
 
@@ -42,6 +41,11 @@ from MessageObj import Message
 # Fuzzy text matching
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
+
+# Global patterns
+global url_pattern 
+url_pattern = '(?:http[s]{0,1}://|www.)[^"\'<> ]+'
+
 
 FORMAT = "%(asctime)-15s %(message)s"
 logging.basicConfig(format=FORMAT,level=logging.INFO)
@@ -166,7 +170,7 @@ for section in config.sections():
     try:
         do_url_shortening = True if (config.get(section, "shortenurls") == "True") else False
     except ConfigParser.NoOptionError:
-        do_url_shortening = True
+        do_url_shortening = False
         pass
     sources_and_sinks[section].do_url_shortening = do_url_shortening
 
@@ -255,7 +259,26 @@ for source in messages:
                     if other_message.content == None:
                         continue
 
-                    match_ratio = fuzz.token_set_ratio(message.content, other_message.content, force_ascii=True)
+                    # Strip URLs before fuzzy matching - different URL shortening services,
+                    # both here and on the remote sites, will mess with the match otherwise.
+
+                    this_message = copy.deepcopy(message.content)
+                    that_message = copy.deepcopy(other_message.content)
+
+                    this_urls = re.findall(url_pattern, this_message, re.MULTILINE)
+                    unique_urls = list(Set(this_urls))
+                    for url in unique_urls:
+                        this_message = this_message.replace(url,"")
+                        pass
+
+                    that_urls = re.findall(url_pattern, that_message, re.MULTILINE)
+                    unique_urls = list(Set(that_urls))
+                    for url in unique_urls:
+                        that_message = that_message.replace(url,"")
+                        pass
+
+
+                    match_ratio = fuzz.token_set_ratio(this_message, that_message, force_ascii=True)
                     if match_ratio >= best_match_score:
                         best_match_score = match_ratio
                         best_match_text = "   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content
@@ -281,7 +304,26 @@ for source in messages:
                         if other_message.content == None:
                             continue
 
-                        match_ratio = fuzz.token_set_ratio(message.content, other_message.content, force_ascii=True)
+                        # Strip URLs before fuzzy matching - different URL shortening services,
+                        # both here and on the remote sites, will mess with the match otherwise.
+
+                        this_message = copy.deepcopy(message.content)
+                        that_message = copy.deepcopy(other_message.content)
+                        
+                        this_urls = re.findall(url_pattern, this_message, re.MULTILINE)
+                        unique_urls = list(Set(this_urls))
+                        for url in unique_urls:
+                            this_message = this_message.replace(url,"")
+                            pass
+                            
+                        that_urls = re.findall(url_pattern, that_message, re.MULTILINE)
+                        unique_urls = list(Set(that_urls))
+                        for url in unique_urls:
+                            that_message = that_message.replace(url,"")
+                            pass
+
+
+                        match_ratio = fuzz.token_set_ratio(this_message, that_message, force_ascii=True)
                         if match_ratio >= best_match_score:
                             best_match_score = match_ratio
                             best_match_text = "   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content
@@ -294,7 +336,7 @@ for source in messages:
 
                 
                 if debug:
-                    print best_match_text.encode("iso-8859-1")
+                    print best_match_text
                     pass
 
                 if not found_match:
@@ -383,17 +425,16 @@ for sinkname in sources_and_sinks:
             print "====================================================================="
             print " MESSAGE CLEANUP FOR %s " % (sinkname)
             print "====================================================================="
-            
-        found_urls = re.findall('(?:http[s]{0,1}://|www.)[^"\'<> ]+', message.content, re.MULTILINE)
+        
+        found_urls = re.findall(url_pattern, message.content, re.MULTILINE)
         unique_urls = list(Set(found_urls))
         for url in unique_urls:
             new_url = URLShortener.ExpandShortURL(url)
+
             try:
                 message.content = message.content.replace(url,new_url)
             except UnicodeDecodeError:
-                url = url.encode('utf-8')
-                new_url = new_url.encode('utf-8')
-                message.content = message.content.replace(url,new_url)
+                message.content = message.content.replace(url.encode('utf-8'),new_url.encode('utf-8'))
                 pass
             pass
 
@@ -431,11 +472,12 @@ for sinkname in sources_and_sinks:
 
         if debug:
             print "Message text after cleanup:"
-            print message.content.encode("iso-8859-1")
+            print message.content
             print "------------------------------- END OF LINE -------------------------------"
             pass
 
         pass
+
 
     messagesToActuallyWrite = []
 
