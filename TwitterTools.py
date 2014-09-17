@@ -142,6 +142,13 @@ class TwitterHandler(SocialHandler):
             success = False
             self.msg(0,"writing to Twitter")
 
+            # if message is too long, chop it and add URL
+            #message_text = copy.deepcopy(message.content)
+            #if len(message_text) > 140:
+            #    message_text = message_text[:97] + "..."
+            #    message_text += URLShortener.URLShort
+
+
             command = "t update \"%s\"" % (message.content)
 
             if len(message.attachments) > 0:
@@ -152,7 +159,9 @@ class TwitterHandler(SocialHandler):
                 self.msg(level=0,text=command)
                 pass
 
-            results = commands.getoutput(command)
+            results = subprocess.check_output(command)
+
+            #results = commands.getoutput(command)
 
             pass
 

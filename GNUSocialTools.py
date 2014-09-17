@@ -226,7 +226,7 @@ class GNUSocialHandler(SocialHandler):
             try:
                 fout.write('source=NavierStokesApp&status='+message.content)
             except UnicodeEncodeError:
-                fout.write(u'source=NavierStokesApp&status='+message.content)
+                fout.write(u'source=NavierStokesApp&status='+unicodedata.normalize('NFKD',message.content).encode('ascii','ignore'))
             fout.close()
 
             data += " -d @/tmp/%d_statusnet_text.txt" % (pid)

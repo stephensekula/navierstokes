@@ -16,6 +16,7 @@ class Message:
         self.repost = 0
         self.attachments = []
         self.public = 0
+        self.link = ""
         self.source = ""
         pass
 
@@ -31,7 +32,11 @@ class Message:
         printable += "PUBLIC?: %d\n" % (self.public)
         printable += "DIRECT?: %d\n" % (self.direct)
         printable += "REPOST?: %d\n" % (self.repost)
-        printable += "CONTENT: %s\n" % (self.content)
+        try:
+            printable += self.content
+        except UnicodeDecodeError:
+            printable += u"CONTENT: %s\n" % (unicodedata.normalize('NFKD',self.content).encode('ascii','ignore'))
+            pass
         printable += "ATTACHMENTS: %s\n" % (str(self.attachments))
 
         if type(printable) == unicode:

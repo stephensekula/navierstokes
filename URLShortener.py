@@ -109,10 +109,10 @@ class URLShortener(object):
             self.serviceURL = urlShorteningConfig['url']
             self.key = urlShorteningConfig['key']
         
-        logging.info('init-ing the URLshortener')
-        logging.info('serviceType: ', self.service)
-        logging.info('serviceURL: ', self.serviceURL)
-        logging.info('key: ', self.key)
+        #logging.info('init-ing the URLshortener')
+        #logging.info('serviceType: ', self.service)
+        #logging.info('serviceURL: ', self.serviceURL)
+        #logging.info('key: ', self.key)
         
     def getURLfromUR1caResponse(self, response):
         #response:
