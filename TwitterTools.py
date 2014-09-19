@@ -159,7 +159,16 @@ class TwitterHandler(SocialHandler):
                 self.msg(level=0,text=command)
                 pass
 
-            results = subprocess.check_output(command)
+            results = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+            tries = 0
+
+            while results.find('Tweet posted') == -1 and tries < 5:
+                self.msg(1,"Posting to twitter failed - trying again...")
+                results = subprocess.check_output(command, stderr=subprocess.STDOUT,shell=True)
+                tries = tries + 1
+                pass
+            
+            
 
             #results = commands.getoutput(command)
 

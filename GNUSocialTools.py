@@ -144,6 +144,7 @@ class GNUSocialHandler(SocialHandler):
             message.content = self.TextToHtml(message.content)
             message.author = dent_author
             message.reply = True if self.find_element_of_status(dent_xml,"in_reply_to_status_id") != "" else False
+            message.public = True
 
             message.id = int(self.find_element_of_status(dent_xml,'id'))
 
