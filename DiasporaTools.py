@@ -88,7 +88,7 @@ class DiasporaHandler(SocialHandler):
                     # watch for hyphenated line-break words
                     line = line.rstrip('\n')
 
-                    if len(msg.content)==0 and line[0] == '@':
+                    if len(msg.content)==0 and len(line) > 0 and line[0] == '@':
                         msg.direct = 1
 
                     if not re.search('.*[a-zA-Z]-$', line):
