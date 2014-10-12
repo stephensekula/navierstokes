@@ -44,7 +44,7 @@ from fuzzywuzzy import process
 
 # Global patterns
 global url_pattern 
-url_pattern = '(?:http[s]{0,1}://|www.)[^"\'<> ]+'
+url_pattern = unicode('(?:http[s]{0,1}://|www.)[^"\'<> ]+')
 
 
 FORMAT = "%(asctime)-15s %(message)s"
@@ -73,12 +73,12 @@ if os.path.exists( path_to_pidfile ):
         pass
 
     if pid_is_running:
-        logging.info("This program is already running, and should not be run twice.")
+        logging.info(unicode("This program is already running, and should not be run twice."))
         sys.exit()
     else:
         os.remove(path_to_pidfile)
-        logging.info("An old PID file was present, but the program is not running.")
-        logging.info("Removing the old PID file and running the program anew.")
+        logging.info(unicode("An old PID file was present, but the program is not running."))
+        logging.info(unicode("Removing the old PID file and running the program anew."))
         open(path_to_pidfile, 'w').write(str(os.getpid()))
         pass
 else:
@@ -129,7 +129,7 @@ config.read(home+'/.navierstokes/navierstokes.cfg')
     
 
 for section in config.sections():
-    logging.info("Configuring a handler named %s", section)
+    logging.info(unicode("Configuring a handler named %s"), section)
     if section.lower() == 'urlshortening':
         try: 
             urlShorteningConfig['service'] = config.get(section, "service")

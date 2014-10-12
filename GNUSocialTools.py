@@ -20,6 +20,7 @@ import re
 import time
 import datetime
 import calendar
+import codecs
 import commands
 
 
@@ -28,7 +29,7 @@ from MessageObj import Message
 
 class GNUSocialHandler(SocialHandler):
     """ a class to read and post to a GNU Social feed """
-    def __init__(self,username="",password="",site="",sharelevel="Public"):
+    def __init__(self,username=unicode("","utf8"),password="",site="",sharelevel="Public"):
         SocialHandler.__init__(self)
         self.username = username
         self.password = password
@@ -112,15 +113,15 @@ class GNUSocialHandler(SocialHandler):
 
         self.messages = []
 
-        self.msg(0, "Gathering messages.")
+        self.msg(0, unicode("Gathering messages."))
 
         # Get the XML file from the web
-        xml_file_contents = commands.getoutput('curl -s -u \'%s:%s\' %s/api/statuses/user_timeline/%s.xml?count=200' % (self.username,self.password,self.site,self.username))
+        xml_file_contents = unicode(commands.getoutput('curl -s -u \'%s:%s\' %s/api/statuses/user_timeline/%s.xml?count=200' % (self.username,self.password,self.site,self.username)).decode('utf-8'))
 
         pid = os.getpid()
         
-        xml_file = open('/tmp/%d_dents.xml' % (pid),'w')
-        xml_file.write(xml_file_contents)
+        xml_file = codecs.open('/tmp/%d_dents.xml' % (pid),'w',encoding='utf-8')
+        xml_file.write(self.texthandler(xml_file_contents))
         xml_file.close()
         
         document = self.get_a_stream("/tmp/%d_dents.xml" % (pid))
@@ -133,11 +134,13 @@ class GNUSocialHandler(SocialHandler):
             #if dent_source == "activity":
             #    continue
 
-            dent_text = self.find_element_of_status(dent_xml,"text")
+            dent_text = unicode(self.find_element_of_status(dent_xml,"text").decode('utf8'))
 
-            dent_author = self.status_author_name(dent_xml)
+            dent_author = unicode(self.status_author_name(dent_xml).decode('utf8'))
             if dent_author != self.username:
                 continue
+
+
             message = Message()
             message.source = "GNU Social"
             message.SetContent(dent_text)
@@ -177,7 +180,7 @@ class GNUSocialHandler(SocialHandler):
             message.date = calendar.timegm(t.timetuple())
             message.repost = self.status_is_retweeted(dent_xml)
             if message.repost:
-                message.SetContent( "<a href=\"%s\">From GNU Social</a> : " % (self.find_element_of_status(dent_xml,"uri")) + message.content )
+                message.SetContent( unicode("<a href=\"%s\">From GNU Social</a> : " % (self.find_element_of_status(dent_xml,"uri")) + message.content ))
                 pass
             self.messages.append(message)
             pass
@@ -223,11 +226,11 @@ class GNUSocialHandler(SocialHandler):
 
             pid = os.getpid()
 
-            fout = open('/tmp/%d_statusnet_text.txt' % (pid),'w')
+            fout = codecs.open('/tmp/%d_statusnet_text.txt' % (pid),'w',encoding='utf-8')
             try:
-                fout.write('source=NavierStokesApp&status='+message.content)
+                fout.write(unicode('source=NavierStokesApp&status=')+message.content)
             except UnicodeEncodeError:
-                fout.write(u'source=NavierStokesApp&status='+unicodedata.normalize('NFKD',message.content).encode('ascii','ignore'))
+                fout.write(unicode('source=NavierStokesApp&status=')+unicodedata.normalize('NFKD',message.content).encode('ascii','ignore'))
             fout.close()
 
             data += " -d @/tmp/%d_statusnet_text.txt" % (pid)
@@ -275,7 +278,7 @@ class GNUSocialHandler(SocialHandler):
                     self.msg(level=3,text="Unable to post this message")
                     pass
                 pass
-            #os.system('rm -f /tmp/%d_statusnet_text.txt' % (pid))
+
             pass
 
         self.msg(0,"Wrote %d messages" % len(messages))

@@ -156,8 +156,8 @@ class DiasporaHandler(SocialHandler):
             # user mapping
             notice_text = self.map_users(notice_text)
 
-            notice_file = open('/tmp/diaspora','w')
-            notice_file.write(unicode(notice_text).encode("utf-8"))
+            notice_file = codecs.open('/tmp/diaspora','w',encoding='utf-8')
+            notice_file.write(self.texthandler(notice_text))
             notice_file.close()
 
 
@@ -177,12 +177,34 @@ class DiasporaHandler(SocialHandler):
             if len(message.attachments) > 0:
                 for attachment in message.attachments:
                     # to post an image, first upload it then comment on it.
-                    os.system('echo "%s" | cliaspora -m upload "%s" %s' % (notice_text,aspect,attachment))
-                    # get the POST-ID of this image
-                    #post_id = commands.getoutput("cliaspora show activity | grep \"POST-ID\" | head -1")
-                    #post_id = post_id.replace('\n','')
-                    #post_id = re.search('.*POST-ID: ([0-9]*)\.*',post_id).group(1)
-                    #os.system('cat /tmp/diaspora | cliaspora comment %s' % (post_id))
+                    
+                    post_succeeded = 0
+                    post_tries = 0
+                    
+                    target_image_width=400
+
+                    while post_succeeded == 0 and post_tries < 5:
+
+                        post_response = self.texthandler("")
+
+                        if post_tries != 0:
+                            commands.getoutput('convert -scale %dx %s %s.small.png' % (target_image_width,attachment,attachment))
+                            post_response = commands.getoutput('echo "%s" | cliaspora -m upload "%s" %s.small.png' % (notice_text,aspect,attachment))
+                            target_image_width = target_image_width - 50
+                        else:
+                            post_response = commands.getoutput('echo "%s" | cliaspora -m upload "%s" %s' % (notice_text,aspect,attachment))
+                            pass
+
+                        if post_response.find("Failed") != -1:
+                            post_succeeded = 0
+                        else:
+                            post_succeeded = 1
+                            pass
+                        
+                        post_tries = post_tries + 1
+
+                        pass
+
                     pass
                 pass
             else:

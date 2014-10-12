@@ -34,7 +34,7 @@ class FacebookHandler(SocialHandler):
         # check that fbcmd is installed
         self.active = True
         if self.which('fbcmd') == None:
-            self.msg(0,"fbcmd not installed; Facebook handler will be inactive")
+            self.msg(0,unicode("fbcmd not installed; Facebook handler will be inactive"))
             self.active = False
             pass
 
@@ -46,7 +46,7 @@ class FacebookHandler(SocialHandler):
         if not self.active:
             return []
 
-        self.msg(0, "Gathering messages.")
+        self.msg(0, self.texthandler("Gathering messages."))
 
         self.messages = []
 
@@ -61,22 +61,24 @@ class FacebookHandler(SocialHandler):
         # this is needed for filtering wall posts to only include those
         # posted by me (the current fbcmd user)
 
-        fbcmd_whoami_text = commands.getoutput('fbcmd whoami')
+        fbcmd_whoami_text = self.texthandler(commands.getoutput('fbcmd whoami'))
         matches = re.search('^[0-9]+  (.*)', fbcmd_whoami_text, re.DOTALL)
         username = ""
         if matches:
-            username = matches.group(1)
+            username = self.texthandler(matches.group(1))
         else:
-            self.msg(0,"Unable to determine your Facebook user name")
+            self.msg(0,self.texthandler("Unable to determine your Facebook user name"))
             return self.messages;
         
             
-        messages_text = commands.getoutput('fbcmd fstream =me 120')
+        messages_text = self.texthandler(commands.getoutput('fbcmd fstream =me 120'))
 
         in_message = False
         msg = Message()
 
         inlink = False
+
+        line = self.texthandler("")
 
         for line in messages_text.split('\n'):
 
@@ -121,7 +123,7 @@ class FacebookHandler(SocialHandler):
                     message_text_match = re.search('.*photo post  (.*)',line,re.DOTALL)
                     pass
                 if message_text_match != None:
-                    msg.content =  message_text_match.group(1)
+                    msg.content =  self.texthandler(message_text_match.group(1))
                     if re.search('http\S+$',message_text_match.group(1),re.DOTALL) != None:
                         inlink = True
                         pass
