@@ -150,6 +150,7 @@ class TwitterHandler(SocialHandler):
             #    message_text = message_text[:97] + "..."
             #    message_text += URLShortener.URLShort
 
+            message_text = self.texthandler(copy.deepcopy(message.content))
             if len(message_text) <= 140:
                 command = self.texthandler("t update \"%s\"" % (message.content))
 
