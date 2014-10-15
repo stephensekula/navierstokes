@@ -198,7 +198,7 @@ class URLShortener(object):
 
         payload = {'longurl':longurl, 'key':self.key, 'term':vanityTerm}
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        r = requests.post(self.serviceURL, data=json.dumps(payload), headers=headers)
+        r = requests.post(self.serviceURL, data=json.dumps(payload), headers=headers, verify=False)
         #print "response: \n", r.text, "---/response -- \n"
         
         shortURL = self.getURLfromShortenizerResponse(r.text)
