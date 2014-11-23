@@ -152,7 +152,10 @@ class TwitterHandler(SocialHandler):
 
             message_text = self.texthandler(copy.deepcopy(message.content))
             if len(message_text) <= 140:
-                command = self.texthandler("t update \"%s\"" % (message.content))
+                tweet = message.content
+                tweet = tweet.replace('\n',' ')
+
+                command = self.texthandler("t update '%s'" % (tweet))
 
                 if len(message.attachments) > 0:
                     command += self.texthandler(" -f %s" % (message.attachments[0]))
@@ -162,12 +165,19 @@ class TwitterHandler(SocialHandler):
                     self.msg(level=0,text=command)
                     pass
 
-                results = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+                try:
+                    results = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+                except subprocess.CalledProcessError:
+                    continue
+
                 tries = 0
 
                 while results.find('Tweet posted') == -1 and tries < 5:
                     self.msg(1,"Posting to twitter failed - trying again...")
-                    results = subprocess.check_output(command, stderr=subprocess.STDOUT,shell=True)
+                    try:
+                        results = subprocess.check_output(command, stderr=subprocess.STDOUT,shell=True)
+                    except subprocess.CalledProcessError:
+                        pass
                     tries = tries + 1
                     pass
                 pass
