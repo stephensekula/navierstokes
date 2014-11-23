@@ -73,12 +73,12 @@ class RSSHandler(SocialHandler):
                     pass
             
             try:
-                msg.content += self.texthandler("<p>%s</p>\n" % entry.link)
+                msg.content += self.texthandler("<p><a href=\"%s\">%s</a></p>\n" % (entry.link,entry.link))
             except AttributeError:
                 pass
             
             try:
-                msg.content += self.texthandler("( Feed URL: %s )" % (self.feed_url))
+                msg.content += self.texthandler("( Feed URL: <a href=\"%s\">%s</a> )" % (self.feed_url,self.feed_url))
             except AttributeError:
                 pass
     
