@@ -28,6 +28,7 @@ from lockfile import FileLock,LockTimeout
 import requests
 from requests_oauthlib import OAuth1
 
+import SocialHandler
 import GNUSocialTools
 import PumpTools
 import DiasporaTools
@@ -41,6 +42,14 @@ from MessageObj import Message
 # Fuzzy text matching
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
+
+# functions
+def texthandler(text=unicode("","utf8")):
+    if not isinstance(text, unicode):
+        return text.decode('utf8', errors='ignore')
+    return text
+
+
 
 # Global patterns
 global url_pattern 
@@ -258,7 +267,7 @@ for source in messages:
             for other_source in messages:
 
                 best_match_score = 0;
-                best_match_text = "";
+                best_match_text = unicode("");
                 found_match = False
                 
                 if other_source == source:
@@ -295,7 +304,7 @@ for source in messages:
                     match_ratio = fuzz.token_set_ratio(this_message, that_message, force_ascii=True)
                     if match_ratio >= best_match_score:
                         best_match_score = match_ratio
-                        best_match_text = "   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content
+                        best_match_text = unicode("   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content)
                         pass
 
                     if match_ratio > 80:
@@ -340,7 +349,7 @@ for source in messages:
                         match_ratio = fuzz.token_set_ratio(this_message, that_message, force_ascii=True)
                         if match_ratio >= best_match_score:
                             best_match_score = match_ratio
-                            best_match_text = "   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content
+                            best_match_text = unicode("   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content)
                             pass
                         if match_ratio > 80:
                             found_match = True
@@ -350,7 +359,7 @@ for source in messages:
 
                 
                 if debug:
-                    print best_match_text
+                    print texthandler(unicode(best_match_text))
                     pass
 
                 if not found_match:
