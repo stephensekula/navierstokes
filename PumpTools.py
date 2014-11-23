@@ -140,7 +140,6 @@ class PumpHandler(SocialHandler):
                         is_direct = True
                     elif isinstance(person, Collection):
                         if person.id.find("public") != -1:
-                            is_direct = False
                             is_public = True
                             skip_this_message = False
                             break
