@@ -67,7 +67,12 @@ def ExpandShortURL(short_url):
     # Set our header function.
     c.setopt(c.WRITEFUNCTION, retrieved_body.store)
     c.setopt(c.HEADERFUNCTION, retrieved_headers.store)
-    c.perform()
+
+    try:
+        c.perform()
+    except pycurl.error:
+        return short_url
+        pass
 
     c.close()
 
