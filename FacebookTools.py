@@ -92,7 +92,7 @@ class FacebookHandler(SocialHandler):
                     # we need to close and save the old message before beginning a new one
                     msg.content = self.TextToHtml(msg.content)
                     msg.id = self.generate_id(msg.content)
-                    self.messages.append( msg )
+                    #self.messages.append( msg )
                     inlink = False
                     pass
                 
@@ -148,15 +148,15 @@ class FacebookHandler(SocialHandler):
                     in_message = False
                     msg.content = self.TextToHtml(msg.content)
                     msg.id = self.generate_id(msg.content)
-                    self.messages.append( msg )
+                    #self.messages.append( msg )
                     inlink = False
                     pass
                 elif hit_name or hit_link or hit_caption or hit_desc:
                     message_text_match = re.search('.*?:(link|caption|name|desc).*?(\S.*)',line, re.DOTALL)
                     msg.repost = 1
-                    if msg.content.find("Shared from Facebook:") == -1:
-                        msg.content = "Shared from Facebook: " + msg.content
-                        pass
+                    #if msg.content.find("Shared from Facebook:") == -1:
+                    #    msg.content = "Shared from Facebook: " + msg.content
+                    #    pass
                     if message_text_match != None:
                         msg.content = msg.content + "\n\n" + message_text_match.group(2)
                         pass
@@ -209,7 +209,7 @@ class FacebookHandler(SocialHandler):
         photo_pid_column = -1
         text_column = -1
 
-        first_line_pattern = re.compile('^%s\s+([0-9]+_[0-9]+)\s+([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}) ([-,\+][0-9]+)(\s.*)' % (username))
+        first_line_pattern = re.compile('^(%s){0,1}\s+([0-9]+_[0-9]+)\s+([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}) ([-,\+][0-9]+)\s+(.*)' % (username))
         message_line_pattern = re.compile('^.*\s+([0-9]+_[0-9]+)\s+([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}) ([-,\+][0-9]+)(\s.*)')
 
         for line in messages_text.split('\n'):
@@ -226,11 +226,11 @@ class FacebookHandler(SocialHandler):
             first_line_pattern_match = first_line_pattern.search(line)
             if first_line_pattern_match != None and photo_pid_column == -1:
                 # we found the key line of the output - find the column where the PID starts
-                pid = first_line_pattern_match.group(1)
+                pid = first_line_pattern_match.group(2)
                 photo_pid_column = line.find(pid)
                 pass
 
-            pid_pattern = re.search('^.*?  ([0-9]+_[0-9]+)\s.*', line, re.DOTALL)
+            pid_pattern = re.search('^.*?\s+([0-9]+_[0-9]+)\s.*', line, re.DOTALL)
             pid_match = re.search("[0-9]", line[photo_pid_column],re.DOTALL)
             if pid_match:
                 pid = pid_pattern.group(1)
@@ -271,6 +271,7 @@ class FacebookHandler(SocialHandler):
                         self.messages.append(msg)
                         pass
 
+
                     msg = Message()
                     msg.source = "Facebook"
 
@@ -296,7 +297,6 @@ class FacebookHandler(SocialHandler):
                 pass
             else:
                 # we are still in the last message - keep doing things
-
                 msg.content = str(msg.content + " " + line[text_column:].lstrip())
 
                 pass
