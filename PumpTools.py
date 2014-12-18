@@ -176,6 +176,8 @@ class PumpHandler(SocialHandler):
             if isinstance( pump_obj, Image):
                 img_url = pump_obj.original.url
 
+                message.link = img_url
+
                 # construct a request to grab the image
                 endpoint = "{0}".format('/'.join(img_url.split('/')[3:]))
                 # remove "_thumb" from the image name to get the original image
