@@ -86,8 +86,6 @@ class FacebookHandler(SocialHandler):
             
         messages_text = self.texthandler(commands.getoutput('%s' % (self.read_posts_command)))
 
-        print messages_text
-
         in_message = False
         msg = Message()
 
