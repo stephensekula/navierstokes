@@ -214,12 +214,13 @@ class FacebookHandler(SocialHandler):
             pass
 
         # handle images - they don't show up in the fstream
-        messages_text = commands.getoutput('%s' % (self.read_pics_command))
+        messages_text = commands.getoutput('%s /tmp/fbcmd/ "-of=[aid]/[pid].jpg"' % (self.read_pics_command))
 
         in_message = False
         msg = Message()
 
         photo_pid_column = -1
+        photo_pid = ""
         text_column = -1
 
         first_line_pattern = re.compile('^(%s){0,1}\s+([0-9]+_[0-9]+)\s+([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}) ([-,\+][0-9]+)\s+(.*)' % (username))
@@ -239,14 +240,14 @@ class FacebookHandler(SocialHandler):
             first_line_pattern_match = first_line_pattern.search(line)
             if first_line_pattern_match != None and photo_pid_column == -1:
                 # we found the key line of the output - find the column where the PID starts
-                pid = first_line_pattern_match.group(2)
-                photo_pid_column = line.find(pid)
+                photo_pid = first_line_pattern_match.group(2)
+                photo_pid_column = line.find(photo_pid)
                 pass
 
             pid_pattern = re.search('^.*?\s+([0-9]+_[0-9]+)\s.*', line, re.DOTALL)
             pid_match = re.search("[0-9]", line[photo_pid_column],re.DOTALL)
             if pid_match:
-                pid = pid_pattern.group(1)
+                photo_pid = pid_pattern.group(1)
                 if not in_message:
                     # we found the first line of a photo message.
                     msg = Message()
@@ -268,8 +269,11 @@ class FacebookHandler(SocialHandler):
                         self.msg(3,"Unable to determine date and time of photo.")
                         pass
 
+                    # attach image
+                    msg.attachments.append('/tmp/fbcmd/%s.jpg' % (photo_pid))
+
                     # we need to find the start of the actual message
-                    text_column = photo_pid_column+len(pid)+2+len(datetext)+1+len(dateoffset)
+                    text_column = photo_pid_column+len(photo_pid)+2+len(datetext)+1+len(dateoffset)
                     msg.content = str(msg.content) + line[text_column:].lstrip()
                     
                     in_message = True
