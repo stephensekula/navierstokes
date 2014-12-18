@@ -98,15 +98,14 @@ else:
 
 # Parse command line options
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "dhi:o:", ["debug","help", "input=", "output="])
+    opts, args = getopt.getopt(sys.argv[1:], "dhc:", ["debug","help", "config="])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
     os.remove(path_to_pidfile)
     sys.exit(2)
     pass
-output = None
-input = None
+configfile = home + "/.navierstokes/navierstokes.cfg"
 verbose = False
 debug = False
 fuzzy = False
@@ -117,10 +116,8 @@ for o, a in opts:
         sys.exit()
     elif o in ("-d", "--debug"):
         debug = True
-    elif o in ("-i", "--input"):
-        input = a
-    elif o in ("-o", "--output"):
-        output = a
+    elif o in ("-c", "--config"):
+        configfile = a
     else:
         assert False, "unhandled option"
         pass
@@ -134,7 +131,7 @@ urlShorteningConfig = {}
 
 # Use the config file to setup the sources and sinks
 config = ConfigParser.ConfigParser()
-config.read(home+'/.navierstokes/navierstokes.cfg')
+config.read(configfile)
     
 
 for section in config.sections():
@@ -180,6 +177,28 @@ for section in config.sections():
     elif config.get(section, "type") == "facebook":
         sources_and_sinks[section] = FacebookTools.FacebookHandler(album=config.get(section, "album"), \
                                                                    sharelevel=config.get(section, "sharelevel"))
+        try:
+            sources_and_sinks[section].username=config.get(section, "username")
+        except ConfigParser.NoOptionError:
+            pass
+        try:
+            sources_and_sinks[section].read_posts_command=config.get(section, "read_posts_command")
+        except ConfigParser.NoOptionError:
+            pass
+        try:
+            sources_and_sinks[section].read_pics_command=config.get(section, "read_pics_command")
+        except ConfigParser.NoOptionError:
+            pass
+        try:
+            sources_and_sinks[section].write_post_command=config.get(section, "write_post_command")
+        except ConfigParser.NoOptionError:
+            pass
+        try:
+            sources_and_sinks[section].write_pics_command=config.get(section, "write_pics_command")
+        except ConfigParser.NoOptionError:
+            pass
+
+
         pass
     elif config.get(section, "type") == "twitter":
         sources_and_sinks[section] = TwitterTools.TwitterHandler(sharelevel=config.get(section, "sharelevel"))

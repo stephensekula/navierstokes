@@ -29,7 +29,9 @@ class FacebookHandler(SocialHandler):
         SocialHandler.__init__(self)
         self.sharelevel = sharelevel
         self.album = album
-
+        # This is automatically searched for if blank. You can specific
+        # it if you need to harvest/write as a page admin, etc.
+        self.username = ""
         
         # check that fbcmd is installed
         self.active = True
@@ -37,6 +39,15 @@ class FacebookHandler(SocialHandler):
             self.msg(0,unicode("fbcmd not installed; Facebook handler will be inactive"))
             self.active = False
             pass
+
+
+        # Default commands - some users will post at themselves (default)
+        # others as page owners or admins (allow for this)
+        self.read_posts_command = "fbcmd fstream =me 120"
+        self.read_pics_command = "fbcmd opics =me 120"
+        self.write_post_command = "fbcmd status"
+        self.write_pics_command = "fbcmd addpic"
+
 
         pass
  
@@ -63,15 +74,19 @@ class FacebookHandler(SocialHandler):
 
         fbcmd_whoami_text = self.texthandler(commands.getoutput('fbcmd whoami'))
         matches = re.search('^[0-9]+  (.*)', fbcmd_whoami_text, re.DOTALL)
-        username = ""
-        if matches:
-            username = self.texthandler(matches.group(1))
-        else:
-            self.msg(0,self.texthandler("Unable to determine your Facebook user name"))
-            return self.messages;
-        
+
+        username = self.username
+        if username == "":
+            if matches:
+                username = self.texthandler(matches.group(1))
+            else:
+                self.msg(0,self.texthandler("Unable to determine your Facebook user name"))
+                return self.messages;
+            pass
             
-        messages_text = self.texthandler(commands.getoutput('fbcmd fstream =me 120'))
+        messages_text = self.texthandler(commands.getoutput('%s' % (self.read_posts_command)))
+
+        print messages_text
 
         in_message = False
         msg = Message()
@@ -201,7 +216,7 @@ class FacebookHandler(SocialHandler):
             pass
 
         # handle images - they don't show up in the fstream
-        messages_text = commands.getoutput('fbcmd opics =me')
+        messages_text = commands.getoutput('%s' % (self.read_pics_command))
 
         in_message = False
         msg = Message()
@@ -349,7 +364,12 @@ class FacebookHandler(SocialHandler):
                     pass
 
                 for attachment in message.attachments:
-                    command = "fbcmd ADDPIC %s \"%s\" \"%s\"" % (attachment, self.album, message.content)
+                    if self.write_pics_command.find('ppost') != -1:
+                        command = "%s \"%s\" %s %s" % (self.write_pics_command, message.content, message.link, message.link)
+                    else:
+                        command = "%s %s \"%s\" \"%s\"" % (self.write_pics_command, attachment, self.album, message.content)
+                        pass
+
                     if self.debug:
                         self.msg(0, "   " + command)
                         pass
@@ -357,7 +377,7 @@ class FacebookHandler(SocialHandler):
                     pass
                 pass
             else:
-                command = "fbcmd STATUS \"%s\"" % (message.content)
+                command = "%s \"%s\"" % (self.write_post_command, message.content)
                 if self.debug:
                     self.msg(0, "   " + command)
                     pass
