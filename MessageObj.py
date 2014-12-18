@@ -28,10 +28,11 @@ FROM:    %(author)s\n \
 DATE:    %(datetime)s\n \
 ID:      %(id)d\n \
 SOURCE:  %(source)s\n \
+LINK:    %(link)s\n \
 REPLY?:  %(reply)d\n \
 PUBLIC?: %(public)d\n \
 DIRECT?: %(direct)d\n \
-REPOST?: %(repost)d\n") % {'author': self.author, 'datetime': ((datetime.datetime.fromtimestamp(time.mktime(time.localtime(self.date)))).strftime('%Y %B %d %H:%M:%S')), 'id': self.id, 'source': self.source, 'reply': self.reply, 'public': self.public, 'direct': self.direct, 'repost': self.repost}
+REPOST?: %(repost)d\n") % {'author': self.author, 'datetime': ((datetime.datetime.fromtimestamp(time.mktime(time.localtime(self.date)))).strftime('%Y %B %d %H:%M:%S')), 'id': self.id, 'source': self.source, 'reply': self.reply, 'public': self.public, 'direct': self.direct, 'repost': self.repost, 'link': self.link}
 
 
 
