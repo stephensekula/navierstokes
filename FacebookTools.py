@@ -44,7 +44,7 @@ class FacebookHandler(SocialHandler):
         # Default commands - some users will post at themselves (default)
         # others as page owners or admins (allow for this)
         self.read_posts_command = "fbcmd fstream =me 120"
-        self.read_pics_command = "fbcmd opics =me 120"
+        self.read_pics_command = "fbcmd opics =me"
         self.write_post_command = "fbcmd status"
         self.write_pics_command = "fbcmd addpic"
 
