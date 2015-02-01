@@ -51,7 +51,11 @@ class FacebookHandler(SocialHandler):
 
         pass
  
-
+    def fbcmd_error_status(self, fbcmd_output=""):
+        if fbcmd_output.find("Application request limit reached") != -1:
+            self.msg(0, self.texthandler("fbcmd unable to talk to Facebook due to limitations on application frequency by Facebook - Facebook operations stopped"))
+            return 1
+        return 0
 
     def gather(self):
         if not self.active:
@@ -73,6 +77,10 @@ class FacebookHandler(SocialHandler):
         # posted by me (the current fbcmd user)
 
         fbcmd_whoami_text = self.texthandler(commands.getoutput('fbcmd whoami'))
+
+        if self.fbcmd_error_status(fbcmd_whoami_text) != 0:
+            return []
+
         matches = re.search('^[0-9]+  (.*)', fbcmd_whoami_text, re.DOTALL)
 
         username = self.username
@@ -85,6 +93,9 @@ class FacebookHandler(SocialHandler):
             pass
             
         messages_text = self.texthandler(commands.getoutput('%s' % (self.read_posts_command)))
+
+        if self.fbcmd_error_status(messages_text) != 0:
+            return []
 
         in_message = False
         msg = Message()
@@ -215,6 +226,9 @@ class FacebookHandler(SocialHandler):
 
         # handle images - they don't show up in the fstream
         messages_text = commands.getoutput('%s /tmp/fbcmd/ "-of=[aid]/[pid].jpg"' % (self.read_pics_command))
+        if self.fbcmd_error_status(messages_text) != 0:
+            return []
+
 
         in_message = False
         msg = Message()
@@ -319,6 +333,7 @@ class FacebookHandler(SocialHandler):
                 pass
             pass
 
+
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
@@ -335,9 +350,11 @@ class FacebookHandler(SocialHandler):
     def write(self, messages):
         if not self.active:
             self.msg(0,"Facebook handler not active; no messages will be posted")
-            return
+            return []
 
         write_count = 0
+
+        successful_id_list = []
 
         for message in messages:
 
@@ -376,6 +393,11 @@ class FacebookHandler(SocialHandler):
                         self.msg(0, "   " + command)
                         pass
                     results = commands.getoutput(command)
+                    if self.fbcmd_error_status(results) == -1:
+                        successful_id_list.append( message.id )
+                        pass
+                        
+
                     pass
                 pass
             else:
@@ -384,11 +406,14 @@ class FacebookHandler(SocialHandler):
                     self.msg(0, "   " + command)
                     pass
                 results = commands.getoutput(command)
+                if self.fbcmd_error_status(results) == -1:
+                    successful_id_list.append( message.id )
+                    pass
                 pass
 
             write_count += 1
             pass
 
         self.msg(0,"Wrote %d messages" % write_count)
-        return
+        return successful_id_list
 

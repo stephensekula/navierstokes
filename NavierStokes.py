@@ -550,11 +550,6 @@ for sinkname in sources_and_sinks:
                 pass
             
             messagesToActuallyWrite.append( copy.deepcopy(message) )
-            if not debug:
-                message_archive_file = open(message_archive_filename, 'a')
-                message_archive_file.write( str(message.id) + "\n" )
-                message_archive_file.close()
-                pass
             pass
         pass
 
@@ -569,7 +564,13 @@ for sinkname in sources_and_sinks:
             print message.Printable()
             pass
 
-        sources_and_sinks[sinkname].write( messagesToActuallyWrite )
+        id_list = sources_and_sinks[sinkname].write( messagesToActuallyWrite )
+
+        for message_id in id_list:
+            message_archive_file = open(message_archive_filename, 'a')
+            message_archive_file.write( str(message_id) + "\n" )
+            message_archive_file.close()
+
         pass
     
     lock.release()

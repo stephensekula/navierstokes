@@ -102,4 +102,4 @@ class RSSHandler(SocialHandler):
 
     def write(self, messages = []):
         self.msg(0, "RSS cannot be written to - this is normal.")
-        pass
+        return []

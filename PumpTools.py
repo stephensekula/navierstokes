@@ -246,8 +246,10 @@ class PumpHandler(SocialHandler):
 
     def write(self, messages = []):
 
+        successful_id_list = []
+
         if not self.pump:
-            return
+            return []
 
 
         for message in messages:
@@ -270,13 +272,15 @@ class PumpHandler(SocialHandler):
             if len(message.attachments)==0:
                 new_note = self.pump.Note(message.content)
                 new_note.send()
+                successful_id_list.append( message.id )
             else:
                 new_note = self.pump.Image(display_name="",content=message.content)
                 for attachment in message.attachments:
                     new_note.from_file(attachment)
                     pass
+                successful_id_list.append( message.id )
                 pass
             pass
 
         self.msg(0, "Wrote %d messages." % (len(messages)))
-        pass
+        return successful_id_list

@@ -202,6 +202,8 @@ class GNUSocialHandler(SocialHandler):
 
     def write(self, messages):
 
+        successful_id_list = []
+
         for message in messages:
 
             self.msg(0,"writing to GNU Social")
@@ -278,9 +280,10 @@ class GNUSocialHandler(SocialHandler):
                     self.msg(level=3,text="Unable to post this message")
                     pass
                 pass
-
+            else:
+                successful_id_list.append( message.id )
             pass
 
         self.msg(0,"Wrote %d messages" % len(messages))
-        return
+        return successful_id_list
 

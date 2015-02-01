@@ -132,6 +132,8 @@ class DiasporaHandler(SocialHandler):
     
     def write(self, messages=[]):
         
+        successful_id_list = []
+
         for message in messages:
 
             self.msg(0,"writing to Diaspora")
@@ -201,6 +203,9 @@ class DiasporaHandler(SocialHandler):
                             post_succeeded = 1
                             pass
                         
+                        if post_succeeded:
+                            successful_id_list.append( message.id )
+
                         post_tries = post_tries + 1
 
                         pass
@@ -209,9 +214,10 @@ class DiasporaHandler(SocialHandler):
                 pass
             else:
                 os.system('cat /tmp/diaspora | cliaspora post "%s"' % (aspect))
+                successful_id_list.append( message.id )
                 pass
             pass
 
         self.msg(0, "Wrote %d messages." % (len(messages)))
-        return
+        return successful_id_list
     

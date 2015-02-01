@@ -30,6 +30,7 @@ class TwitterHandler(SocialHandler):
     def __init__(self,sharelevel="Public"):
         SocialHandler.__init__(self)
         self.sharelevel = sharelevel
+        self.configfile = ""
         pass
 
 
@@ -41,7 +42,12 @@ class TwitterHandler(SocialHandler):
 
         self.msg(0, self.texthandler("Gathering messages."))
 
-        whoami = self.texthandler(commands.getoutput('t whoami | grep "Screen name"'))
+        configstring = ""
+        if self.configfile != "":
+            configstring = '-P %s' % (self.configfile)
+            pass
+
+        whoami = self.texthandler(commands.getoutput('t whoami %s | grep "Screen name"' % (configstring)))
 
         matches = re.search('.*Screen name.*?@(.*)$', whoami, re.DOTALL)
         username = self.texthandler("");
@@ -53,7 +59,7 @@ class TwitterHandler(SocialHandler):
         
 
 
-        text = self.texthandler(commands.getoutput('t timeline -c @%s' % (username)))
+        text = self.texthandler(commands.getoutput('t timeline %s -c @%s' % (configstring,username)))
 
         message = Message()
 
@@ -71,6 +77,12 @@ class TwitterHandler(SocialHandler):
 
 
                 message_text = self.texthandler(matches.group(4))
+
+                # t does funny things with quotes in messages that are not RTs.
+                message_text = message_text.lstrip("\"")
+                message_text = message_text.rstrip("\"")
+                message_text = message_text.replace("\"\"","\"")
+
                 message = Message()
                 message.id = int(matches.group(1))
                 message_time_text = datetime.datetime.strptime(matches.group(2), "%Y-%m-%d %H:%M:%S +0000")
@@ -123,6 +135,13 @@ class TwitterHandler(SocialHandler):
 
     def write(self, messages):
 
+        successful_id_list = []
+
+        configstring = ""
+        if self.configfile != "":
+            configstring = '-c %s' % (self.configfile)
+            pass
+
         for message in messages:
 
             do_write = False
@@ -155,7 +174,7 @@ class TwitterHandler(SocialHandler):
                 tweet = message.content
                 tweet = tweet.replace('\n',' ')
 
-                command = self.texthandler("t update '%s'" % (tweet))
+                command = self.texthandler("t update %s '%s'" % (configstring,tweet))
 
                 if len(message.attachments) > 0:
                     command += self.texthandler(" -f %s" % (message.attachments[0]))
@@ -167,6 +186,8 @@ class TwitterHandler(SocialHandler):
 
                 try:
                     results = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+                    if results.find('Tweet posted') != -1:
+                        successful_id_list.append( message.id )
                 except subprocess.CalledProcessError:
                     continue
 
@@ -176,6 +197,8 @@ class TwitterHandler(SocialHandler):
                     self.msg(1,"Posting to twitter failed - trying again...")
                     try:
                         results = subprocess.check_output(command, stderr=subprocess.STDOUT,shell=True)
+                        if results.find('Tweet posted') != -1:
+                            successful_id_list.append( message.id )
                     except subprocess.CalledProcessError:
                         pass
                     tries = tries + 1
@@ -184,5 +207,5 @@ class TwitterHandler(SocialHandler):
             pass
 
         self.msg(0,"Wrote %d messages" % len(messages))
-        return
+        return successful_id_list
 
