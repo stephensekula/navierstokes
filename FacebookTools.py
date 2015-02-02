@@ -225,7 +225,7 @@ class FacebookHandler(SocialHandler):
             pass
 
         # handle images - they don't show up in the fstream
-        messages_text = commands.getoutput('%s /tmp/fbcmd/ "-of=[aid]/[pid].jpg"' % (self.read_pics_command))
+        messages_text = commands.getoutput('%s /tmp/fbcmd/ "-of=[pid].jpg"' % (self.read_pics_command))
         if self.fbcmd_error_status(messages_text) != 0:
             return []
 
