@@ -146,6 +146,9 @@ class FacebookHandler(SocialHandler):
                 if message_text_match == None:
                     message_text_match = re.search('.*photo post  (.*)',line,re.DOTALL)
                     pass
+                if message_text_match == None:
+                    message_text_match = re.search('.*video post  (.*)',line,re.DOTALL)
+                    pass
                 if message_text_match != None:
                     msg.content =  self.texthandler(message_text_match.group(1))
                     if re.search('http\S+$',message_text_match.group(1),re.DOTALL) != None:
