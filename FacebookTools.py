@@ -109,14 +109,14 @@ class FacebookHandler(SocialHandler):
             # new messages begin with [number].
             matches = (re.search('^\[[0-9]+\].*', line, re.DOTALL) != None)
             matches = matches and (line[0:len(username)+10].find(username) != -1)
-        
-            if matches:
 
+            if matches:
+                
                 if in_message == True:
                     # we need to close and save the old message before beginning a new one
                     msg.content = self.TextToHtml(msg.content)
                     msg.id = self.generate_id(msg.content)
-                    #self.messages.append( msg )
+                    self.messages.append( msg )
                     inlink = False
                     pass
                 
@@ -158,6 +158,9 @@ class FacebookHandler(SocialHandler):
                     print "PROBLEM:"
                     print line.encode("iso-8859-1")
                     pass
+
+                msg.content = message_text_match.group(1)
+
                 pass
 
             elif in_message:
@@ -167,7 +170,8 @@ class FacebookHandler(SocialHandler):
                 hit_caption = (line.find(':caption') != -1)
                 hit_desc = (line.find(':desc') != -1)
                 hit_blankline = (re.search('^$',line) != None)
-                if hit_likes_or_comments or hit_blankline:
+                if hit_likes_or_comments:
+                    # or hit_blankline:
                     # we have finished the message content. Close it.
                     in_message = False
                     msg.content = self.TextToHtml(msg.content)
@@ -260,6 +264,7 @@ class FacebookHandler(SocialHandler):
 
             pid_pattern = re.search('^.*?\s+([0-9]+_[0-9]+)\s.*', line, re.DOTALL)
             pid_match = re.search("[0-9]", line[photo_pid_column],re.DOTALL)
+
             if pid_match:
                 photo_pid = pid_pattern.group(1)
                 if not in_message:
@@ -289,7 +294,7 @@ class FacebookHandler(SocialHandler):
                     # we need to find the start of the actual message
                     text_column = photo_pid_column+len(photo_pid)+2+len(datetext)+1+len(dateoffset)
                     msg.content = str(msg.content) + line[text_column:].lstrip()
-                    
+
                     in_message = True
                     pass
                 else:
@@ -323,6 +328,10 @@ class FacebookHandler(SocialHandler):
                         pass
 
                     msg.content = str(msg.content) + line[text_column:].lstrip()
+
+                    # attach image
+                    msg.attachments.append('/tmp/fbcmd/%s.jpg' % (photo_pid))
+
                     in_message = True
                     pass
                 pass
@@ -343,6 +352,7 @@ class FacebookHandler(SocialHandler):
                 print message.Printable()
                 pass
             print "**************************************************************\n"
+
 
         return self.messages
     
