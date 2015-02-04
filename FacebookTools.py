@@ -54,6 +54,7 @@ class FacebookHandler(SocialHandler):
     def fbcmd_error_status(self, fbcmd_output=""):
         if fbcmd_output.find("Application request limit reached") != -1:
             self.msg(0, self.texthandler("fbcmd unable to talk to Facebook due to limitations on application frequency by Facebook - Facebook operations stopped"))
+            self.active = False
             return 1
         return 0
 
@@ -88,7 +89,9 @@ class FacebookHandler(SocialHandler):
             if matches:
                 username = self.texthandler(matches.group(1))
             else:
+                self.msg(0,self.texthandler(fbcmd_whoami_text))
                 self.msg(0,self.texthandler("Unable to determine your Facebook user name"))
+                self.active = False
                 return self.messages;
             pass
             
