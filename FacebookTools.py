@@ -97,139 +97,79 @@ class FacebookHandler(SocialHandler):
         if self.fbcmd_error_status(messages_text) != 0:
             return []
 
-        in_message = False
-        msg = Message()
+        #in_message = False
+        #msg = Message()
 
-        inlink = False
+        #inlink = False
 
-        line = self.texthandler("")
 
-        for line in messages_text.split('\n'):
+        # First, find all blocks of text corresponding to unique posts (non photos first)
+        messages_body_match = re.search('^.*?(\[1\].*)',messages_text,re.DOTALL)
 
-            # new messages begin with [number].
-            matches = (re.search('^\[[0-9]+\].*', line, re.DOTALL) != None)
-            matches = matches and (line[0:len(username)+10].find(username) != -1)
+        messages_text_noheader = self.texthandler("")
 
-            if matches:
-                
-                if in_message == True:
-                    # we need to close and save the old message before beginning a new one
-                    msg.content = self.TextToHtml(msg.content)
-                    msg.id = self.generate_id(msg.content)
-                    self.messages.append( msg )
-                    inlink = False
-                    pass
-                
-                # Start a new message
-                in_message = True
-                
-                msg = Message()
-                msg.source = "Facebook"
-                
-                # find date of message
-                message_date_match = re.search('%s.*?([0-9]{4,4} .*?:[0-9][0-9]) ([-,\+][0-9]+)  ' % (username),line,re.DOTALL)
-                if message_date_match:
-                    t = (datetime.datetime.strptime(message_date_match.group(1), '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(message_date_match.group(2)))).timetuple()
-                    msg.date = calendar.timegm(t)
-                    pass
-                else:
-                    self.msg(0,username)
-                    self.msg(0,line)
-                    self.msg(3,"Unable to obtain message date and time")
-                    pass
-                
-                # we need to find the start of the actual message
-                message_text_match = re.search('.*attach post  (.*)',line,re.DOTALL)
-                if message_text_match == None:
-                    message_text_match = re.search('.*link post  (.*)',line,re.DOTALL)
-                    pass
-                if message_text_match == None:
-                    message_text_match = re.search('.*photo post  (.*)',line,re.DOTALL)
-                    pass
-                if message_text_match == None:
-                    message_text_match = re.search('.*video post  (.*)',line,re.DOTALL)
-                    pass
-                if message_text_match != None:
-                    msg.content =  self.texthandler(message_text_match.group(1))
-                    if re.search('http\S+$',message_text_match.group(1),re.DOTALL) != None:
-                        inlink = True
-                        pass
-                    else:
-                        inlink = False
-                        pass
-                else:
-                    print "PROBLEM:"
-                    print line.encode("iso-8859-1")
-                    pass
-
-                msg.content = message_text_match.group(1)
-
-                pass
-
-            elif in_message:
-                hit_likes_or_comments = (line.find(':likes') != -1) or (line.find(':comment') != -1)
-                hit_link = (line.find(':link') != -1)
-                hit_name = (line.find(':name') != -1)
-                hit_caption = (line.find(':caption') != -1)
-                hit_desc = (line.find(':desc') != -1)
-                hit_blankline = (re.search('^$',line) != None)
-                if hit_likes_or_comments:
-                    # or hit_blankline:
-                    # we have finished the message content. Close it.
-                    in_message = False
-                    msg.content = self.TextToHtml(msg.content)
-                    msg.id = self.generate_id(msg.content)
-                    #self.messages.append( msg )
-                    inlink = False
-                    pass
-                elif hit_name or hit_link or hit_caption or hit_desc:
-                    message_text_match = re.search('.*?:(link|caption|name|desc).*?(\S.*)',line, re.DOTALL)
-                    msg.repost = 1
-                    #if msg.content.find("Shared from Facebook:") == -1:
-                    #    msg.content = "Shared from Facebook: " + msg.content
-                    #    pass
-                    if message_text_match != None:
-                        msg.content = msg.content + "\n\n" + message_text_match.group(2)
-                        pass
-                    pass
-                else:
-                    # we are still in the last message - keep doing things
-                    message_text_match = re.search('.*?(\S.*)',line, re.DOTALL)
-                    spacer = ""
-
-                    if message_text_match != None:
-                        if inlink:
-                            spacer = ""
-                            
-                            # see if we continue to be in a link at the end of this line
-                            if re.search('.*\s.*', message_text_match.group(1),re.DOTALL) != None:
-                                # this line contains whitespace - the URL must end in here
-                                inlink = False
-                            else:
-                                # the url continues unbroken by whitespace
-                                inlink = True
-                                pass
-                            pass
-
-                        else:
-                            spacer = " "
-
-                            # see if a link begins in this line
-                            if re.search('http\S+$', message_text_match.group(1),re.DOTALL) != None:
-                                inlink = True
-                            else:
-                                inlink = False
-                                spacer = " "
-                                pass
-                            
-                            pass
-                        
-
-                        msg.content = msg.content + spacer + message_text_match.group(1)
-                        pass
-                    
-                pass
+        if messages_body_match:
+            messages_text_noheader = messages_body_match.group(1)
             pass
+
+        facebook_message_blocks = re.split('\[[0-9]+\]\s+', messages_text_noheader, flags=re.DOTALL)
+
+        for block in facebook_message_blocks:
+            msg = Message()
+            msg.source = "Facebook"
+
+            # find date of message
+            message_date_match = re.search('%s.*?([0-9]{4,4} .*?:[0-9][0-9]) ([-,\+][0-9]+)  ' % (username),block,re.DOTALL)
+            if message_date_match:
+                t = (datetime.datetime.strptime(message_date_match.group(1), '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(message_date_match.group(2)))).timetuple()
+                msg.date = calendar.timegm(t)
+                pass
+            else:
+                self.msg(0,username)
+                self.msg(0,block)
+                self.msg(0,"Unable to obtain message date and time")
+                continue
+            
+            # Get the message text and none of the comments, etc.
+
+            message_text_match = re.search('.*[attach,link,photo,video] post  (.*)',block,re.DOTALL)
+            if message_text_match != None:
+
+                message_body = self.texthandler(message_text_match.group(1))
+                
+                message_text_match = re.search('.*?:(link|caption|name|desc).*',message_body, re.DOTALL)
+                if message_text_match:
+                    msg.repost = 1
+
+
+                # remove links, etc.
+                message_footer_match = re.search('(.*?):[link,desc,name,likes,caption].*',message_body,re.DOTALL)
+                if message_footer_match:
+                    message_body = message_footer_match.group(1)
+                    pass
+
+
+                # strip leading whitespace and ending whitespace.
+                message_leading_whitespace = re.search('^\s+(.*)',message_body,re.DOTALL)
+                if message_leading_whitespace:
+                    message_body = message_leading_whitespace.group(1)
+                    pass
+                message_ending_whitespace = re.search('(.*?)\s+$',message_body,re.DOTALL)
+                if message_ending_whitespace:
+                    message_body = message_ending_whitespace.group(1)
+                    pass
+
+                message_body = re.sub('\s{3,100}',' ',message_body)
+
+                msg.content = self.TextToHtml(message_body)
+                msg.id = self.generate_id(msg.content)
+
+
+                pass
+
+
+            self.messages.append( msg )
+            
 
         # handle images - they don't show up in the fstream
         messages_text = commands.getoutput('%s /tmp/fbcmd/ "-of=[pid].jpg"' % (self.read_pics_command))
@@ -237,113 +177,76 @@ class FacebookHandler(SocialHandler):
             return []
 
 
-        in_message = False
-        msg = Message()
+        # strip the column header line
+        message_header_search = re.search('^.*?CAPTION(.*)',messages_text,re.DOTALL)
+        if message_header_search:
+            messages_text = message_header_search.group(1)
+            pass
 
-        photo_pid_column = -1
-        photo_pid = ""
-        text_column = -1
 
-        first_line_pattern = re.compile('^(%s){0,1}\s+([0-9]+_[0-9]+)\s+([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}) ([-,\+][0-9]+)\s+(.*)' % (username))
-        message_line_pattern = re.compile('^.*\s+([0-9]+_[0-9]+)\s+([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}) ([-,\+][0-9]+)(\s.*)')
+        first_line_pattern = re.compile('((%s){0,1}\s+[0-9]+_[0-9]+\s+[0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2} [-,\+][0-9]+.*?)' % (username), flags=re.DOTALL)
+        message_line_pattern = re.compile('^.*\s+([0-9]+_[0-9]+)\s+([0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}) ([-,\+][0-9]+)(.*)')
 
-        for line in messages_text.split('\n'):
+        facebook_message_blocks = re.split('(^.*?[0-9]+_[0-9]+\s+[0-9]{4} [A-Za-z]{3} [A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2} [-,\+][0-9]+)', messages_text, flags=re.MULTILINE)
 
-            line = str(line)
+        facebook_message_blocks = facebook_message_blocks[1:]
 
-            if line.find("NAME") != 1 and line.find("PID") != -1 and line.find("CAPTION") != -1:
+        for block_index in range(len(facebook_message_blocks)):
+            if block_index % 2 != 0:
+                continue
+                
+            pid_pattern = re.search('.*?\s+([0-9]+_[0-9]+)\s.*', facebook_message_blocks[block_index], re.DOTALL)
+            if pid_pattern == None:
                 continue
 
-            # new messages begin with a PID. To determine the column containing
-            # the PID, we need to do some math.
-        
-            # Stephen Sekula  100000196682628_1073741900  2014 Sun May 11 14:23  Tracking down bug
-            first_line_pattern_match = first_line_pattern.search(line)
-            if first_line_pattern_match != None and photo_pid_column == -1:
-                # we found the key line of the output - find the column where the PID starts
-                photo_pid = first_line_pattern_match.group(2)
-                photo_pid_column = line.find(photo_pid)
-                pass
-
-            pid_pattern = re.search('^.*?\s+([0-9]+_[0-9]+)\s.*', line, re.DOTALL)
-            pid_match = re.search("[0-9]", line[photo_pid_column],re.DOTALL)
-
-            if pid_match:
-                photo_pid = pid_pattern.group(1)
-                if not in_message:
-                    # we found the first line of a photo message.
-                    msg = Message()
-                    msg.source = "Facebook"
+            photo_pid = pid_pattern.group(1)
+            
+            msg = Message()
+            msg.source = "Facebook"
                     
-                    # find date of message
+            # find date of message
 
-                    message_date_match = message_line_pattern.search(line)
-                    datetext = ""
-                    dateoffset = ""
-                    if message_date_match:
-                        datetext = message_date_match.group(2)
-                        dateoffset = message_date_match.group(3)
-
-                        t = (datetime.datetime.strptime(datetext, '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(dateoffset))).timetuple()
-                        msg.date = calendar.timegm(t)
-                        pass
-                    else:
-                        self.msg(3,"Unable to determine date and time of photo.")
-                        pass
-
-                    # attach image
-                    msg.attachments.append('/tmp/fbcmd/%s.jpg' % (photo_pid))
-
-                    # we need to find the start of the actual message
-                    text_column = photo_pid_column+len(photo_pid)+2+len(datetext)+1+len(dateoffset)
-                    msg.content = str(msg.content) + line[text_column:].lstrip()
-
-                    in_message = True
-                    pass
-                else:
-                    # we found the start of the next message. close the last one
-                    msg.content = self.TextToHtml(msg.content)
-                    msg.id = self.generate_id(msg.content)
-                    
-                    # check if the message has any content before saving
-                    if re.search(".*[A-Za-z0-9].*",msg.content,re.DOTALL) != None:
-                        self.messages.append(msg)
-                        pass
-
-
-                    msg = Message()
-                    msg.source = "Facebook"
-
-                    # Find date of message
-                    message_date_match = message_line_pattern.search(line)
-
-                    datetext = ""
-                    dateoffset = ""
-                    if message_date_match:
-                        datetext = message_date_match.group(2)
-                        dateoffset = message_date_match.group(3)
-
-                        t = (datetime.datetime.strptime(datetext, '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(dateoffset))).timetuple()
-                        msg.date = calendar.timegm(t)
-                        pass
-                    else:
-                        self.msg(3,"Unable to determine date and time of photo.")
-                        pass
-
-                    msg.content = str(msg.content) + line[text_column:].lstrip()
-
-                    # attach image
-                    msg.attachments.append('/tmp/fbcmd/%s.jpg' % (photo_pid))
-
-                    in_message = True
-                    pass
+            message_date_match = message_line_pattern.search(facebook_message_blocks[block_index])
+            datetext = ""
+            dateoffset = ""
+            if message_date_match:
+                datetext = message_date_match.group(2)
+                dateoffset = message_date_match.group(3)
+                
+                t = (datetime.datetime.strptime(datetext, '%Y %a %b %d %H:%M') - datetime.timedelta(seconds=int(dateoffset))).timetuple()
+                msg.date = calendar.timegm(t)
                 pass
             else:
-                # we are still in the last message - keep doing things
-                msg.content = str(msg.content + " " + line[text_column:].lstrip())
-
+                self.msg(0,"Unable to determine date and time of photo.")
+                continue
                 pass
-            pass
+
+            # attach image
+            msg.attachments.append('/tmp/fbcmd/%s.jpg' % (photo_pid))
+
+            # Get the content of the message
+            message_body = facebook_message_blocks[block_index+1]
+
+            # strip leading whitespace and ending whitespace.
+            message_leading_whitespace = re.search('^\s+(.*)',message_body,re.DOTALL)
+            if message_leading_whitespace:
+                message_body = message_leading_whitespace.group(1)
+                pass
+            message_ending_whitespace = re.search('(.*?)\s+$',message_body,re.DOTALL)
+            if message_ending_whitespace:
+                message_body = message_ending_whitespace.group(1)
+                pass
+
+            message_body = re.sub('\s{3,100}',' ',message_body)
+
+
+            msg.content = self.TextToHtml(self.texthandler(message_body))
+            msg.id = self.generate_id(msg.content)
+
+
+            self.messages.append( msg )
+            
+
 
 
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
@@ -355,7 +258,6 @@ class FacebookHandler(SocialHandler):
                 print message.Printable()
                 pass
             print "**************************************************************\n"
-
 
         return self.messages
     
