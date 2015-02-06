@@ -82,11 +82,12 @@ class FacebookHandler(SocialHandler):
         if self.fbcmd_error_status(fbcmd_whoami_text) != 0:
             return []
 
-        matches = re.search('^[0-9]+  (.*)', fbcmd_whoami_text, re.DOTALL)
+        matches = re.search('^[0-9]+  (.*)', fbcmd_whoami_text, re.DOTALL|re.MULTILINE)
 
         username = self.username
         if username == "":
             if matches:
+                self.msg(0,self.texthandler(fbcmd_whoami_text))
                 username = self.texthandler(matches.group(1))
             else:
                 self.msg(0,self.texthandler(fbcmd_whoami_text))
@@ -95,15 +96,13 @@ class FacebookHandler(SocialHandler):
                 return self.messages;
             pass
             
+        sys.exit()
+
         messages_text = self.texthandler(commands.getoutput('%s' % (self.read_posts_command)))
 
         if self.fbcmd_error_status(messages_text) != 0:
             return []
 
-        #in_message = False
-        #msg = Message()
-
-        #inlink = False
 
 
         # First, find all blocks of text corresponding to unique posts (non photos first)
