@@ -95,8 +95,6 @@ class FacebookHandler(SocialHandler):
                 self.active = False
                 return self.messages;
             pass
-            
-        sys.exit()
 
         messages_text = self.texthandler(commands.getoutput('%s' % (self.read_posts_command)))
 
