@@ -271,6 +271,9 @@ class PumpHandler(SocialHandler):
 
             if len(message.attachments)==0:
                 new_note = self.pump.Note(message.content)
+                if message.public:
+                    new_note.to = self.pump.Public
+                    pass
                 new_note.send()
                 successful_id_list.append( message.id )
             else:
@@ -278,6 +281,10 @@ class PumpHandler(SocialHandler):
                 for attachment in message.attachments:
                     new_note.from_file(attachment)
                     pass
+                if message.public:
+                    new_note.to = self.pump.Public
+                    pass
+                new_note.send()
                 successful_id_list.append( message.id )
                 pass
             pass
