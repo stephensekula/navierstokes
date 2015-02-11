@@ -118,6 +118,8 @@ class FacebookHandler(SocialHandler):
             msg = Message()
             msg.source = "Facebook"
 
+            msg.public = 1
+
             # find date of message
             message_date_match = re.search('%s.*?([0-9]{4,4} .*?:[0-9][0-9]) ([-,\+][0-9]+)  ' % (username),block,re.DOTALL)
             if message_date_match:
@@ -174,8 +176,8 @@ class FacebookHandler(SocialHandler):
 
                 pass
 
-
-            self.messages.append( msg )
+            if msg.content != "":
+                self.messages.append( msg )
             
         # handle images - they don't show up in the fstream
         messages_text = commands.getoutput('%s /tmp/fbcmd/ "-of=[pid].jpg"' % (self.read_pics_command))
@@ -209,6 +211,8 @@ class FacebookHandler(SocialHandler):
             
             msg = Message()
             msg.source = "Facebook"
+            msg.public = 1
+
                     
             # find date of message
 
