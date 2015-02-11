@@ -99,6 +99,8 @@ class PumpHandler(SocialHandler):
 
             pump_obj_id = activity.id
 
+            pump_obj_url = pump_obj.url
+
             message = Message()
 
             message.source = "Pump.io"
@@ -118,6 +120,8 @@ class PumpHandler(SocialHandler):
                 
 
             message.SetContent(text)
+
+            message.link = pump_obj_url
             
             try:
                 if pump_obj.deleted:
@@ -253,6 +257,10 @@ class PumpHandler(SocialHandler):
 
 
         for message in messages:
+
+
+            if message.content == "" and len(message.attachments):
+                continue
 
             do_write = False
             if self.sharelevel == "All":
