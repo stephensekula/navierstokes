@@ -135,18 +135,26 @@ class FacebookHandler(SocialHandler):
             message_text_match = re.search('.*[attach,link,photo,video] post  (.*)',block,re.DOTALL)
             if message_text_match != None:
 
-                message_body = self.texthandler(message_text_match.group(1))
+                full_message_body = self.texthandler(message_text_match.group(1))
                 
-                message_text_match = re.search('.*?:(link|caption|name|desc).*',message_body, re.DOTALL)
+                message_text_match = re.search('.*?:(link|caption|name|desc).*',full_message_body, re.DOTALL)
                 if message_text_match:
                     msg.repost = 1
 
 
                 # remove links, etc.
-                message_footer_match = re.search('(.*?):[link,desc,name,likes,caption].*',message_body,re.DOTALL)
+                message_body = self.texthandler("")
+                message_footer_match = re.search('(.*?):[link,desc,name,likes,caption].*',full_message_body,re.DOTALL)
                 if message_footer_match:
                     message_body = message_footer_match.group(1)
                     pass
+
+                # look for links and other things to add to the message body
+                message_link_match = re.search('.*:link\s+(.*):caption\s+(.*):desc\s+(.*)',full_message_body,re.DOTALL)
+                if message_link_match:
+                    message_body += message_link_match.group(1) + '\n' + message_link_match.group(3)
+                    pass
+
 
 
                 # strip leading whitespace and ending whitespace.
@@ -164,13 +172,11 @@ class FacebookHandler(SocialHandler):
                 msg.content = self.TextToHtml(message_body)
                 msg.id = self.generate_id(msg.content)
 
-
                 pass
 
 
             self.messages.append( msg )
             
-
         # handle images - they don't show up in the fstream
         messages_text = commands.getoutput('%s /tmp/fbcmd/ "-of=[pid].jpg"' % (self.read_pics_command))
         if self.fbcmd_error_status(messages_text) != 0:
