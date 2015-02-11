@@ -144,6 +144,9 @@ class TwitterHandler(SocialHandler):
 
         for message in messages:
 
+            if message.content == "":
+                continue
+
             do_write = False
             if self.sharelevel == "All":
                 do_write = True
