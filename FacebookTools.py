@@ -118,7 +118,9 @@ class FacebookHandler(SocialHandler):
 
         facebook_message_blocks = re.split('\[[0-9]+\]\s+', messages_text_noheader, flags=re.DOTALL)
 
+
         for block in facebook_message_blocks:
+
             msg = Message()
             msg.source = "Facebook"
 
@@ -151,12 +153,18 @@ class FacebookHandler(SocialHandler):
                 # remove links, etc.
                 message_body = self.texthandler("")
                 message_footer_match = re.search('(.*?):[link,desc,name,likes,caption].*',full_message_body,re.DOTALL)
+
                 if message_footer_match:
                     message_body = message_footer_match.group(1)
                     pass
+                else:
+                    message_body = full_message_body
+                    pass
+
 
                 # look for links and other things to add to the message body
                 message_link_match = re.search('.*:link\s+(.*):caption\s+(.*):desc\s+(.*)',full_message_body,re.DOTALL)
+
                 if message_link_match:
                     message_body += message_link_match.group(1) + '\n' + message_link_match.group(3)
                     pass
@@ -165,6 +173,7 @@ class FacebookHandler(SocialHandler):
 
                 # strip leading whitespace and ending whitespace.
                 message_leading_whitespace = re.search('^\s+(.*)',message_body,re.DOTALL)
+
                 if message_leading_whitespace:
                     message_body = message_leading_whitespace.group(1)
                     pass
@@ -183,6 +192,8 @@ class FacebookHandler(SocialHandler):
             if msg.content != "":
                 self.messages.append( msg )
             
+            
+
         # handle images - they don't show up in the fstream
         messages_text = commands.getoutput('%s /tmp/fbcmd/ "-of=[pid].jpg"' % (self.read_pics_command))
         if self.fbcmd_error_status(messages_text) != 0:
