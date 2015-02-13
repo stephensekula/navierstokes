@@ -56,6 +56,10 @@ class FacebookHandler(SocialHandler):
             self.msg(0, self.texthandler("fbcmd unable to talk to Facebook due to limitations on application frequency by Facebook - Facebook operations stopped"))
             self.active = False
             return 1
+        if re.search("fbcmd \[v[0-9]+\.[0-9]+\] ERROR:", fbcmd_output, re.DOTALL) != None:
+            self.msg(0, self.texthandler("fbcmd unable to talk to Facebook due to error state - Facebook operations stopped"))
+            self.active = False
+            return 1
         return 0
 
     def gather(self):
@@ -331,6 +335,7 @@ class FacebookHandler(SocialHandler):
                     self.msg(0, "   " + command)
                     pass
                 results = commands.getoutput(command)
+                print results
                 if self.fbcmd_error_status(results) == -1:
                     successful_id_list.append( message.id )
                     pass
