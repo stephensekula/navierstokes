@@ -137,9 +137,12 @@ class FacebookHandler(SocialHandler):
                 self.msg(0,block)
                 self.msg(0,"Unable to obtain message date and time")
                 continue
+
+            # check if this is a photo post. If so, skip it - it will appear in the photo stream later
+            if re.search('.*photo post  (.*)',block,re.DOTALL) != None:
+                continue
             
             # Get the message text and none of the comments, etc.
-
             message_text_match = re.search('.*[attach,link,photo,video] post  (.*)',block,re.DOTALL)
             if message_text_match != None:
 
@@ -283,6 +286,8 @@ class FacebookHandler(SocialHandler):
                 print message.Printable()
                 pass
             print "**************************************************************\n"
+
+        sys.exit()
 
         return self.messages
     
