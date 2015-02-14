@@ -287,8 +287,6 @@ class FacebookHandler(SocialHandler):
                 pass
             print "**************************************************************\n"
 
-        sys.exit()
-
         return self.messages
     
 
