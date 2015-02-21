@@ -378,7 +378,7 @@ for source in messages:
 
                 
                 if debug:
-                    print texthandler(unicode(best_match_text))
+                    print texthandler(unicode(best_match_text)).encode('utf-8')
                     pass
 
                 if not found_match:
@@ -408,6 +408,7 @@ for sinkname in sources_and_sinks:
         pass
     
     lock = FileLock(message_archive_filename)
+
     lock_try_count = 0
     max_lock_try_count = 6
     obtained_lock = False

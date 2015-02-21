@@ -188,24 +188,37 @@ class TwitterHandler(SocialHandler):
                     pass
 
                 try:
-                    results = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
-                    if results.find('Tweet posted') != -1:
-                        successful_id_list.append( message.id )
+                    process = subprocess.Popen([command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                    tries = 0
+                    while tries < 5:
+                        if process.communicate()[0].find('Tweet posted') == -1 or process.poll() != 0:
+                            sleep(5)
+                            print " ==> Tweet not posted - retrying ... "
+                            process.kill()
+                            process = subprocess.Popen([command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                        else:
+                            successful_id_list.append( message.id )
+                            break
+                        tries = tries+1
+                    
+                    #results = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+                    #if results.find('Tweet posted') != -1:
+                    #successful_id_list.append( message.id )
                 except subprocess.CalledProcessError:
                     continue
 
-                tries = 0
+                #tries = 0
 
-                while results.find('Tweet posted') == -1 and tries < 5:
-                    self.msg(1,"Posting to twitter failed - trying again...")
-                    try:
-                        results = subprocess.check_output(command, stderr=subprocess.STDOUT,shell=True)
-                        if results.find('Tweet posted') != -1:
-                            successful_id_list.append( message.id )
-                    except subprocess.CalledProcessError:
-                        pass
-                    tries = tries + 1
-                    pass
+                #while results.find('Tweet posted') == -1 and tries < 5:
+                #    self.msg(1,"Posting to twitter failed - trying again...")
+                #    try:
+                #        results = subprocess.check_output(command, stderr=subprocess.STDOUT,shell=True)
+                #        if results.find('Tweet posted') != -1:
+                #            successful_id_list.append( message.id )
+                #    except subprocess.CalledProcessError:
+                #        pass
+                #    tries = tries + 1
+                #    pass
                 pass
             pass
 
