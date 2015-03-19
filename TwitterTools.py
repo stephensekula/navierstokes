@@ -19,6 +19,7 @@ import re
 import datetime
 import calendar
 import commands
+import time
 
 import URLShortener
 
@@ -190,12 +191,19 @@ class TwitterHandler(SocialHandler):
                 try:
                     process = subprocess.Popen([command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                     tries = 0
+                    time.sleep(5)
                     while tries < 5:
-                        if process.communicate()[0].find('Tweet posted') == -1 or process.poll() != 0:
-                            sleep(5)
+                        tweet_results = process.communicate()[0]
+                        if tweet_results.find('Tweet posted') == -1 or process.poll() != 0:
                             print " ==> Tweet not posted - retrying ... "
-                            process.kill()
+                            try:
+                                process.kill()
+                            except OSError:
+                                print tweet_results
+                                pass
                             process = subprocess.Popen([command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                            time.sleep(5)
+
                         else:
                             successful_id_list.append( message.id )
                             break
