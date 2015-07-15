@@ -278,14 +278,14 @@ class PumpHandler(SocialHandler):
                 continue
 
             if len(message.attachments)==0:
-                new_note = self.pump.Note(message.content)
+                new_note = self.pump.Note(display_name=message.title,content=message.content)
                 if message.public:
                     new_note.to = self.pump.Public
                     pass
                 new_note.send()
                 successful_id_list.append( message.id )
             else:
-                new_note = self.pump.Image(display_name="",content=message.content)
+                new_note = self.pump.Image(display_name=message.title,content=message.content)
                 for attachment in message.attachments:
                     new_note.from_file(attachment)
                     pass

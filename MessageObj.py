@@ -5,6 +5,7 @@ import unicodedata
 
 class Message:
     def __init__(self):
+        self.title   = unicode()
         self.content = unicode()
         self.id = 0
         self.file = unicode("")

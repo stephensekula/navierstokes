@@ -90,6 +90,12 @@ class RSSHandler(SocialHandler):
                 msg.author = self.texthandler(entry.author)
             except AttributeError:
                 msg.author = self.texthandler("Unknown Author")
+
+            try:
+                msg.title = self.texthandler(entry.title)
+            except AttributeError:
+                msg.title = self.texthandler(msg.content[:60])+self.texthandler("...")
+                pass
         
             self.messages.append(msg)
             
