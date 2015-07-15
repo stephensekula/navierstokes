@@ -83,7 +83,10 @@ class RSSHandler(SocialHandler):
                 pass
 
             msg.link = entry.link
-            msg.author = self.texthandler(entry.author)
+            try:
+                msg.author = self.texthandler(entry.author)
+            except AttributeError:
+                msg.author = self.texthandler("Unknown Author")
         
             self.messages.append(msg)
             
