@@ -147,13 +147,11 @@ class GNUSocialHandler(SocialHandler):
             message.content = self.TextToHtml(message.content)
             message.author = dent_author
             message.reply = True if self.find_element_of_status(dent_xml,"in_reply_to_status_id") != "" else False
-            #message.public = True
+            message.public = True
 
             message.id = int(self.find_element_of_status(dent_xml,'id'))
 
-            #dent_source = self.find_element_of_status(dent_xml,"source")
-            #if dent_source == "NavierStokesApp":
-            #    message.
+            message.link = '%s/conversation/%d#notice-%d' % (self.site,message.id,message.id)
 
             # if the dent has a @ at the beginning, it was meant to be a direct
             # message to someone on GNU social and should not be broadcast
@@ -244,8 +242,11 @@ class GNUSocialHandler(SocialHandler):
 
 
 
-                fout = open('/tmp/%d_statusnet_text.txt' % (pid),'w')
-                fout.write(message.content)
+                fout = codecs.open('/tmp/%d_statusnet_text.txt' % (pid),'w',encoding='utf-8')
+                try:
+                    fout.write(message.content)
+                except UnicodeEncodeError:
+                    fout.write(unicodedata.normalize('NFKD',message.content).encode('ascii','ignore'))
                 fout.close()
 
                 data =  " -F source=NavierStokesApp"
