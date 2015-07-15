@@ -59,6 +59,7 @@ class DiasporaHandler(SocialHandler):
                     if matches:
                         msg.date = calendar.timegm(datetime.datetime.strptime(matches.group(1),"%Y-%m-%dT%H:%M:%SZ").timetuple())
                         msg.id = int(matches.group(2))
+                        msg.link = '%s/posts/%d' % (self.webfinger.split('@')[1],msg.id)
                         pass
                     pass
                 pass
