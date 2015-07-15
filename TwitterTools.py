@@ -104,6 +104,28 @@ class TwitterHandler(SocialHandler):
                     message.SetContent( self.texthandler("From <a href=\"https://twitter.com/%s\">Twitter</a>: " % (username)) + message.content )
                     pass
 
+                message.attachments = []
+                # Try to harvest any photo content from the post
+                photo_link_matches = re.compile('(http.*?t\.co/[A-Za-z0-9]+)').findall( message.content )
+                for photo_link in list(set(photo_link_matches)):
+                    # download the HTML page
+                    photo_link_url = URLShortener.ExpandShortURL(photo_link)
+                    process = subprocess.Popen(["curl %s"%(photo_link_url)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                    curl_text = process.communicate()[0]
+                    photo_match = re.compile('(https://[a-zA-Z]+\.twimg\.com.*?:large)').findall(curl_text)
+                    if len(photo_match)>0:
+                        filename_match = re.search('.*/(.*):large', photo_match[0], re.DOTALL)
+                        if filename_match:
+                            if not os.path.exists("/tmp/%s" % (filename_match.group(1))):
+                                process = subprocess.Popen(["curl -o /tmp/%s %s"%(filename_match.group(1),photo_match[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                                pass
+                            if "/tmp/%s" % (filename_match.group(1)) not in message.attachments:
+                                message.attachments.append("/tmp/%s" % (filename_match.group(1)))
+                                pass
+                            pass
+                        pass
+                    pass
+                
 
                 self.messages.append( message )
 
@@ -168,15 +190,27 @@ class TwitterHandler(SocialHandler):
             self.msg(0,"Writing to Twitter")
 
             # if message is too long, chop it and add URL
-            #message_text = copy.deepcopy(message.content)
-            #if len(message_text) > 140:
-            #    message_text = message_text[:97] + "..."
-            #    message_text += URLShortener.URLShort
+            message_text = copy.deepcopy(message.content)
+            if len(message_text) > 140:
+                if len(message.attachments) > 0:
+                    message_text = message_text[:50] + "... " + message.link
+                else:
+                    message_text = message_text[:97] + "... " + message.link
+                    pass
 
-            message_text = self.texthandler(copy.deepcopy(message.content))
+                pass
+
+            if len(message_text) > 140:
+                message_text = message_text[:95]
+                message_text += "... "
+                message_text += self.ShortenURLs(message.link)
+                
+
             if len(message_text) <= 140:
-                tweet = message.content
+                tweet = message_text
                 tweet = tweet.replace('\n',' ')
+                tweet = tweet.replace("'","\\\'")
+                tweet = tweet.replace("@","")
 
                 command = self.texthandler("t update %s '%s'" % (configstring,tweet))
 
@@ -194,6 +228,8 @@ class TwitterHandler(SocialHandler):
                     time.sleep(5)
                     while tries < 5:
                         tweet_results = process.communicate()[0]
+                        print tweet_results
+                        print command
                         if tweet_results.find('Tweet posted') == -1 or process.poll() != 0:
                             print " ==> Tweet not posted - retrying ... "
                             try:
