@@ -56,7 +56,10 @@ class RSSHandler(SocialHandler):
 
             msg.id     = self.generate_id(entry.link)
 
-            msg.date = calendar.timegm(entry.updated_parsed)
+            try:
+                msg.date = calendar.timegm(entry.updated_parsed)
+            except TypeError:
+                continue
 
             msg.content = self.texthandler("<p>Shared from RSS:</p>\n")
             try:
