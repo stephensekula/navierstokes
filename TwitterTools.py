@@ -228,8 +228,6 @@ class TwitterHandler(SocialHandler):
                     time.sleep(5)
                     while tries < 5:
                         tweet_results = process.communicate()[0]
-                        print tweet_results
-                        print command
                         if tweet_results.find('Tweet posted') == -1 or process.poll() != 0:
                             print " ==> Tweet not posted - retrying ... "
                             try:
