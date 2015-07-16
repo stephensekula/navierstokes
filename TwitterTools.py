@@ -35,6 +35,34 @@ class TwitterHandler(SocialHandler):
         pass
 
 
+
+    def tweet_get_images(self,tweet_content=unicode()):
+        #
+        # Search a tweet for an image link. If there are any, hunt them
+        # down for the images, and get those images
+        #
+        photo_attachments = []
+        photo_link_matches = re.compile('(http.*?t\.co/[A-Za-z0-9]+)').findall( tweet_content )
+        for photo_link in list(set(photo_link_matches)):
+            # download the HTML page that holds the image
+            photo_link_url = URLShortener.ExpandShortURL(photo_link)
+            process = subprocess.Popen(["curl %s"%(photo_link_url)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            curl_text = process.communicate()[0]
+            photo_match = re.compile('content="(https://[a-zA-Z]+\.twimg\.com.*?:large)"').findall(curl_text)
+            if len(photo_match)>0:
+                filename_match = re.search('.*/(.*):large', photo_match[0], re.DOTALL)
+                if filename_match:
+                    if not os.path.exists("/tmp/%s" % (filename_match.group(1))):
+                        process = subprocess.Popen(["curl -o /tmp/%s %s"%(filename_match.group(1),photo_match[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                        pass
+                    if "/tmp/%s" % (filename_match.group(1)) not in photo_attachments:
+                        photo_attachments.append("/tmp/%s" % (filename_match.group(1)))
+                        pass
+                    pass
+                pass
+            pass
+
+        return photo_attachments
                         
 
     def gather(self):
@@ -106,26 +134,27 @@ class TwitterHandler(SocialHandler):
 
                 message.attachments = []
                 # Try to harvest any photo content from the post
-                photo_link_matches = re.compile('(http.*?t\.co/[A-Za-z0-9]+)').findall( message.content )
-                for photo_link in list(set(photo_link_matches)):
-                    # download the HTML page
-                    photo_link_url = URLShortener.ExpandShortURL(photo_link)
-                    process = subprocess.Popen(["curl %s"%(photo_link_url)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                    curl_text = process.communicate()[0]
-                    photo_match = re.compile('(https://[a-zA-Z]+\.twimg\.com.*?:large)').findall(curl_text)
-                    if len(photo_match)>0:
-                        filename_match = re.search('.*/(.*):large', photo_match[0], re.DOTALL)
-                        if filename_match:
-                            if not os.path.exists("/tmp/%s" % (filename_match.group(1))):
-                                process = subprocess.Popen(["curl -o /tmp/%s %s"%(filename_match.group(1),photo_match[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                                pass
-                            if "/tmp/%s" % (filename_match.group(1)) not in message.attachments:
-                                message.attachments.append("/tmp/%s" % (filename_match.group(1)))
-                                pass
-                            pass
-                        pass
-                    pass
+                #photo_link_matches = re.compile('(http.*?t\.co/[A-Za-z0-9]+)').findall( message.content )
+                #for photo_link in list(set(photo_link_matches)):
+                #    # download the HTML page
+                #    photo_link_url = URLShortener.ExpandShortURL(photo_link)
+                #    process = subprocess.Popen(["curl %s"%(photo_link_url)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                #    curl_text = process.communicate()[0]
+                #    photo_match = re.compile('(https://[a-zA-Z]+\.twimg\.com.*?:large)').findall(curl_text)
+                #    if len(photo_match)>0:
+                #        filename_match = re.search('.*/(.*):large', photo_match[0], re.DOTALL)
+                #        if filename_match:
+                #            if not os.path.exists("/tmp/%s" % (filename_match.group(1))):
+                #                process = subprocess.Popen(["curl -o /tmp/%s %s"%(filename_match.group(1),photo_match[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                #                pass
+                #            if "/tmp/%s" % (filename_match.group(1)) not in message.attachments:
+                #                message.attachments.append("/tmp/%s" % (filename_match.group(1)))
+                #                pass
+                #            pass
+                #        pass
+                #    pass
                 
+                message.attachments = self.tweet_get_images(message.content)
 
                 self.messages.append( message )
 
