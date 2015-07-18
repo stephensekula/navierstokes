@@ -41,6 +41,9 @@ class SocialHandler(object):
         # time limit for considering posts in this service (seconds)
         self.max_message_age = 3600
 
+        # set a "no share" keyword that, if present in a message, prevents NS from sharing the message
+        self.noshare_keyword = ""
+
         # check that lynx is installed and accessible
         lynx_check = ""
         try:
@@ -62,6 +65,16 @@ class SocialHandler(object):
     @abc.abstractmethod
     def write(self,message=unicode("","utf8")):
         """ This method posts a message to a social network """
+
+    def append_message(self, message=unicode("","utf8")):
+        # safely append messages
+        if self.noshare_keyword != "":
+            if message.content.find(self.noshare_keyword) == -1:
+                self.messages.append(message)
+                pass
+            pass
+        return
+
 
     def texthandler(self, text=unicode("","utf8")):
         if not isinstance(text, unicode):

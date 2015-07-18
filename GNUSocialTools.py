@@ -180,7 +180,8 @@ class GNUSocialHandler(SocialHandler):
             if message.repost:
                 message.SetContent( unicode("<a href=\"%s\">From GNU Social</a> : " % (self.find_element_of_status(dent_xml,"uri")) + message.content ))
                 pass
-            self.messages.append(message)
+
+            self.append_message(message)
             pass
 
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)

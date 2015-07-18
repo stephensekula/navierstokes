@@ -193,8 +193,8 @@ class FacebookHandler(SocialHandler):
                 pass
 
             if msg.content != "":
-                self.messages.append( msg )
-            
+                self.messages.append(msg)
+
             
 
         # handle images - they don't show up in the fstream

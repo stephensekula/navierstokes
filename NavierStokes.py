@@ -222,6 +222,13 @@ for section in config.sections():
         pass
     sources_and_sinks[section].max_message_age = max_message_age
 
+    try:
+        noshare_keyword = config.get(section, "noshare_keyword")
+    except ConfigParser.NoOptionError:
+        noshare_keyword = ""
+        pass
+    sources_and_sinks[section].noshare_keyword = noshare_keyword
+
 
 if debug == True:
     for handler in sources_and_sinks:

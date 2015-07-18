@@ -70,7 +70,7 @@ class DiasporaHandler(SocialHandler):
                     msg.SetContent( msg.content.replace('arx-iv','arxiv') )
                     msg.SetContent( msg.content.replace('arX-iv','arXiv') )
 
-                    messages.append(msg)
+                    self.messages.append(msg)
                     pass
                 elif line.find("POST-ID:") != -1:
                     # we are in a message, but this is a reshare. Handle the first line

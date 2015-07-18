@@ -97,7 +97,8 @@ class RSSHandler(SocialHandler):
                 msg.title = self.texthandler(msg.content[:60])+self.texthandler("...")
                 pass
         
-            self.messages.append(msg)
+
+            self.messages.append(message)
             
 
 

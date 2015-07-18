@@ -156,7 +156,7 @@ class TwitterHandler(SocialHandler):
                 
                 message.attachments = self.tweet_get_images(message.content)
 
-                self.messages.append( message )
+                self.append_message(message)
 
                 pass
 

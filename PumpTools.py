@@ -232,7 +232,7 @@ class PumpHandler(SocialHandler):
                 message.SetContent( "RT from <a href=\"%s\">%s</a>: " % (message.author_url,message.author) + message.content )
                 pass
 
-            self.messages.append(message)
+            self.append_message(message)
 
             pass
 
