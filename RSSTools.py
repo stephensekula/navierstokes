@@ -98,7 +98,7 @@ class RSSHandler(SocialHandler):
                 pass
         
 
-            self.messages.append(message)
+            self.messages.append(msg)
             
 
 
