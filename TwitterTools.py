@@ -224,21 +224,15 @@ class TwitterHandler(SocialHandler):
                 if len(message.attachments) > 0:
                     message_text = message_text[:50] + "... " + message.link
                 else:
-                    message_text = message_text[:97] + "... " + message.link
+                    message_text = message_text[:80] + "... " + message.link
                     pass
 
                 pass
 
-            if len(message_text) > 140:
-                message_text = message_text[:95]
-                message_text += "... "
-                message_text += self.ShortenURLs(message.link)
-                
-
             if len(message_text) <= 140:
                 tweet = message_text
                 tweet = tweet.replace('\n',' ')
-                tweet = tweet.replace("'","\\\'")
+                tweet = tweet.replace("'","'\\\''")
                 tweet = tweet.replace("@","")
 
                 command = self.texthandler("t update %s '%s'" % (configstring,tweet))
@@ -256,9 +250,12 @@ class TwitterHandler(SocialHandler):
                     tries = 0
                     time.sleep(5)
                     while tries < 5:
-                        tweet_results = process.communicate()[0]
+                        tweet_results = '\n'.join(process.communicate())
                         if tweet_results.find('Tweet posted') == -1 or process.poll() != 0:
                             print " ==> Tweet not posted - retrying ... "
+                            print command
+                            print " Twitter output: "
+                            print tweet_results
                             try:
                                 process.kill()
                             except OSError:
