@@ -73,6 +73,9 @@ class SocialHandler(object):
                 self.messages.append(message)
                 pass
             pass
+        else:
+            self.messages.append(message)
+            pass
         return
 
 
