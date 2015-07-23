@@ -43,8 +43,6 @@ class DiasporaHandler(SocialHandler):
 
         lines = text.split('\n')
         
-        messages = []
-
         msg = Message()
 
         for line in lines:
@@ -64,13 +62,13 @@ class DiasporaHandler(SocialHandler):
                     pass
                 pass
             else:
-                if line.find("COMMENTS:") != -1:
+                if line.find("COMMENTS") != -1:
                     in_message = False
 
-                    msg.SetContent( msg.content.replace('arx-iv','arxiv') )
-                    msg.SetContent( msg.content.replace('arX-iv','arXiv') )
+                    #msg.SetContent( msg.content.replace('arx-iv','arxiv') )
+                    #msg.SetContent( msg.content.replace('arX-iv','arXiv') )
 
-                    self.messages.append(msg)
+                    self.append_message(msg)
                     pass
                 elif line.find("POST-ID:") != -1:
                     # we are in a message, but this is a reshare. Handle the first line
@@ -99,10 +97,7 @@ class DiasporaHandler(SocialHandler):
                 pass
 
             pass
-
-
-
-        return messages
+        return
         
 
     def gather(self):
@@ -117,7 +112,7 @@ class DiasporaHandler(SocialHandler):
         
         text = commands.getoutput('cliaspora show mystream | sed -e \'s/\.br/\.nf \.nh/\' | preconv | groff -Tascii')
         
-        self.messages = self.ParseStream(text)
+        self.ParseStream(text)
 
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
