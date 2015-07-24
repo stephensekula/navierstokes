@@ -39,9 +39,6 @@ Requirements
         git clone https://github.com/seatgeek/fuzzywuzzy.git
         cd fuzzywuzzy
         python setup.py install
-    FBCMD
-        This is needed if you want to bridge to Facebook.
-        http://fbcmd.dtompkins.com/
     t (Ruby Gem for interacting with Twitter)
         This is needed if you want to bridge to Twitter.
         http://rubygems.org/gems/t
@@ -112,12 +109,6 @@ password: XXXXXXXXXXXXXXXXXXX
 aspect: public
 sharelevel: All
 
-[facebook]
-type: facebook
-username: My Name On Facebook
-album: Timeline Photos
-sharelevel: Public
-
 [twitter]
 type: twitter
 sharelevel: Public
@@ -135,14 +126,14 @@ serviceKey: pseudosecretKey
 #serviceURL: http://ur1.ca
 #serviceKey: False
 
-Note that “sharelevel” means at what level of publicity from other networks you want a notice shared to this one. I've set this, for now, the way I like it. If you set this to “Public”, ONLY notices that are public on other networks will go there. For instance, I only like to share things that are public on pump.io with Facebook and Twitter. Things on Twitter are public by default, so they will ALWAYS be shared with other networks.
+Note that “sharelevel” means at what level of publicity from other networks you want a notice shared to this one. I've set this, for now, the way I like it. If you set this to “Public”, ONLY notices that are public on other networks will go there. For instance, I only like to share things that are public on pump.io with Twitter. Things on Twitter are public by default, so they will ALWAYS be shared with other networks.
 
 “shortenurls” presently enabled will take ALL URLs listed in the message text and shorten them via ur1.ca. In the future, this will be a choice the user can make.
 Running NavierStokes
 
 "urlshortening" currently supports ur1.ca (and sites running its source) and shortenizer shortening. ur1.ca is the default shortening service/url.
 
-Once you have written a .cfg file and setup account information in it (and, in the case of Pump.io, Twitter, and Facebook, authenticated PyPump, t, and FBCMD against those respective networks as clients), you can try executing NavierStokes manually:
+Once you have written a .cfg file and setup account information in it (and, in the case of Pump.io and Twitter, you have authenticated PyPump and t against those respective networks as clients), you can try executing NavierStokes manually:
 
     python ./NavierStokes.py
 

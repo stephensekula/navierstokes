@@ -32,7 +32,6 @@ import SocialHandler
 import GNUSocialTools
 import PumpTools
 import DiasporaTools
-import FacebookTools
 import TwitterTools
 import RSSTools
 import URLShortener
@@ -173,32 +172,6 @@ for section in config.sections():
                                                                        password=config.get(section, "password"), \
                                                                        aspect=config.get(section,"aspect"),
                                                                        sharelevel=config.get(section,"sharelevel"))
-        pass
-    elif config.get(section, "type") == "facebook":
-        sources_and_sinks[section] = FacebookTools.FacebookHandler(album=config.get(section, "album"), \
-                                                                   sharelevel=config.get(section, "sharelevel"))
-        try:
-            sources_and_sinks[section].username=config.get(section, "username")
-        except ConfigParser.NoOptionError:
-            pass
-        try:
-            sources_and_sinks[section].read_posts_command=config.get(section, "read_posts_command")
-        except ConfigParser.NoOptionError:
-            pass
-        try:
-            sources_and_sinks[section].read_pics_command=config.get(section, "read_pics_command")
-        except ConfigParser.NoOptionError:
-            pass
-        try:
-            sources_and_sinks[section].write_post_command=config.get(section, "write_post_command")
-        except ConfigParser.NoOptionError:
-            pass
-        try:
-            sources_and_sinks[section].write_pics_command=config.get(section, "write_pics_command")
-        except ConfigParser.NoOptionError:
-            pass
-
-
         pass
     elif config.get(section, "type") == "twitter":
         sources_and_sinks[section] = TwitterTools.TwitterHandler(sharelevel=config.get(section, "sharelevel"))
@@ -490,8 +463,7 @@ for sinkname in sources_and_sinks:
 
 
         if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler or \
-           type(sources_and_sinks[sinkname]) == GNUSocialTools.GNUSocialHandler or \
-           type(sources_and_sinks[sinkname]) == FacebookTools.FacebookHandler:
+           type(sources_and_sinks[sinkname]) == GNUSocialTools.GNUSocialHandler:
             message.content = sources_and_sinks[sinkname].HTMLConvert(message.content)
 
         if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler or \
@@ -500,8 +472,7 @@ for sinkname in sources_and_sinks:
             message.content = message.content.rstrip('\n')
             
 
-        if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler or \
-           type(sources_and_sinks[sinkname]) == FacebookTools.FacebookHandler:
+        if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler:
             message.content = message.content.replace('"','\\"')
             
 
@@ -515,10 +486,6 @@ for sinkname in sources_and_sinks:
             message.content = message.content.decode('iso-8859-1') 
             pass
 
-
-        if type(sources_and_sinks[sinkname]) == FacebookTools.FacebookHandler:
-            # fbcmd just cannot handle unicode...
-            message.content = unicodedata.normalize('NFKD', unicode(message.content)).encode('ascii','ignore')
 
         if debug:
             print "Message text after cleanup:"
