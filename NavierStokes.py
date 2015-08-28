@@ -452,12 +452,14 @@ for sinkname in sources_and_sinks:
         found_urls = re.findall(url_pattern, message.content, re.MULTILINE)
         unique_urls = list(Set(found_urls))
         for url in unique_urls:
-            new_url = URLShortener.ExpandShortURL(url)
+            if (url.find("fb.me") != -1 or url.find("t.co") != -1):
+                new_url = URLShortener.ExpandShortURL(url)
 
-            try:
-                message.content = message.content.replace(url,new_url)
-            except UnicodeDecodeError:
-                message.content = message.content.replace(url.encode('utf-8'),new_url.encode('utf-8'))
+                try:
+                    message.content = message.content.replace(url,new_url)
+                except UnicodeDecodeError:
+                    message.content = message.content.replace(url.encode('utf-8'),new_url.encode('utf-8'))
+                    pass
                 pass
             pass
 
