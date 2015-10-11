@@ -54,7 +54,10 @@ class RSSHandler(SocialHandler):
             msg.reply  = False
             msg.direct = False
 
-            msg.id     = self.generate_id(entry.link)
+            try:
+                msg.id     = self.generate_id(entry.link)
+            except AttributeError:
+                continue
 
             try:
                 msg.date = calendar.timegm(entry.updated_parsed)
