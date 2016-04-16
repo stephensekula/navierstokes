@@ -7,6 +7,7 @@ import requests
 import logging
 import pycurl
 import json
+import time
 try:
     from io import BytesIO
 except ImportError:
@@ -62,6 +63,7 @@ def ExpandShortURL(short_url):
 
     c = pycurl.Curl()
     c.setopt(c.URL, short_url)
+    #c.setopt(c.USERAGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A")
 
     c.setopt(c.FOLLOWLOCATION, True)
     # Set our header function.
@@ -155,11 +157,14 @@ class URLShortener(object):
 
         while tries < 5:
             payload = {'longurl':longurl}
-            r = requests.post(self.serviceURL, data=payload)
-            if r.status_code == 200:
-                break
+            try:
+                r = requests.post(self.serviceURL, data=payload)
+                if r.status_code == 200:
+                    break
+            except requests.exceptions.ConnectionError:
+                pass
             tries += 1
-            sleep(5)
+            time.sleep(5)
         
         if tries == 5:
             logging.error("Unable to connect to URL shortening site.")
