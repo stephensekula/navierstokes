@@ -54,6 +54,9 @@ def texthandler(text=unicode("","utf8")):
 global url_pattern 
 url_pattern = unicode('(?:http[s]{0,1}://|www.)[^"\'<> ]+')
 
+global html_pattern
+html_pattern = unicode('<.*?>')
+
 
 FORMAT = "%(asctime)-15s %(message)s"
 logging.basicConfig(format=FORMAT,level=logging.INFO)
@@ -148,6 +151,10 @@ for section in config.sections():
         continue
     elif config.get(section, "type") == "rss":
         sources_and_sinks[section] = RSSTools.RSSHandler(feed_url=config.get(section, "feed_url"))
+        try:
+            sources_and_sinks[section].prepend = config.get(section, "prepend")
+        except ConfigParser.NoOptionError:
+            pass
 
         pass
     if config.get(section, "type") == "gnusocial":
@@ -293,12 +300,23 @@ for source in messages:
                         this_message = this_message.replace(url,"")
                         pass
 
+                    this_htmls = re.findall(html_pattern, this_message, re.MULTILINE)
+                    for htmlcode in this_htmls:
+                        this_message = this_message.replace(htmlcode,"")
+                        pass
+
                     that_urls = re.findall(url_pattern, that_message, re.MULTILINE)
                     unique_urls = list(Set(that_urls))
                     for url in unique_urls:
                         that_message = that_message.replace(url,"")
                         pass
 
+                    that_htmls = re.findall(html_pattern, that_message, re.MULTILINE)
+                    for htmlcode in that_htmls:
+                        that_message = that_message.replace(htmlcode,"")
+                        pass
+
+                    
 
                     match_ratio = fuzz.token_set_ratio(this_message, that_message, force_ascii=True)
                     if match_ratio >= best_match_score:
@@ -338,10 +356,20 @@ for source in messages:
                             this_message = this_message.replace(url,"")
                             pass
                             
+                        this_htmls = re.findall(html_pattern, this_message, re.MULTILINE)
+                        for htmlcode in this_htmls:
+                            this_message = this_message.replace(htmlcode,"")
+                            pass
+
                         that_urls = re.findall(url_pattern, that_message, re.MULTILINE)
                         unique_urls = list(Set(that_urls))
                         for url in unique_urls:
                             that_message = that_message.replace(url,"")
+                            pass
+
+                        that_htmls = re.findall(html_pattern, that_message, re.MULTILINE)
+                        for htmlcode in that_htmls:
+                            that_message = that_message.replace(htmlcode,"")
                             pass
 
 
@@ -452,8 +480,16 @@ for sinkname in sources_and_sinks:
         found_urls = re.findall(url_pattern, message.content, re.MULTILINE)
         unique_urls = list(Set(found_urls))
         for url in unique_urls:
-            if (url.find("fb.me") != -1 or url.find("t.co") != -1):
+            if debug:
+                print "URL: %s" % (url)
+            # fb.me links cannot be tracked back to source, because FB is a piece of shit
+            # and blocks cURL as an "unsupported browser"
+            if (url.find("t.co") != -1 or url.find("flip.it") != -1):
+                if debug:
+                    print "Found forbidden links! Fix them!"
+
                 new_url = URLShortener.ExpandShortURL(url)
+
 
                 try:
                     message.content = message.content.replace(url,new_url)
