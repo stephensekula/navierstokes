@@ -31,6 +31,7 @@ class RSSHandler(SocialHandler):
 
         # the feed URL
         self.feed_url = feed_url
+        self.prepend  = ""
         
             
         pass
@@ -64,9 +65,11 @@ class RSSHandler(SocialHandler):
             except TypeError:
                 continue
 
-            msg.content = self.texthandler("<p>Shared from RSS:</p>\n")
+            #msg.content = self.texthandler("<p>Shared from RSS:</p>\n")
+            msg.content = self.texthandler(self.prepend)
             try:
                 msg.content += self.texthandler("<p><b>\"%s\"</b></p>\n" % entry.title)
+                msg.title   =  self.texthandler(entry.title)
             except AttributeError:
                 pass
             
