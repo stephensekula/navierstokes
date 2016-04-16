@@ -116,7 +116,10 @@ class GNUSocialHandler(SocialHandler):
         self.msg(0, unicode("Gathering messages."))
 
         # Get the XML file from the web
-        xml_file_contents = unicode(commands.getoutput('curl -s -u \'%s:%s\' %s/api/statuses/user_timeline/%s.xml?count=200' % (self.username,self.password,self.site,self.username)).decode('utf-8'))
+        try:
+            xml_file_contents = unicode(commands.getoutput('curl -m 120 --connect-timeout 60 -s -u \'%s:%s\' %s/api/statuses/user_timeline/%s.xml?count=200' % (self.username,self.password,self.site,self.username)).decode('utf-8'))
+        except xml.parsers.expat.ExpatError:
+            return self.messages
 
         pid = os.getpid()
         
@@ -163,7 +166,7 @@ class GNUSocialHandler(SocialHandler):
                 if dent_attachment.find(self.site) != -1:
                     filename = dent_attachment.split('/')[-1]
                     if not os.path.exists('/tmp/%s' % (filename)):
-                        os.system('curl -s -o /tmp/%s %s' % ( filename, dent_attachment ))
+                        os.system('curl --connect-timeout 60 -m 120 -s -o /tmp/%s %s' % ( filename, dent_attachment ))
                         pass
                     
                     message.attachments.append( '/tmp/%s' % (filename) )
@@ -269,7 +272,7 @@ class GNUSocialHandler(SocialHandler):
 
                 pass
 
-            command = 'curl -s -u \'%s:%s\' %s/api/statuses/update.xml %s' % (self.username,self.password,self.site,data)
+            command = 'curl --connect-timeout 60 -m 120 -s -u \'%s:%s\' %s/api/statuses/update.xml %s' % (self.username,self.password,self.site,data)
             if self.debug:
                 self.msg(level=0,text=command)
                 pass
