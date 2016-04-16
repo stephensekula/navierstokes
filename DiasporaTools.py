@@ -67,8 +67,9 @@ class DiasporaHandler(SocialHandler):
 
                     #msg.SetContent( msg.content.replace('arx-iv','arxiv') )
                     #msg.SetContent( msg.content.replace('arX-iv','arXiv') )
-
-                    self.append_message(msg)
+                    if len(msg.content) != 0:
+                        self.append_message(msg)
+                        pass
                     pass
                 elif line.find("POST-ID:") != -1:
                     # we are in a message, but this is a reshare. Handle the first line
@@ -152,7 +153,7 @@ class DiasporaHandler(SocialHandler):
             notice_text = message.content
 
             # user mapping
-            notice_text = self.map_users(notice_text)
+            #notice_text = self.map_users(notice_text)
 
             notice_file = codecs.open('/tmp/diaspora','w',encoding='utf-8')
             notice_file.write(self.texthandler(notice_text))
@@ -187,10 +188,11 @@ class DiasporaHandler(SocialHandler):
 
                         if post_tries != 0:
                             commands.getoutput('convert -scale %dx %s %s.small.png' % (target_image_width,attachment,attachment))
-                            post_response = commands.getoutput('echo "%s" | cliaspora -m upload "%s" %s.small.png' % (notice_text,aspect,attachment))
+                            #post_response = commands.getoutput('echo "%s" | cliaspora -m upload "%s" %s.small.png' % (notice_text,aspect,attachment))
+                            post_response = commands.getoutput('cat /tmp/diaspora | cliaspora -m upload "%s" %s.small.png' % (aspect,attachment))
                             target_image_width = target_image_width - 50
                         else:
-                            post_response = commands.getoutput('echo "%s" | cliaspora -m upload "%s" %s' % (notice_text,aspect,attachment))
+                            post_response = commands.getoutput('cat /tmp/diaspora | cliaspora -m upload "%s" %s' % (aspect,attachment))
                             pass
 
                         if post_response.find("Failed") != -1:
