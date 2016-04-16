@@ -46,14 +46,14 @@ class TwitterHandler(SocialHandler):
         for photo_link in list(set(photo_link_matches)):
             # download the HTML page that holds the image
             photo_link_url = URLShortener.ExpandShortURL(photo_link)
-            process = subprocess.Popen(["curl %s"%(photo_link_url)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            process = subprocess.Popen(["curl -m 120 --connect-timeout 60 %s"%(photo_link_url)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             curl_text = process.communicate()[0]
             photo_match = re.compile('content="(https://[a-zA-Z]+\.twimg\.com.*?:large)"').findall(curl_text)
             if len(photo_match)>0:
                 filename_match = re.search('.*/(.*):large', photo_match[0], re.DOTALL)
                 if filename_match:
                     if not os.path.exists("/tmp/%s" % (filename_match.group(1))):
-                        process = subprocess.Popen(["curl -o /tmp/%s %s"%(filename_match.group(1),photo_match[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                        process = subprocess.Popen(["curl -m 120 --connect-timeout 60 -o /tmp/%s %s"%(filename_match.group(1),photo_match[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                         pass
                     if "/tmp/%s" % (filename_match.group(1)) not in photo_attachments:
                         photo_attachments.append("/tmp/%s" % (filename_match.group(1)))
@@ -113,14 +113,19 @@ class TwitterHandler(SocialHandler):
                 message_text = message_text.replace("\"\"","\"")
 
                 message = Message()
-                message.id = int(matches.group(1))
+                try:
+                    message.id = int(matches.group(1))
+                except ValueError:
+                    print "ERROR: unable to get the message ID. Bailing."
+                    continue
+                
                 message_time_text = datetime.datetime.strptime(matches.group(2), "%Y-%m-%d %H:%M:%S +0000")
                 message.date = calendar.timegm(message_time_text.timetuple())
                 message.source = "Twitter"
                 message.SetContent(self.TextToHtml(message_text))
                 message.author = username
-                message.reply = True if (message_text[0] == "@" or message_text[1] == "@") else False
-                message.direct = True if (message_text[0] == "@" or message_text[1] == "@") else False
+                message.reply = True if (message_text[0] == "@") else False
+                message.direct = True if (message_text[0] == "@") else False
                 if message.reply or message.direct:
                     message.public = False
                 else:
@@ -288,6 +293,14 @@ class TwitterHandler(SocialHandler):
                 #    tries = tries + 1
                 #    pass
                 pass
+
+            else:
+                # message is too long to post - print it to screen to help debug
+                self.msg(0, "Unable to post a message to twitter, even after shortening - too long!")
+                self.msg(0, self.texthandler(message_text))
+
+
+
             pass
 
         self.msg(0,"Wrote %d messages" % len(messages))
