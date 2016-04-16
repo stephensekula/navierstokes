@@ -99,7 +99,11 @@ class PumpHandler(SocialHandler):
 
             pump_obj_id = activity.id
 
-            pump_obj_url = pump_obj.url
+            try:
+                pump_obj_url = pump_obj.url
+            except AttributeError:
+                continue
+                pass
 
             message = Message()
 
@@ -286,14 +290,18 @@ class PumpHandler(SocialHandler):
                 successful_id_list.append( message.id )
             else:
                 new_note = self.pump.Image(display_name=message.title,content=message.content)
-                for attachment in message.attachments:
-                    new_note.from_file(attachment)
-                    pass
                 if message.public:
                     new_note.to = self.pump.Public
                     pass
-                new_note.send()
-                successful_id_list.append( message.id )
+                for attachment in message.attachments:
+                    new_note.from_file(attachment)
+                    pass
+
+                try:
+                    new_note.send()
+                    successful_id_list.append( message.id )
+                except PyPumpException:
+                    pass
                 pass
             pass
 
