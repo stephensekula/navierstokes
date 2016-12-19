@@ -480,6 +480,7 @@ for sinkname in sources_and_sinks:
         found_urls = re.findall(url_pattern, message.content, re.MULTILINE)
         unique_urls = list(Set(found_urls))
         for url in unique_urls:
+            url = unicode(url)
             if debug:
                 print "URL: %s" % (url)
             # fb.me links cannot be tracked back to source, because FB is a piece of shit
@@ -489,13 +490,26 @@ for sinkname in sources_and_sinks:
                     print "Found forbidden links! Fix them!"
 
                 new_url = URLShortener.ExpandShortURL(url)
+                
 
+                if new_url.find("unsupportedbrowser") != -1:
+                    # uh oh - probably this was a trace back to a FB page, which doesn't
+                    # recognize wget or cURL as "real browsers". Reset the URL.
+                    new_url = url
+                    pass
+
+                if debug:
+                    print "Original URL: %s" % (url)
+                    print "Fixed    URL: %s" % (new_url)
 
                 try:
                     message.content = message.content.replace(url,new_url)
                 except UnicodeDecodeError:
                     message.content = message.content.replace(url.encode('utf-8'),new_url.encode('utf-8'))
                     pass
+
+                logging.info(message.content)
+
                 pass
             pass
 
