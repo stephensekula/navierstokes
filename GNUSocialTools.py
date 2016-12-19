@@ -127,9 +127,12 @@ class GNUSocialHandler(SocialHandler):
         xml_file.write(self.texthandler(xml_file_contents))
         xml_file.close()
         
-        document = self.get_a_stream("/tmp/%d_dents.xml" % (pid))
-        dents_xml = self.find_status_elements(document)
-        
+        try:
+            document = self.get_a_stream("/tmp/%d_dents.xml" % (pid))
+            dents_xml = self.find_status_elements(document)
+        except xml.parsers.expat.ExpatError:
+            return self.messages
+
         highest_id = 0
         for dent_xml in dents_xml:
          
@@ -142,12 +145,14 @@ class GNUSocialHandler(SocialHandler):
             dent_author = unicode(self.status_author_name(dent_xml).decode('utf8'))
             if dent_author != self.username:
                 continue
-
+                
 
             message = Message()
             message.source = "GNU Social"
             message.SetContent(dent_text)
             message.content = self.TextToHtml(message.content)
+            if message.content.find("deleted notice") != -1:
+                continue
             message.author = dent_author
             message.reply = True if self.find_element_of_status(dent_xml,"in_reply_to_status_id") != "" else False
             message.public = True
