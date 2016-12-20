@@ -208,10 +208,18 @@ class URLShortener(object):
 
         payload = {'longurl':longurl, 'key':self.key, 'term':vanityTerm}
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        r = requests.post(self.serviceURL, data=json.dumps(payload), headers=headers, verify=False)
-        #print "response: \n", r.text, "---/response -- \n"
         
-        shortURL = self.getURLfromShortenizerResponse(r.text)
+        try:
+            r = requests.post(self.serviceURL, data=json.dumps(payload), headers=headers, verify=False)
+            r = r.text
+            shortURL = self.getURLfromShortenizerResponse(r)
+        except requests.exceptions.ConnectionError:
+            r = 'error: Unable to connect to URL shortening site'
+            logging.error(r)
+            shortURL = r
+                
+        #print "response: \n", r, "---/response -- \n"
+        
         return shortURL
             
     def shorten(self, longurl, vanityTerm=False):         
@@ -223,7 +231,7 @@ class URLShortener(object):
                     
         print "original URL length: " + str(len(longurl))
         print "short URL length: " + str(len(shortURL))   
-        if len(longurl) <= len(shortURL):
+        if len(longurl) <= len(shortURL) or (shortURL[:6] == 'error:'):
             return longurl
         else:
             return shortURL        
