@@ -1,4 +1,4 @@
-NavierStokes
+# NavierStokes
 
 NavierStokes is a set of Python classes that allow you to bridge between social network accounts. These classes rely on a number of external tools to do the hard work of actually talking to networks. There is a master “executable” file that uses the supporting classes to bridge between your various accounts. See usage information below.
 
@@ -6,15 +6,14 @@ It employs “fuzzy text matching”, as well as a record of posts that have alr
 
 NavierStokes considers only posts made in the last hour when it scans the streams from different social networks. It won't re-post something that is 6 hours or 6 days old.
 
-Developers
+## Developers
 
 Created by Stephen Sekula. Developers of this code are as follows:
 
 * Jon Robbins (https://io.jrobb.org/jrobb)
 * Stephen Sekula (https://hub.polari.us/steve)
 
-
-License
+## License
 
 Copyright 2014, Stephen Jacob Sekula https://hub.polari.us/steve
 
@@ -24,7 +23,7 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-Requirements
+# Requirements
 
     cliaspora-0.1.9.tgz (Diaspora access) (https://freeshell.de/~mk/projects/cliaspora.html)
     PyPump 0.5 (pump.io access)
@@ -47,6 +46,7 @@ Requirements
 
 In general, here are the Python libraries needed to make this package operate:
 
+```
 abc
 calendar
 codecs
@@ -70,8 +70,9 @@ sys
 time
 unicodedata
 xml.dom.minidom
+```
 
-Installation
+# Installation
 
     Unpack the tarball. This automatically creates the navierstokes/ application directory
     You should create a configuration file for NavierStokes: ~/.navierstokes/navierstokes.cfg. The syntax for the file is explained below.
@@ -82,12 +83,13 @@ Installation
     file (see example below). PyPump docs: https://pypump.readthedocs.org/en/latest/
     Make sure Cliaspora is available in the PATH environment variable, or Diaspora interactions will fail.
 
-Example navierstokes.cfg file
+## Example navierstokes.cfg file
 
 Be sure to make this .cfg file only readable by you:
 
     chmod 600 ~/.navierstokes/navierstokes.cfg
 
+```
 [gnusocial]
 type: gnusocial
 site: gnusocial.server.url
@@ -125,6 +127,7 @@ serviceKey: pseudosecretKey
 #service: ur1
 #serviceURL: http://ur1.ca
 #serviceKey: False
+```
 
 Note that “sharelevel” means at what level of publicity from other networks you want a notice shared to this one. I've set this, for now, the way I like it. If you set this to “Public”, ONLY notices that are public on other networks will go there. For instance, I only like to share things that are public on pump.io with Twitter. Things on Twitter are public by default, so they will ALWAYS be shared with other networks.
 
@@ -143,13 +146,16 @@ If you get errors, try running in Debug Mode and see what you can learn:
 
 I run NavierStokes every 5 minutes using a CRON job:
 
+```
 */5 * * * * bash -l -c 'python /path/to/navierstokes/NavierStokes.py >> ${HOME}/.navierstokes/navierstokes.log 2>&1'
+```
 
 If you get any errors that are unrelated to passwords, logging into, report them to navierstokes+NOSPAM@hub.polari.us.
 A simple program to authenticate PyPump against your pump.io instance
 
 For PyPump v0.5, this ought to work:
 
+```
 #!/usr/bin/env python
 
 from pypump import PyPump, Client
@@ -170,4 +176,4 @@ client_tokens = pump.get_token() # [<token>, <secret>]
 
 print "client_credentials: %s,%s" % (client_credentials[0],client_credentials[1])
 print "client_tokens: %s,%s" % (client_tokens[0],client_tokens[1])
-
+```
