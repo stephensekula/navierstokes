@@ -6,9 +6,8 @@ Created: Dec. 23, 2013
 * DisaporaHandler:
 Inherits from: SocialHandler
 Purpose: to gather messages from a Diaspora instance, and write messages to
-the same instance. It uses an external tool to do all of this, currently
-"cliaspora" (version 0.1.7 is currently employed) - 
-http://freeshell.de/~mk/projects/cliaspora.html
+the same instance. It uses an external library to do this: diaspy
+https://github.com/marekjm/diaspy
 """
 
 from SocialHandler import *
@@ -21,6 +20,7 @@ import calendar
 import datetime
 import commands
 import codecs
+import diaspy
 
 class DiasporaHandler(SocialHandler):
     def __init__(self, webfinger, password, aspect="public", sharelevel="Public"):
@@ -42,7 +42,7 @@ class DiasporaHandler(SocialHandler):
         in_message = False
 
         lines = text.split('\n')
-        
+
         msg = Message()
 
         for line in lines:
@@ -99,21 +99,50 @@ class DiasporaHandler(SocialHandler):
 
             pass
         return
-        
+
 
     def gather(self):
 
         self.messages = []
 
-        response = os.system('cliaspora status')
-        if response == 256:
-            password = self.password.replace(' ','\ ')
-            os.system('cliaspora session new %s "%s"' % (self.webfinger, password))
-            pass
-        
-        text = commands.getoutput('cliaspora show mystream | sed -e \'s/\.br/\.nf \.nh/\' | preconv | groff -Tascii')
-        
-        self.ParseStream(text)
+        connection = diaspy.connection.Connection(pod='https://%s' % (self.webfinger.split('@')[1]),username=self.webfinger.split('@')[0],password=self.password)
+
+
+        # response = os.system('cliaspora status')
+        #if response == 256:
+        #    password = self.password.replace(' ','\ ')
+        #    os.system('cliaspora session new %s "%s"' % (self.webfinger, password))
+        #    pass
+
+        #text = commands.getoutput('cliaspora show mystream | sed -e \'s/\.br/\.nf \.nh/\' | preconv | groff -Tascii')
+
+        connection.login()
+        stream = diaspy.streams.Activity(connection)
+
+        for post in stream:
+            msg = Message()
+            msg.source = "Diaspora"
+            #msg.date = calendar.timegm(datetime.datetime.strptime(matches.group(1),"%Y-%m-%dT%H:%M:%SZ").timetuple())
+            msg.id = post['id']
+            msg.link = '%s/posts/%d' % (self.webfinger.split('@')[1],msg.id)
+            msg.author = post.author()
+            msg.date   = calendar.timegm(datetime.datetime.strptime(post['created_at'],"%Y-%m-%dT%H:%M:%S.000Z").timetuple())
+            msg.SetContent(msg.content + post.__str__())
+
+            # determine the message type
+            if post['post_type'] == "StatusMessage":
+                msg.repost = 0
+                msg.direct = 0
+            elif post['post_type'] == "Reshare":
+                msg.report = 1
+                msg.direct = 0
+                msg.SetContent(msg.content + "From %s on Diaspora: " % (post.author()))
+                pass
+
+
+            self.messages.append(msg)
+
+        #self.ParseStream(text)
 
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
@@ -126,9 +155,9 @@ class DiasporaHandler(SocialHandler):
 
         return self.messages
 
-    
+
     def write(self, messages=[]):
-        
+
         successful_id_list = []
 
         for message in messages:
@@ -167,7 +196,7 @@ class DiasporaHandler(SocialHandler):
                 #password = self.password.replace(' ','\ ')
                 os.system('cliaspora session new %s \'%s\'' % (self.webfinger, self.password))
                 pass
-            
+
             aspect = self.aspect
             if message.public:
                 aspect = "public"
@@ -176,10 +205,10 @@ class DiasporaHandler(SocialHandler):
             if len(message.attachments) > 0:
                 for attachment in message.attachments:
                     # to post an image, first upload it then comment on it.
-                    
+
                     post_succeeded = 0
                     post_tries = 0
-                    
+
                     target_image_width=400
 
                     while post_succeeded == 0 and post_tries < 5:
@@ -200,7 +229,7 @@ class DiasporaHandler(SocialHandler):
                         else:
                             post_succeeded = 1
                             pass
-                        
+
                         if post_succeeded:
                             successful_id_list.append( message.id )
 
@@ -218,4 +247,3 @@ class DiasporaHandler(SocialHandler):
 
         self.msg(0, "Wrote %d messages." % (len(messages)))
         return successful_id_list
-    
