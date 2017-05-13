@@ -25,7 +25,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 # Requirements
 
-    cliaspora-0.1.9.tgz (Diaspora access) (https://freeshell.de/~mk/projects/cliaspora.html)
+    diapsy (Limited Diaspora access) (https://github.com/marekjm/diaspy)
     PyPump 0.5 (pump.io access)
         git clone https://github.com/xray7224/PyPump.git
         cd PyPump
@@ -48,10 +48,12 @@ In general, here are the Python libraries needed to make this package operate:
 
 ```
 abc
+bs4
 calendar
 codecs
 commands
 copy
+diaspy
 feedparser
 fuzzywuzzy
 getopt
@@ -107,6 +109,7 @@ sharelevel: All
 [diaspora]
 type: diaspora
 webfinger: user@diaspora.server
+guid: XXXXXXXXXXXXXXXXXXX
 password: XXXXXXXXXXXXXXXXXXX
 aspect: public
 sharelevel: All

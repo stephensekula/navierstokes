@@ -7,7 +7,7 @@ Created: Dec. 23, 2013
 Inherits from: SocialHandler
 Purpose: to gather messages from a Diaspora instance, and write messages to
 the same instance. It uses an external tool to do all of this, currently
-"cliaspora" (version 0.1.7 is currently employed) - 
+"cliaspora" (version 0.1.7 is currently employed) -
 http://freeshell.de/~mk/projects/cliaspora.html
 """
 
@@ -21,11 +21,16 @@ import calendar
 import datetime
 import commands
 import codecs
+import diaspy
+import json
+from bs4 import BeautifulSoup
+
 
 class DiasporaHandler(SocialHandler):
-    def __init__(self, webfinger, password, aspect="public", sharelevel="Public"):
+    def __init__(self, webfinger, guid, password, aspect="public", sharelevel="Public"):
         SocialHandler.__init__(self)
         self.webfinger = webfinger
+        self.guid      = guid
         self.password = password
         self.usermap = {}
         self.aspect = aspect
@@ -35,100 +40,73 @@ class DiasporaHandler(SocialHandler):
 
 
 
-    def ParseStream(self, text=""):
-        # messages begin with a line that contains "POST-ID:" and end
-        # with a line that contains COMMENTS:
-
-        in_message = False
-
-        lines = text.split('\n')
-        
-        msg = Message()
-
-        for line in lines:
-            if not in_message:
-                if line.find("POST-ID:") != -1:
-                    in_message = True
-                    # create a new message object
-                    msg = Message()
-                    msg.source = "Diaspora"
-                    # parse the timestamp and the post ID
-                    matches = re.search('(2.*Z) POST-ID: ([0-9]+).*', line, re.DOTALL)
-                    if matches:
-                        msg.date = calendar.timegm(datetime.datetime.strptime(matches.group(1),"%Y-%m-%dT%H:%M:%SZ").timetuple())
-                        msg.id = int(matches.group(2))
-                        msg.link = '%s/posts/%d' % (self.webfinger.split('@')[1],msg.id)
-                        pass
-                    pass
-                pass
-            else:
-                if line.find("COMMENTS") != -1:
-                    in_message = False
-
-                    #msg.SetContent( msg.content.replace('arx-iv','arxiv') )
-                    #msg.SetContent( msg.content.replace('arX-iv','arXiv') )
-                    if len(msg.content) != 0:
-                        self.append_message(msg)
-                        pass
-                    pass
-                elif line.find("POST-ID:") != -1:
-                    # we are in a message, but this is a reshare. Handle the first line
-                    # carefully!
-                    original_author_match = re.search('<(.*)> on .*', line, re.DOTALL)
-                    if original_author_match:
-                        # found the original author. Mark this message as a repost
-                        # and credit the original author
-                        original_author_name = original_author_match.group(1)
-                        msg.SetContent(msg.content + "From %s on Diaspora: " % (original_author_name))
-                        msg.repost = 1
-                        pass
-
-                else:
-                    # we are in a message - get a line and add to content.
-                    # watch for hyphenated line-break words
-                    line = line.rstrip('\n')
-
-                    if len(msg.content)==0 and len(line) > 0 and line[0] == '@':
-                        msg.direct = 1
-
-                    if not re.search('.*[a-zA-Z]-$', line):
-                        line = line + " "
-                        pass
-                    msg.SetContent(msg.content + line)
-                pass
-
-            pass
-        return
-        
-
     def gather(self):
 
         self.messages = []
 
-        response = os.system('cliaspora status')
-        if response == 256:
-            password = self.password.replace(' ','\ ')
-            os.system('cliaspora session new %s "%s"' % (self.webfinger, password))
-            pass
-        
-        text = commands.getoutput('cliaspora show mystream | sed -e \'s/\.br/\.nf \.nh/\' | preconv | groff -Tascii')
-        
-        self.ParseStream(text)
+        connection = diaspy.connection.Connection(pod='https://%s' % (self.webfinger.split('@')[1]),username=self.webfinger.split('@')[0],password=self.password)
+
+        connection.login()
+        stream = diaspy.streams.Activity(connection)
+        #user   = diaspy.people.User(connection, guid=self.guid)
+
+        for post in stream:
+            msg = Message()
+            msg.source = "Diaspora"
+            msg.id = post['id']
+            msg.link = '%s/posts/%d' % (self.webfinger.split('@')[1],msg.id)
+            msg.author = post['author']['name']
+            msg.title = post['title']
+            msg.date   = calendar.timegm(datetime.datetime.strptime(post['created_at'],"%Y-%m-%dT%H:%M:%S.000Z").timetuple())
+            msg.SetContent(msg.content + post.__str__())
+
+            # harvest media from the post
+            for medium in post['photos']:
+                post_attachment = medium["sizes"]["large"]
+                filename = post_attachment.split('/')[-1]
+                if not os.path.exists('/tmp/%s' % (filename)):
+                    os.system('curl --connect-timeout 60 -m 120 -s -o /tmp/%s %s' % ( filename, post_attachment ))
+                    pass
+                msg.attachments.append( '/tmp/%s' % (filename) )
+                pass
+
+            # determine the message type
+            if post['post_type'] == "StatusMessage":
+                msg.repost = 0
+                msg.direct = 0
+                if post['author']['guid'] != self.guid:
+                    continue
+                #if msg.author != user['name']:
+                #    continue
+            elif post['post_type'] == "Reshare":
+                msg.repost = 1
+                msg.direct = 0
+                msg.SetContent(msg.content + "\n\n" + "Reshared from %s on Diaspora: " % (post.author()))
+                pass
+            else:
+                continue
+
+            if post['public'] == True:
+                msg.public = 1
+            else:
+                msg.public = 0
+
+            self.messages.append(msg)
 
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
-            print "********************** Diaspora Handler **********************\n"
-            print "Here are the messages I gathered from the Diaspora server:\n"
+            print("********************** Diaspora Handler **********************\n")
+            print("Here are the messages I gathered from the Diaspora server:\n")
             for message in self.messages:
-                print message.Printable()
+                print(message.Printable())
                 pass
 
         return self.messages
 
-    
+
     def write(self, messages=[]):
-        
+
         successful_id_list = []
 
         for message in messages:
@@ -150,72 +128,36 @@ class DiasporaHandler(SocialHandler):
             if not do_write:
                 continue
 
-            notice_text = message.content
+            # create a connection to the pod and write
+            connection = diaspy.connection.Connection(pod='https://%s' % (self.webfinger.split('@')[1]),username=self.webfinger.split('@')[0],password=self.password)
+            connection.login()
+            try:
+                stream = diaspy.streams.Stream(connection)
+            except Exception:
+                logging.warning("There was an error while connecting to Diaspora pod - we will try again next time NavierStokes is run.")
+                continue
 
-            # user mapping
-            #notice_text = self.map_users(notice_text)
-
-            notice_file = codecs.open('/tmp/diaspora','w',encoding='utf-8')
-            notice_file.write(self.texthandler(notice_text))
-            notice_file.close()
-
-
-            response = os.system('cliaspora status')
-            if response == 256:
-                # session expired - renew it
-                print "Session is expired - creating a new one..."
-                #password = self.password.replace(' ','\ ')
-                os.system('cliaspora session new %s \'%s\'' % (self.webfinger, self.password))
+            aspect = 'public'
+            if message.public == 0:
+                aspect = self.aspect
                 pass
-            
-            aspect = self.aspect
-            if message.public:
-                aspect = "public"
-                pass
+
+            message_text = BeautifulSoup(message.content, "html.parser").text
 
             if len(message.attachments) > 0:
-                for attachment in message.attachments:
-                    # to post an image, first upload it then comment on it.
-                    
-                    post_succeeded = 0
-                    post_tries = 0
-                    
-                    target_image_width=400
-
-                    while post_succeeded == 0 and post_tries < 5:
-
-                        post_response = self.texthandler("")
-
-                        if post_tries != 0:
-                            commands.getoutput('convert -scale %dx %s %s.small.png' % (target_image_width,attachment,attachment))
-                            #post_response = commands.getoutput('echo "%s" | cliaspora -m upload "%s" %s.small.png' % (notice_text,aspect,attachment))
-                            post_response = commands.getoutput('cat /tmp/diaspora | cliaspora -m upload "%s" %s.small.png' % (aspect,attachment))
-                            target_image_width = target_image_width - 50
-                        else:
-                            post_response = commands.getoutput('cat /tmp/diaspora | cliaspora -m upload "%s" %s' % (aspect,attachment))
-                            pass
-
-                        if post_response.find("Failed") != -1:
-                            post_succeeded = 0
-                        else:
-                            post_succeeded = 1
-                            pass
-                        
-                        if post_succeeded:
-                            successful_id_list.append( message.id )
-
-                        post_tries = post_tries + 1
-
-                        pass
-
+                try:
+                    stream.post(text=message_text, photo=message.attachments[0], aspect_ids=aspect)
+                except Exception:
+                    # This is due to this bug: https://github.com/marekjm/diaspy/issues/22
+                    # Try to work around it for now.
+                    message_text += "\n\n" + message.link
+                    stream.post(text=message_text, aspect_ids=aspect)
                     pass
-                pass
+
             else:
-                os.system('cat /tmp/diaspora | cliaspora post "%s"' % (aspect))
-                successful_id_list.append( message.id )
+                stream.post(text=message_text, aspect_ids=aspect)
                 pass
             pass
 
         self.msg(0, "Wrote %d messages." % (len(messages)))
         return successful_id_list
-    
