@@ -25,15 +25,15 @@ import feedparser
 
 
 class RSSHandler(SocialHandler):
-    
+
     def __init__(self,feed_url=""):
         SocialHandler.__init__(self)
 
         # the feed URL
         self.feed_url = feed_url
         self.prepend  = ""
-        
-            
+
+
         pass
 
 
@@ -72,7 +72,7 @@ class RSSHandler(SocialHandler):
                 msg.title   =  self.texthandler(entry.title)
             except AttributeError:
                 pass
-            
+
             try:
                 msg.content += self.texthandler("<p>%s</p>\n" % entry.summary )
             except AttributeError:
@@ -80,12 +80,12 @@ class RSSHandler(SocialHandler):
                     msg.content += self.texthandler("<p>%s ... </p>\n" % entry.content[:500])
                 except AttributeError:
                     pass
-            
+
             try:
                 msg.content += self.texthandler("<p><a href=\"%s\">%s</a></p>\n" % (entry.link,entry.link))
             except AttributeError:
                 pass
-            
+
             try:
                 msg.content += self.texthandler("( Feed URL: <a href=\"%s\">%s</a> )" % (self.feed_url,self.feed_url))
             except AttributeError:
@@ -102,21 +102,21 @@ class RSSHandler(SocialHandler):
             except AttributeError:
                 msg.title = self.texthandler(msg.content[:60])+self.texthandler("...")
                 pass
-        
+
 
             self.messages.append(msg)
-            
+
 
 
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
-            print self.texthandler("********************** RSS Handler **********************\n")
-            print self.texthandler("Here are the messages I gathered from the RSS feed:\n")
+            print(self.texthandler("********************** RSS Handler **********************\n"))
+            print(self.texthandler("Here are the messages I gathered from the RSS feed:\n"))
             for message in self.messages:
-                print message.Printable()
+                print(message.Printable())
                 pass
-            
+
         return self.messages
 
 

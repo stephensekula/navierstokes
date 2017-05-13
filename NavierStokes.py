@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 NavierStokes.py
 Author: Stephen J. Sekula
@@ -13,14 +14,14 @@ import os
 import re
 import time
 import calendar
-import getopt 
+import getopt
 import logging
-import ConfigParser
+import configparser
 import codecs
 import math
 import copy
 import unicodedata
-from sets import Set
+#from sets import Set
 
 from os.path import expanduser
 from lockfile import FileLock,LockTimeout
@@ -43,19 +44,17 @@ from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 
 # functions
-def texthandler(text=unicode("","utf8")):
-    if not isinstance(text, unicode):
-        return text.decode('utf8', errors='ignore')
+def texthandler(text=""):
     return text
 
 
 
 # Global patterns
-global url_pattern 
-url_pattern = unicode('(?:http[s]{0,1}://|www.)[^"\'<> ]+')
+global url_pattern
+url_pattern = '(?:http[s]{0,1}://|www.)[^"\'<> ]+'
 
 global html_pattern
-html_pattern = unicode('<.*?>')
+html_pattern = '<.*?>'
 
 
 FORMAT = "%(asctime)-15s %(message)s"
@@ -74,7 +73,7 @@ try:
     opts, args = getopt.getopt(sys.argv[1:], "dhc:", ["debug","help", "config="])
 except getopt.GetoptError as err:
     # print help information and exit:
-    print str(err) # will print something like "option -a not recognized"
+    print(str(err)) # will print something like "option -a not recognized"
     os.remove(path_to_pidfile)
     sys.exit(2)
     pass
@@ -113,47 +112,47 @@ if os.path.exists( path_to_pidfile ):
         pass
 
     if pid_is_running:
-        logging.info(unicode("This program is already running, and should not be run twice."))
+        logging.info("This program is already running, and should not be run twice.")
         sys.exit()
     else:
         os.remove(path_to_pidfile)
-        logging.info(unicode("An old PID file was present, but the program is not running."))
-        logging.info(unicode("Removing the old PID file and running the program anew."))
+        logging.info("An old PID file was present, but the program is not running.")
+        logging.info("Removing the old PID file and running the program anew.")
         open(path_to_pidfile, 'w').write(str(os.getpid()))
         pass
 else:
     open(path_to_pidfile, 'w').write(str(os.getpid()))
     pass
 
-    
+
 
 
 sources_and_sinks = {}
 urlShorteningConfig = {}
 
 # Use the config file to setup the sources and sinks
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read(configfile)
-    
+
 
 for section in config.sections():
-    logging.info(unicode("Configuring a handler named %s"), section)
+    logging.info("Configuring a handler named %s", section)
     if section.lower() == 'urlshortening':
-        try: 
+        try:
             urlShorteningConfig['service'] = config.get(section, "service")
             urlShorteningConfig['url'] = config.get(section, "serviceURL")
             urlShorteningConfig['key'] = config.get(section, "serviceKey")
         except:
 			#there was some problem with the section or it wasn't there.
 			#	notify the user (defaults are set in URLShortener.py
-            print 'urlShortening section error or not present: using defaults'
-            
+            print('urlShortening section error or not present: using defaults')
+
         continue
     elif config.get(section, "type") == "rss":
         sources_and_sinks[section] = RSSTools.RSSHandler(feed_url=config.get(section, "feed_url"))
         try:
             sources_and_sinks[section].prepend = config.get(section, "prepend")
-        except ConfigParser.NoOptionError:
+        except configparser.NoOptionError:
             pass
 
         pass
@@ -176,6 +175,7 @@ for section in config.sections():
         pass
     elif config.get(section, "type") == "diaspora":
         sources_and_sinks[section] = DiasporaTools.DiasporaHandler(webfinger=config.get(section, "webfinger"), \
+                                                                        guid=config.get(section, "guid"), \
                                                                        password=config.get(section, "password"), \
                                                                        aspect=config.get(section,"aspect"),
                                                                        sharelevel=config.get(section,"sharelevel"))
@@ -188,8 +188,8 @@ for section in config.sections():
 
     do_url_shortening = False
     try:
-        do_url_shortening = True if (config.get(section, "shortenurls") == "True") else False        
-    except ConfigParser.NoOptionError:
+        do_url_shortening = True if (config.get(section, "shortenurls") == "True") else False
+    except configparser.NoOptionError:
         do_url_shortening = False
         pass
     sources_and_sinks[section].do_url_shortening = do_url_shortening
@@ -197,14 +197,14 @@ for section in config.sections():
     max_message_age = 3600
     try:
         max_message_age = config.get(section, "max_message_age")
-    except ConfigParser.NoOptionError:
+    except configparser.NoOptionError:
         max_message_age = 3600
         pass
     sources_and_sinks[section].max_message_age = max_message_age
 
     try:
         noshare_keyword = config.get(section, "noshare_keyword")
-    except ConfigParser.NoOptionError:
+    except configparser.NoOptionError:
         noshare_keyword = ""
         pass
     sources_and_sinks[section].noshare_keyword = noshare_keyword
@@ -227,11 +227,11 @@ current_time = calendar.timegm(time.gmtime())
 messages = {}
 messagesToWrite = {}
 
-for name in sources_and_sinks:  
+for name in sources_and_sinks:
     messagesToWrite[name] = []
     messages[name] = []
     messages[name] = copy.deepcopy(sources_and_sinks[name].gather())
-    
+
     sources_and_sinks[name].urlShorteningConfig = urlShorteningConfig
     pass
 
@@ -241,41 +241,41 @@ six_hours = one_hour * 6
 # find all messages within the last hour from one source that are not present in another
 for source in messages:
     if debug:
-        print "================================================================="
-        print "===== SOURCE: %s" % (source)
-        print "================================================================="
+        print("=================================================================")
+        print("===== SOURCE: %s" % (source))
+        print("=================================================================")
         pass
 
     for message in messages[source]:
-        
+
         if message.reply:
             continue
-        
+
         if message.direct:
             continue
 
         if message.content == None:
             continue
-        
+
         delta_time = math.fabs(message.date - current_time)
-        
+
         if debug:
-            print "============================================================="
-            print "Message to assess for sharing:"
-            print message.Printable()
-            print "     Timestamp (UNIX Epoch): %f [Age (s): %f]" % (message.date, delta_time )
+            print("=============================================================")
+            print("Message to assess for sharing:")
+            print(message.Printable())
+            print("     Timestamp (UNIX Epoch): %f [Age (s): %f]" % (message.date, delta_time ))
             pass
-        
+
         max_message_age = float(sources_and_sinks[source].max_message_age)
-        
+
         if (math.fabs(message.date - current_time))<max_message_age:
-    
+
             for other_source in messages:
 
                 best_match_score = 0;
-                best_match_text = unicode("");
+                best_match_text = "";
                 found_match = False
-                
+
                 if other_source == source:
                     continue
 
@@ -295,7 +295,7 @@ for source in messages:
                     that_message = copy.deepcopy(other_message.content)
 
                     this_urls = re.findall(url_pattern, this_message, re.MULTILINE)
-                    unique_urls = list(Set(this_urls))
+                    unique_urls = list(set(this_urls))
                     for url in unique_urls:
                         this_message = this_message.replace(url,"")
                         pass
@@ -306,7 +306,7 @@ for source in messages:
                         pass
 
                     that_urls = re.findall(url_pattern, that_message, re.MULTILINE)
-                    unique_urls = list(Set(that_urls))
+                    unique_urls = list(set(that_urls))
                     for url in unique_urls:
                         that_message = that_message.replace(url,"")
                         pass
@@ -315,28 +315,28 @@ for source in messages:
                     for htmlcode in that_htmls:
                         that_message = that_message.replace(htmlcode,"")
                         pass
-                        
+
                     if this_message.isspace():
                         # This is a URL-only message.
                         # Danger, Will Robinson! Bail.
                         found_match = True
                         continue
-                    
+
 
                     match_ratio = fuzz.token_set_ratio(this_message, that_message, force_ascii=True)
                     if match_ratio >= best_match_score:
                         best_match_score = match_ratio
-                        best_match_text = unicode("   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content)
+                        best_match_text = "   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content
                         pass
 
                     if match_ratio > 80:
-                        # check if this message is better quality than the one already scheduled to be 
+                        # check if this message is better quality than the one already scheduled to be
                         # written
                         found_match = True
                         if other_message.source == "Diaspora":
                             # Cliaspora loses attachments. Maybe replace with this message.
                             if debug:
-                                print "Replacing message from Disapora with message from %s" % (message.source.encode("iso-8859-1"))
+                                print("Replacing message from Disapora with message from %s" % (message.source.encode("iso-8859-1")))
                                 pass
 
                             messagesToWrite[other_source][message_already_written_index] = copy.deepcopy(message)
@@ -354,20 +354,20 @@ for source in messages:
 
                         this_message = copy.deepcopy(message.content)
                         that_message = copy.deepcopy(other_message.content)
-                        
+
                         this_urls = re.findall(url_pattern, this_message, re.MULTILINE)
-                        unique_urls = list(Set(this_urls))
+                        unique_urls = list(set(this_urls))
                         for url in unique_urls:
                             this_message = this_message.replace(url,"")
                             pass
-                            
+
                         this_htmls = re.findall(html_pattern, this_message, re.MULTILINE)
                         for htmlcode in this_htmls:
                             this_message = this_message.replace(htmlcode,"")
                             pass
 
                         that_urls = re.findall(url_pattern, that_message, re.MULTILINE)
-                        unique_urls = list(Set(that_urls))
+                        unique_urls = list(set(that_urls))
                         for url in unique_urls:
                             that_message = that_message.replace(url,"")
                             pass
@@ -377,18 +377,18 @@ for source in messages:
                             that_message = that_message.replace(htmlcode,"")
                             pass
 
-                        
+
                         if this_message.isspace():
                             # This is a URL-only message.
                             # Danger, Will Robinson! Bail.
                             found_match = True
                             continue
-                    
+
 
                         match_ratio = fuzz.token_set_ratio(this_message, that_message, force_ascii=True)
                         if match_ratio >= best_match_score:
                             best_match_score = match_ratio
-                            best_match_text = unicode("   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content)
+                            best_match_text = "   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content
                             pass
                         if match_ratio > 80:
                             found_match = True
@@ -396,9 +396,9 @@ for source in messages:
                         pass
                     pass
 
-                
+
                 if debug:
-                    print texthandler(unicode(best_match_text)).encode('utf-8')
+                    print(texthandler(best_match_text))
                     pass
 
                 if not found_match:
@@ -414,19 +414,19 @@ for source in messages:
 
 
 if debug:
-    print "The list of messages to write (targets and message objects):"
-    print messagesToWrite
+    print("The list of messages to write (targets and message objects):")
+    print(messagesToWrite)
     pass
 
 for sinkname in sources_and_sinks:
-    
+
     logging.info("Writing to sink: %s", sinkname)
-    
+
     message_archive_filename = home+"/.navierstokes/message_archive_"+sinkname+".txt"
     if not os.path.exists(message_archive_filename):
-        open(message_archive_filename, 'w').close() 
+        open(message_archive_filename, 'w').close()
         pass
-    
+
     lock = FileLock(message_archive_filename)
 
     lock_try_count = 0
@@ -458,51 +458,51 @@ for sinkname in sources_and_sinks:
             logging.info("Unable to resolve lock problem. %s", "Exiting")
             break
             pass
-        
+
         pass
 
     if not obtained_lock:
         logging.info("Failed to acquire lock; %s", "moving onto another target")
         continue
-    
-    
+
+
 
     if debug:
-        print "File lock on %s accomplished..." % (message_archive_filename)
-        pass
-    
-    
-    if debug:
-        print "Checking id code of this message against that of messages already written..."
+        print("File lock on %s accomplished..." % (message_archive_filename))
         pass
 
 
     if debug:
-        print messagesToWrite[sinkname]
+        print("Checking id code of this message against that of messages already written...")
+        pass
+
+
+    if debug:
+        print(messagesToWrite[sinkname])
         pass
 
 
     # Message modificaton - remove tracking links, remove HTML, etc. as appropriate
     for message in messagesToWrite[sinkname]:
         if debug:
-            print "====================================================================="
-            print " MESSAGE CLEANUP FOR %s " % (sinkname)
-            print "====================================================================="
-        
+            print("=====================================================================")
+            print(" MESSAGE CLEANUP FOR %s " % (sinkname))
+            print("=====================================================================")
+
         found_urls = re.findall(url_pattern, message.content, re.MULTILINE)
-        unique_urls = list(Set(found_urls))
+        unique_urls = list(set(found_urls))
         for url in unique_urls:
-            url = unicode(url)
+            #url = unicode(url)
             if debug:
-                print "URL: %s" % (url)
+                print("URL: %s" % (url))
             # fb.me links cannot be tracked back to source, because FB is a piece of shit
             # and blocks cURL as an "unsupported browser"
             if (url.find("t.co") != -1 or url.find("flip.it") != -1):
                 if debug:
-                    print "Found forbidden links! Fix them!"
+                    print("Found forbidden links! Fix them!")
 
                 new_url = URLShortener.ExpandShortURL(url)
-                
+
 
                 if new_url.find("unsupportedbrowser") != -1:
                     # uh oh - probably this was a trace back to a FB page, which doesn't
@@ -511,8 +511,8 @@ for sinkname in sources_and_sinks:
                     pass
 
                 if debug:
-                    print "Original URL: %s" % (url)
-                    print "Fixed    URL: %s" % (new_url)
+                    print("Original URL: %s" % (url))
+                    print("Fixed    URL: %s" % (new_url))
 
                 try:
                     message.content = message.content.replace(url,new_url)
@@ -534,27 +534,27 @@ for sinkname in sources_and_sinks:
            type(sources_and_sinks[sinkname]) == GNUSocialTools.GNUSocialHandler:
             message.content = message.content.lstrip(' ')
             message.content = message.content.rstrip('\n')
-            
+
 
         if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler:
             message.content = message.content.replace('"','\\"')
-            
+
 
         if sources_and_sinks[sinkname].do_url_shortening:
             message.content = sources_and_sinks[sinkname].ShortenURLs(message.content)
             pass
-            
+
         try:
             message.content = message.content.encode('utf-8')
         except UnicodeDecodeError:
-            message.content = message.content.decode('iso-8859-1') 
+            message.content = message.content.decode('iso-8859-1')
             pass
 
 
         if debug:
-            print "Message text after cleanup:"
-            print message.content
-            print "------------------------------- END OF LINE -------------------------------"
+            print("Message text after cleanup:")
+            print(message.content)
+            print("------------------------------- END OF LINE -------------------------------")
             pass
 
         pass
@@ -577,30 +577,30 @@ for sinkname in sources_and_sinks:
             pass
 
         message_archive_file.close()
-        
+
         if message_already_written:
             if debug:
-                print "   This message ID sum is not unique; the message will not be written again."
+                print("   This message ID sum is not unique; the message will not be written again.")
                 pass
             pass
         else:
             if debug:
-                print "   According to the message ID sum check, this message is new..."
+                print("   According to the message ID sum check, this message is new...")
                 pass
-            
+
             messagesToActuallyWrite.append( copy.deepcopy(message) )
             pass
         pass
 
-    
+
     if debug:
         for message in messagesToActuallyWrite:
-            print message.Printable()
+            print(message.Printable())
             pass
     else:
         for message in messagesToActuallyWrite:
             logging.info("New message to write:")
-            print message.Printable()
+            print(message.Printable())
             pass
 
         id_list = sources_and_sinks[sinkname].write( messagesToActuallyWrite )
@@ -611,9 +611,9 @@ for sinkname in sources_and_sinks:
             message_archive_file.close()
 
         pass
-    
+
     lock.release()
-    
+
     pass
 
 # We are done. Remove the PID file

@@ -1,6 +1,6 @@
 # NavierStokes
 
-NavierStokes is a set of Python classes that allow you to bridge between social network accounts. These classes rely on a number of external tools to do the hard work of actually talking to networks. There is a master “executable” file that uses the supporting classes to bridge between your various accounts. See usage information below.
+NavierStokes is a set of Python 3 classes that allow you to bridge between social network accounts. These classes rely on a number of external tools to do the hard work of actually talking to networks. There is a master “executable” file that uses the supporting classes to bridge between your various accounts. See usage information below.
 
 It employs “fuzzy text matching”, as well as a record of posts that have already been shared between networks, to try to prevent a post from being shared more than once to other networks (or back to the originating network). Fuzzy text matching is needed because different social networks encode or format the same information slightly differently. For instance, a post in HTML on Pump.io will not be formatted in HTML on Twitter, and Twitter will shorten links, thus altering the text of the original post. Fuzzy text matching uses statistical methods to attempt to compute the probability that the message has already been shared on a network. Above a match threshold, the post will not be shared.
 
@@ -25,6 +25,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 # Requirements
 
+    Python 3.X
     cliaspora-0.1.9.tgz (Diaspora access) (https://freeshell.de/~mk/projects/cliaspora.html)
     PyPump 0.5 (pump.io access)
         git clone https://github.com/xray7224/PyPump.git
@@ -43,15 +44,17 @@ Unless required by applicable law or agreed to in writing, software distributed 
         http://rubygems.org/gems/t
         gem install t (requires Ruby 1.9 or greater)
     txt2html: needed for clean text → HTML conversion (e.g. from Twitter messages to Pump.io)
+    diaspy: a python library to interfacing with Diaspora (https://github.com/marekjm/diaspy)
 
 In general, here are the Python libraries needed to make this package operate:
 
 ```
 abc
+bs4
 calendar
 codecs
-commands
 copy
+diaspy
 feedparser
 fuzzywuzzy
 getopt
@@ -107,6 +110,7 @@ sharelevel: All
 [diaspora]
 type: diaspora
 webfinger: user@diaspora.server
+guid: XXXXXXXXXXXXXXXXXX
 password: XXXXXXXXXXXXXXXXXXX
 aspect: public
 sharelevel: All
@@ -138,16 +142,16 @@ Running NavierStokes
 
 Once you have written a .cfg file and setup account information in it (and, in the case of Pump.io and Twitter, you have authenticated PyPump and t against those respective networks as clients), you can try executing NavierStokes manually:
 
-    python ./NavierStokes.py
+    python3 ./NavierStokes.py
 
 If you get errors, try running in Debug Mode and see what you can learn:
 
-    python ./NavierStokes.py -d
+    python3 ./NavierStokes.py -d
 
 I run NavierStokes every 5 minutes using a CRON job:
 
 ```
-*/5 * * * * bash -l -c 'python /path/to/navierstokes/NavierStokes.py >> ${HOME}/.navierstokes/navierstokes.log 2>&1'
+*/5 * * * * bash -l -c 'python3 /path/to/navierstokes/NavierStokes.py >> ${HOME}/.navierstokes/navierstokes.log 2>&1'
 ```
 
 If you get any errors that are unrelated to passwords, logging into, report them to navierstokes+NOSPAM@hub.polari.us.
@@ -156,7 +160,7 @@ A simple program to authenticate PyPump against your pump.io instance
 For PyPump v0.5, this ought to work:
 
 ```
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from pypump import PyPump, Client
 
@@ -167,13 +171,13 @@ client = Client(
 )
 
 def simple_verifier(url):
-    print 'Go to: ' + url
+    print('Go to: ' + url)
     return raw_input('Verifier: ') # they will get a code back
 
 pump = PyPump(client=client, verifier_callback=simple_verifier)
 client_credentials = pump.get_registration() # will return [<key>, <secret>, <expirey>]
 client_tokens = pump.get_token() # [<token>, <secret>]
 
-print "client_credentials: %s,%s" % (client_credentials[0],client_credentials[1])
-print "client_tokens: %s,%s" % (client_tokens[0],client_tokens[1])
+print("client_credentials: %s,%s" % (client_credentials[0],client_credentials[1])
+print("client_tokens: %s,%s" % (client_tokens[0],client_tokens[1]))
 ```

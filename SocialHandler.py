@@ -7,13 +7,13 @@ import os
 import subprocess
 import logging
 import unicodedata
-import commands
+#import commands
 import re
 import hashlib
 import copy
 import URLShortener
 import chardet
-from sets import Set
+#from sets import Set
 
 
 class SocialHandler(object):
@@ -34,7 +34,7 @@ class SocialHandler(object):
 
         # shorten URLs in message content?
         self.do_url_shortening = False
-        
+
         # URL shortening config to use
         self.urlShorteningConfig = {}
 
@@ -54,8 +54,8 @@ class SocialHandler(object):
         except OSError:
             self.msg(3, self.texthandler("Lynx is required, but I cannot run it. Make sure it is installed and located in the PATH."))
             pass
-        
-        
+
+
         return
 
     @abc.abstractmethod
@@ -63,10 +63,10 @@ class SocialHandler(object):
         """ This method harvests posts from a social network """
 
     @abc.abstractmethod
-    def write(self,message=unicode("","utf8")):
+    def write(self,message=""):
         """ This method posts a message to a social network """
 
-    def append_message(self, message=unicode("","utf8")):
+    def append_message(self, message=""):
         # safely append messages
         if self.noshare_keyword != "":
             if message.content.find(self.noshare_keyword) == -1:
@@ -79,9 +79,9 @@ class SocialHandler(object):
         return
 
 
-    def texthandler(self, text=unicode("","utf8")):
-        if not isinstance(text, unicode):
-            return text.decode('utf8', errors='ignore')
+    def texthandler(self, text=""):
+        #if not isinstance(text, unicode):
+        #    return text.decode('utf8', errors='ignore')
         return text
 
 
@@ -91,7 +91,7 @@ class SocialHandler(object):
         text = self.texthandler("RT from %s" % (owner))
         return text
 
-    def msg(self,level=0,text=unicode("","utf8")):
+    def msg(self,level=0,text=""):
         level_text = self.texthandler("INFO")
         message = self.texthandler("%s: %s" % (self.__class__.__name__, text))
 
@@ -104,16 +104,16 @@ class SocialHandler(object):
         elif level == 3:
             logging.critical(message)
             pass
-        
+
         #print "%s: [%s] %s" % (self.__class__.__name__, level_text, text)
-        
-        
+
+
         if level > 2:
             sys.exit()
-        
+
         return
 
-    def generate_id(self,text=unicode("","utf8")):
+    def generate_id(self,text=""):
         # generate an ID for a message from input text by generating
         # an MD5 checksum from the text
 
@@ -122,12 +122,15 @@ class SocialHandler(object):
         except UnicodeEncodeError:
             message_md5sum = hashlib.md5(text.encode('utf-8')).hexdigest()
             pass
+        except TypeError:
+            message_md5sum = hashlib.md5(text.encode('utf-8')).hexdigest()
+            pass
 
         return int(message_md5sum, 16)
-        
-        
 
-    def map_users(self, text=unicode("","utf8")):
+
+
+    def map_users(self, text=""):
         new_text = text
         for key in self.usermap:
             new_text = new_text.replace(key, self.texthandler('<a href="%s">%s</a>'%(self.usermap[key][0],self.usermap[key][1])))
@@ -150,31 +153,31 @@ class SocialHandler(object):
                 exe_file = os.path.join(path, program)
                 if is_exe(exe_file):
                     return exe_file
-                    
+
         return None
 
-    def changeLinksToURLs(self, msg=unicode("","utf8")):
+    def changeLinksToURLs(self, msg=""):
         prefx       = self.texthandler('<a href="')
         linkClose   = self.texthandler('">')
         postfx      = self.texthandler( '</a>')
- 
-        new_msg = unicode("","utf8")
+
+        new_msg = ""
         new_msg += msg
 
         if not prefx in msg:
-            return new_msg    
+            return new_msg
         #<a href="http://www.thisisalink.com/foo/bar.html">this is some link text</a>
         #to
         #this is some link msg http://www.thisisalink.com/foo/bar.html
 
-        pos = 0        
+        pos = 0
         while True:
             pos = new_msg.find(prefx,pos)
             if pos < 0:
                 break
-                
+
             htmlText = new_msg[pos:new_msg.find(postfx,pos) + len(postfx)]
-             
+
             link = htmlText[htmlText.find(prefx)+len(prefx):htmlText.find(linkClose)]
             linkmsg = htmlText[htmlText.find(linkClose)+len(linkClose):htmlText.find(postfx)]
 
@@ -182,16 +185,16 @@ class SocialHandler(object):
 
             if linkmsg == link:
                 outText = link
-             
+
             new_msg = new_msg.replace(htmlText, outText)
-    
+
             pass
 
         return new_msg
 
-    def HTMLConvert(self, msg=unicode("","utf8") ):
+    def HTMLConvert(self, msg="" ):
         msg_clean = self.changeLinksToURLs(msg)
-        
+
         pid = os.getpid()
 
         htmlfile = open('/tmp/%d_msg.html' % (pid),'w')
@@ -202,15 +205,17 @@ class SocialHandler(object):
             pass
 
         htmlfile.close()
-        
-        txt = commands.getoutput('/usr/bin/lynx --dump -width 2048 -nolist /tmp/%d_msg.html' % (pid))
 
+        #txt = commands.getoutput('/usr/bin/lynx --dump -width 2048 -nolist /tmp/%d_msg.html' % (pid))
+        txt = subprocess.check_output('/usr/bin/lynx --dump -width 2048 -nolist /tmp/%d_msg.html' % (pid), \
+                                        stderr=subprocess.STDOUT, \
+                                        shell=True)
         os.system('rm -f /tmp/%d_msg.html' % (pid))
 
         return txt
 
 
-    def TextToHtml(self, msg=unicode("","utf8") ):
+    def TextToHtml(self, msg="" ):
         # Convert links to HTML in a text message
         # Relied on external tool, txt2html
 
@@ -224,19 +229,19 @@ class SocialHandler(object):
         text_file.close();
 
         # Convert using tool
-        html_message = unicode("","utf8")
+        html_message = ""
         try:
             #html_message = unicode(subprocess.check_output(["txt2html", "--infile", "/tmp/txt2html_%d.txt" % (pid)]))
             html_message = subprocess.check_output(["txt2html", "--infile", "/tmp/txt2html_%d.txt" % (pid)])
         except subprocess.CalledProcessError:
-            print self.texthandler("There was a problem trying to call the txt2html program - make sure it is installed correctly.")
+            print(self.texthandler("There was a problem trying to call the txt2html program - make sure it is installed correctly."))
             sys.exit(-1)
             pass
-            
+
         # excerpt the content of the <body> tags
 
         html_message = self.texthandler(html_message)
-        
+
         body_begin = html_message.find(u'<body>') + 6
         body_end   = html_message.find(u'</body>')
 
@@ -245,12 +250,12 @@ class SocialHandler(object):
         return html_message
 
 
-    def ShortenURLs(self, text=unicode("","utf8")):
+    def ShortenURLs(self, text=""):
         # convert all links in HTML to shortened links using a shortening service
 
         # Get all unique URLs from this text string
 
-        found_urls = list(Set(re.findall(self.texthandler('(?:http[s]*://|www.)[^"\'<> ]+'), text, re.MULTILINE)))
+        found_urls = list(set(re.findall(self.texthandler('(?:http[s]*://|www.)[^"\'<> ]+'), text, re.MULTILINE)))
 
         if len(found_urls) == 0:
             return self.texthandler(text)
@@ -259,11 +264,11 @@ class SocialHandler(object):
 
         new_text = copy.deepcopy(text)
 
-        url = unicode("","utf8")
+        url = ""
 
         for url in found_urls:
             shortened_url = url_shortener.shorten(url)
-            
+
             try:
                 new_text = new_text.replace(url, shortened_url)
             except UnicodeDecodeError:
@@ -275,9 +280,3 @@ class SocialHandler(object):
             pass
 
         return new_text
-        
-            
-            
-            
-
-        

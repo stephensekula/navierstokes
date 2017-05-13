@@ -18,7 +18,7 @@ import os
 import re
 import datetime
 import calendar
-import commands
+#import commands
 import time
 
 import URLShortener
@@ -36,7 +36,7 @@ class TwitterHandler(SocialHandler):
 
 
 
-    def tweet_get_images(self,tweet_content=unicode()):
+    def tweet_get_images(self,tweet_content=""):
         #
         # Search a tweet for an image link. If there are any, hunt them
         # down for the images, and get those images
@@ -63,7 +63,7 @@ class TwitterHandler(SocialHandler):
             pass
 
         return photo_attachments
-                        
+
 
     def gather(self):
 
@@ -76,8 +76,10 @@ class TwitterHandler(SocialHandler):
             configstring = '-P %s' % (self.configfile)
             pass
 
-        whoami = self.texthandler(commands.getoutput('t whoami %s | grep "Screen name"' % (configstring)))
-
+        #whoami = self.texthandler(commands.getoutput('t whoami %s | grep "Screen name"' % (configstring)))
+        whoami = self.texthandler(subprocess.check_output('t whoami %s | grep "Screen name"' % (configstring), \
+                                        stderr=subprocess.STDOUT, \
+                                        shell=True))
         matches = re.search('.*Screen name.*?@(.*)$', whoami, re.DOTALL)
         username = self.texthandler("");
         if matches:
@@ -85,10 +87,13 @@ class TwitterHandler(SocialHandler):
             username = username.rstrip('\n')
         else:
             return []
-        
 
 
-        text = self.texthandler(commands.getoutput('t timeline %s -c @%s' % (configstring,username)))
+
+        #text = self.texthandler(commands.getoutput('t timeline %s -c @%s' % (configstring,username)))
+        text = self.texthandler(subprocess.check_output('t timeline %s -c @%s' % (configstring,username), \
+                                        stderr=subprocess.STDOUT, \
+                                        shell=True))
 
         message = Message()
 
@@ -99,7 +104,7 @@ class TwitterHandler(SocialHandler):
             matches = re.search('(.*?),(.*?),(.*?),(.*)', line, re.DOTALL)
 
             if matches:
-                
+
                 # the first line of t output is just header information
                 if matches.group(1) == "ID":
                     continue
@@ -116,9 +121,9 @@ class TwitterHandler(SocialHandler):
                 try:
                     message.id = int(matches.group(1))
                 except ValueError:
-                    print "ERROR: unable to get the message ID. Bailing."
+                    print("ERROR: unable to get the message ID. Bailing.")
                     continue
-                
+
                 message_time_text = datetime.datetime.strptime(matches.group(2), "%Y-%m-%d %H:%M:%S +0000")
                 message.date = calendar.timegm(message_time_text.timetuple())
                 message.source = "Twitter"
@@ -158,7 +163,7 @@ class TwitterHandler(SocialHandler):
                 #            pass
                 #        pass
                 #    pass
-                
+
                 message.attachments = self.tweet_get_images(message.content)
 
                 self.append_message(message)
@@ -171,24 +176,24 @@ class TwitterHandler(SocialHandler):
                 pass
 
             pass
-        
-        
+
+
 
 
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
-            print "********************** Twitter Handler **********************\n"
-            print "Here are the messages I gathered from the Twitter account:\n"
+            print("********************** Twitter Handler **********************\n")
+            print("Here are the messages I gathered from the Twitter account:\n")
             for message in self.messages:
-                print message.Printable()
+                print(message.Printable())
                 pass
 
             pass
 
 
         return self.messages
-    
+
 
     def write(self, messages):
 
@@ -219,7 +224,7 @@ class TwitterHandler(SocialHandler):
                 self.msg(0,"Unable to share above message based on sharelevel settings.")
                 continue
 
-       
+
             success = False
             self.msg(0,"Writing to Twitter")
 
@@ -257,14 +262,14 @@ class TwitterHandler(SocialHandler):
                     while tries < 5:
                         tweet_results = '\n'.join(process.communicate())
                         if tweet_results.find('Tweet posted') == -1 or process.poll() != 0:
-                            print " ==> Tweet not posted - retrying ... "
-                            print command
-                            print " Twitter output: "
-                            print tweet_results
+                            print(" ==> Tweet not posted - retrying ... ")
+                            print(command)
+                            print(" Twitter output: ")
+                            print(tweet_results)
                             try:
                                 process.kill()
                             except OSError:
-                                print tweet_results
+                                print(tweet_results)
                                 pass
                             process = subprocess.Popen([command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                             time.sleep(5)
@@ -273,7 +278,7 @@ class TwitterHandler(SocialHandler):
                             successful_id_list.append( message.id )
                             break
                         tries = tries+1
-                    
+
                     #results = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
                     #if results.find('Tweet posted') != -1:
                     #successful_id_list.append( message.id )
@@ -305,4 +310,3 @@ class TwitterHandler(SocialHandler):
 
         self.msg(0,"Wrote %d messages" % len(messages))
         return successful_id_list
-

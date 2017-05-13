@@ -29,17 +29,18 @@ import unicodedata
 import datetime
 import calendar
 import codecs
+import imageio
 
 import requests
 from requests_oauthlib import OAuth1
 
 class PumpHandler(SocialHandler):
-    
+
     def __init__(self,webfinger,credentials,tokens,sharelevel="Public"):
         SocialHandler.__init__(self)
         self.webfinger = webfinger
         self.credentials = [s.strip() for s in credentials] #get rid of any stray spaces in the credentials/tokens
-        self.tokens = [s.strip() for s in tokens]        
+        self.tokens = [s.strip() for s in tokens]
         self.sharelevel = sharelevel
 
         self.pump = None
@@ -49,20 +50,20 @@ class PumpHandler(SocialHandler):
             self.pump = self.CreatePumpClient(self.webfinger, self.credentials, self.tokens)
             self.me   = self.pump.Person(self.webfinger)
         except PyPumpException:
-            print "Unable to initiate a connection to the pump server. Pump.io will be skipped."
+            print("Unable to initiate a connection to the pump server. Pump.io will be skipped.")
             self.pump = None
             self.me = None
             pass
         except ConnectionError:
-            print "The connection to the pump server has timed out. Pump.io will be skipped."
+            print("The connection to the pump server has timed out. Pump.io will be skipped.")
             self.pump = None
             self.me = None
             pass
-            
+
         pass
 
     def simple_verifier(url):
-        print 'Go to: ' + url
+        print('Go to: ' + url)
         return raw_input('Verifier: ') # they will get a code back
 
     def CreatePumpClient(self, webfinger, client_credentials,client_tokens):
@@ -73,14 +74,14 @@ class PumpHandler(SocialHandler):
             key=client_credentials[0],
             secret=client_credentials[1],
             )
-        
+
         pump = PyPump(
             client=client,
             token=client_tokens[0], # the token
             secret=client_tokens[1], # the token secret
             verifier_callback=self.simple_verifier
             )
-        
+
         return pump
 
 
@@ -121,17 +122,17 @@ class PumpHandler(SocialHandler):
                     pass
             except AttributeError:
                 continue
-                
+
 
             message.SetContent(text)
 
             message.link = pump_obj_url
-            
+
             try:
                 if pump_obj.deleted:
                     continue
             except AttributeError:
-                print "The arrtribute \"deleted\" does not exist . . . continuing anyway . . . "
+                print("The arrtribute \"deleted\" does not exist . . . continuing anyway . . . ")
                 pass
 
             # Determine if this message was directed to someone on Pump.io and thus
@@ -156,7 +157,7 @@ class PumpHandler(SocialHandler):
                             skip_this_message = False
 
                         pass
-                    pass 
+                    pass
 
                 if is_direct:
                     message.direct = 1
@@ -180,36 +181,43 @@ class PumpHandler(SocialHandler):
 
             if skip_this_message:
                 continue;
-                
+
             if isinstance( pump_obj, Image):
                 img_url = pump_obj.original.url
 
                 message.link = img_url
 
                 # construct a request to grab the image
-                endpoint = "{0}".format('/'.join(img_url.split('/')[3:]))
+                #endpoint = "{0}".format('/'.join(img_url.split('/')[3:]))
                 # remove "_thumb" from the image name to get the original image
-                endpoint = endpoint.replace('_thumb','')
-                local_img_name = endpoint.split('/')[-1]
-                client = self.pump.setup_oauth_client(endpoint)
-                params = {} 
-                headers = {"Content-Type": "application/json"}
-                request = {
-                    "params": params,
-                    "auth": client,
-                    "headers": headers,
-                    }
-                
-                image_raw = self.pump._requester(requests.get, endpoint, raw=False, **request)
-                
-                fout = open("/tmp/{0}".format(local_img_name), "w")
-                fout.write(image_raw.content)
-                fout.close()
-                
-                #message.content = unicodedata.normalize('NFKD', pump_obj.display_name).encode('ascii','ignore')
-                #print ".display_name: %s" % (pump_obj.display_name)
-                #print ".summary: %s" % (pump_obj.summary)
-                #print ".content: %s" % (pump_obj.content)
+                #endpoint = endpoint.replace('_thumb','')
+                #local_img_name = endpoint.split('/')[-1]
+                #client = self.pump.setup_oauth_client(endpoint)
+                #params = {}
+                #headers = {"Content-Type": "application/json"}
+                #request = {
+                #    "params": params,
+                #    "auth": client,
+                #    "headers": headers,
+                #    }
+
+                #image_raw = self.pump._requester(requests.get, endpoint, raw=False, **request)
+
+
+                #fout = open("/tmp/{0}".format(local_img_name), "bw")
+                #print(image_raw.content)
+                #fout.write(image_raw.content)
+                #fout.close()
+
+                # attempt to retrieve the image with cURL
+                image_url = message.link.replace('_thumb','')
+                local_img_name = image_url.split('/')[-1]
+
+                os.system('curl --connect-timeout 60 -m 120 -s -o /tmp/%s %s' % ( local_img_name, image_url ))
+
+                #print(".display_name: %s" % (pump_obj.display_name))
+                #print(".summary: %s" % (pump_obj.summary))
+                #print(".content: %s" % (pump_obj.content))
 
                 text = ""
                 if not pump_obj.content:
@@ -228,7 +236,7 @@ class PumpHandler(SocialHandler):
 
             message.author = pump_obj.author.display_name
             message.author_url = pump_obj.author.url
-            
+
 
             #if str(message.author) != str(self.me):
             if message.author != self.me.display_name:
@@ -243,12 +251,12 @@ class PumpHandler(SocialHandler):
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
-            print "********************** Pump.io Handler **********************\n"
-            print "Here are the messages I gathered from the pump.io server:\n"
+            print("********************** Pump.io Handler **********************\n")
+            print("Here are the messages I gathered from the pump.io server:\n")
             for message in self.messages:
-                print message.Printable()
+                print(message.Printable())
                 pass
-            
+
         return self.messages
 
 
