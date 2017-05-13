@@ -29,7 +29,6 @@ import unicodedata
 import datetime
 import calendar
 import codecs
-import imageio
 
 import requests
 from requests_oauthlib import OAuth1
