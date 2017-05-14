@@ -143,10 +143,11 @@ class DiasporaHandler(SocialHandler):
                 aspect = self.aspect
                 pass
 
-            #message_text = BeautifulSoup(message.content, "html.parser").text
-            message_text =   html2text.html2text(message.content)
+            message_text = BeautifulSoup(message.content, "html.parser").get_text()
+            message_text = message_text.replace('\n','\n\n')
+            #message_text =   html2text.html2text(message.content)
 
-            
+
 
             if len(message.attachments) > 0:
                 try:
