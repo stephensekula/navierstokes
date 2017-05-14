@@ -23,6 +23,7 @@ import commands
 import codecs
 import diaspy
 import json
+import html2text
 from bs4 import BeautifulSoup
 
 
@@ -142,7 +143,10 @@ class DiasporaHandler(SocialHandler):
                 aspect = self.aspect
                 pass
 
-            message_text = BeautifulSoup(message.content, "html.parser").text
+            #message_text = BeautifulSoup(message.content, "html.parser").text
+            message_text =   html2text.html2text(message.content)
+
+            
 
             if len(message.attachments) > 0:
                 try:
