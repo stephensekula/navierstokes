@@ -38,10 +38,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
         git clone https://github.com/seatgeek/fuzzywuzzy.git
         cd fuzzywuzzy
         python setup.py install
-    t (Ruby Gem for interacting with Twitter)
-        This is needed if you want to bridge to Twitter.
-        http://rubygems.org/gems/t
-        gem install t (requires Ruby 1.9 or greater)
     txt2html: needed for clean text → HTML conversion (e.g. from Twitter messages to Pump.io)
 
 In general, here are the Python libraries needed to make this package operate:
@@ -70,6 +66,7 @@ requests
 subprocess
 sys
 time
+twitter
 unicodedata
 xml.dom.minidom
 ```
@@ -118,6 +115,9 @@ sharelevel: All
 type: twitter
 sharelevel: Public
 shortenurls: True
+client_credentials: abcd1234,wxyz6789
+client_tokens: efgh2345,stuv4567
+
 
 [my blog rss feed]
 type: rss
@@ -132,6 +132,12 @@ serviceKey: pseudosecretKey
 #serviceKey: False
 ```
 
+### The meaning of client_credentials and client_tokens for Pump.io and Twitter
+For pump.io, these arrays hold the comma-separated list of credentials and tokens that you obtain when registering your NavierStokes pump client (see below).
+
+For Twitter, this set of lists holds the following items. client_credentials holds the consumer key, followed by the consumer secret (comma-separated), that you get when you register NavierStokes in your twitter account as a new app (apps.twitter.com). The client_tokens list holds, in order, the access token and the access token secret (again, comma-separated) that you get from that same registration process.
+
+### The meaning of other configuration keys
 Note that “sharelevel” means at what level of publicity from other networks you want a notice shared to this one. I've set this, for now, the way I like it. If you set this to “Public”, ONLY notices that are public on other networks will go there. For instance, I only like to share things that are public on pump.io with Twitter. Things on Twitter are public by default, so they will ALWAYS be shared with other networks.
 
 “shortenurls” presently enabled will take ALL URLs listed in the message text and shorten them via ur1.ca. In the future, this will be a choice the user can make.
