@@ -112,6 +112,7 @@ sharelevel: All
 type: twitter
 sharelevel: Public
 shortenurls: True
+username: myname
 client_credentials: abcd1234,wxyz6789
 client_tokens: efgh2345,stuv4567
 
