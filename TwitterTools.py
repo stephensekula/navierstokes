@@ -18,52 +18,56 @@ import os
 import re
 import datetime
 import calendar
-import commands
+#import commands
 import time
 
 import URLShortener
+
+# Python Twitter API access
+import twitter
 
 from MessageObj import Message
 
 
 class TwitterHandler(SocialHandler):
     """ a class to read and post to a GNU Social feed """
-    def __init__(self,sharelevel="Public"):
+    def __init__(self,username,credentials,tokens,sharelevel="Public"):
         SocialHandler.__init__(self)
+        self.username = ""
+        self.credentials = [s.strip() for s in credentials] #get rid of any stray spaces in the credentials/tokens
+        self.tokens = [s.strip() for s in tokens]
         self.sharelevel = sharelevel
         self.configfile = ""
         pass
 
 
 
-    def tweet_get_images(self,tweet_content=unicode()):
+    def tweet_get_images(self,medialinks=[]):
         #
         # Search a tweet for an image link. If there are any, hunt them
         # down for the images, and get those images
         #
-        photo_attachments = []
-        photo_link_matches = re.compile('(http.*?t\.co/[A-Za-z0-9]+)').findall( tweet_content )
-        for photo_link in list(set(photo_link_matches)):
+        photo_attachments=[]
+        if medialinks == None:
+            return photo_attachments
+
+        for photo_link in medialinks:
             # download the HTML page that holds the image
-            photo_link_url = URLShortener.ExpandShortURL(photo_link)
-            process = subprocess.Popen(["curl -m 120 --connect-timeout 60 %s"%(photo_link_url)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            curl_text = process.communicate()[0]
-            photo_match = re.compile('content="(https://[a-zA-Z]+\.twimg\.com.*?:large)"').findall(curl_text)
-            if len(photo_match)>0:
-                filename_match = re.search('.*/(.*):large', photo_match[0], re.DOTALL)
-                if filename_match:
-                    if not os.path.exists("/tmp/%s" % (filename_match.group(1))):
-                        process = subprocess.Popen(["curl -m 120 --connect-timeout 60 -o /tmp/%s %s"%(filename_match.group(1),photo_match[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                        pass
-                    if "/tmp/%s" % (filename_match.group(1)) not in photo_attachments:
-                        photo_attachments.append("/tmp/%s" % (filename_match.group(1)))
-                        pass
+            photo_link_url = photo_link.media_url_https
+            filename_match = re.search('.*/(.*)', photo_link_url, re.DOTALL)
+            if filename_match:
+                local_filename = "/tmp/%s" % (filename_match.group(1))
+                if not os.path.exists(local_filename):
+                    process = subprocess.Popen(["curl -m 120 --connect-timeout 60 -o %s %s" % (local_filename,photo_link_url)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()[0]
+                    pass
+                if "/tmp/%s" % (filename_match.group(1)) not in photo_attachments:
+                    photo_attachments.append(local_filename)
                     pass
                 pass
             pass
 
         return photo_attachments
-                        
+
 
     def gather(self):
 
@@ -76,128 +80,73 @@ class TwitterHandler(SocialHandler):
             configstring = '-P %s' % (self.configfile)
             pass
 
-        whoami = self.texthandler(commands.getoutput('t whoami %s | grep "Screen name"' % (configstring)))
+        username = self.username
+        api = twitter.Api(tweet_mode='extended', consumer_key = self.credentials[0], consumer_secret=self.credentials[1], access_token_key=self.tokens[0],access_token_secret=self.tokens[1])
 
-        matches = re.search('.*Screen name.*?@(.*)$', whoami, re.DOTALL)
-        username = self.texthandler("");
-        if matches:
-            username = self.texthandler(matches.group(1))
-            username = username.rstrip('\n')
-        else:
-            return []
-        
-
-
-        text = self.texthandler(commands.getoutput('t timeline %s -c @%s' % (configstring,username)))
+        statuses = api.GetUserTimeline(screen_name=self.username)
 
         message = Message()
 
-        line = self.texthandler("")
-
-        for line in text.split('\n'):
-            # 437607107773206528,2014-02-23 15:17:19 +0000,drsekula,message text
-            matches = re.search('(.*?),(.*?),(.*?),(.*)', line, re.DOTALL)
-
-            if matches:
-                
-                # the first line of t output is just header information
-                if matches.group(1) == "ID":
-                    continue
-
-
-                message_text = self.texthandler(matches.group(4))
-
-                # t does funny things with quotes in messages that are not RTs.
-                message_text = message_text.lstrip("\"")
-                message_text = message_text.rstrip("\"")
-                message_text = message_text.replace("\"\"","\"")
-
-                message = Message()
-                try:
-                    message.id = int(matches.group(1))
-                except ValueError:
-                    print "ERROR: unable to get the message ID. Bailing."
-                    continue
-                
-                message_time_text = datetime.datetime.strptime(matches.group(2), "%Y-%m-%d %H:%M:%S +0000")
-                message.date = calendar.timegm(message_time_text.timetuple())
-                message.source = "Twitter"
-                message.SetContent(self.TextToHtml(message_text))
-                message.author = username
-                message.reply = True if (message_text[0] == "@") else False
-                message.direct = True if (message_text[0] == "@") else False
-                if message.reply or message.direct:
-                    message.public = False
-                else:
-                    message.public = True
-                    pass
-                message.repost = True if (message_text.find("RT ") != -1) else False
-
-                if message.repost:
-                    message.SetContent( self.texthandler("From <a href=\"https://twitter.com/%s\">Twitter</a>: " % (username)) + message.content )
-                    pass
-
-                message.attachments = []
-                # Try to harvest any photo content from the post
-                #photo_link_matches = re.compile('(http.*?t\.co/[A-Za-z0-9]+)').findall( message.content )
-                #for photo_link in list(set(photo_link_matches)):
-                #    # download the HTML page
-                #    photo_link_url = URLShortener.ExpandShortURL(photo_link)
-                #    process = subprocess.Popen(["curl %s"%(photo_link_url)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                #    curl_text = process.communicate()[0]
-                #    photo_match = re.compile('(https://[a-zA-Z]+\.twimg\.com.*?:large)').findall(curl_text)
-                #    if len(photo_match)>0:
-                #        filename_match = re.search('.*/(.*):large', photo_match[0], re.DOTALL)
-                #        if filename_match:
-                #            if not os.path.exists("/tmp/%s" % (filename_match.group(1))):
-                #                process = subprocess.Popen(["curl -o /tmp/%s %s"%(filename_match.group(1),photo_match[0])], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                #                pass
-                #            if "/tmp/%s" % (filename_match.group(1)) not in message.attachments:
-                #                message.attachments.append("/tmp/%s" % (filename_match.group(1)))
-                #                pass
-                #            pass
-                #        pass
-                #    pass
-                
-                message.attachments = self.tweet_get_images(message.content)
-
-                self.append_message(message)
-
-                pass
-
+        for status in statuses:
+            message = Message()
+            message_time_text = datetime.datetime.strptime(status.created_at, "%a %b %d %H:%M:%S +0000 %Y")
+            message.date = calendar.timegm(message_time_text.timetuple())
+            message.source = "Twitter"
+            message.repost = status.retweeted
+            if message.repost and status.retweeted_status != None:
+                message.SetContent(status.retweeted_status.full_text)
             else:
-                # this might just be another line in a multi-line message in Twitter
-                message.content += self.texthandler("\n") + line;
+                message.SetContent(status.full_text)
+            message.author = status.user.screen_name
+            message.reply = True if (status.in_reply_to_status_id != None) else False
+            message.direct = True if (message.content[0] == "@") else False
+            if message.reply or message.direct:
+                message.public = False
+            else:
+                message.public = True
                 pass
 
-            pass
-        
-        
+            # Don't bother sharing replies across networks...
+            if message.reply:
+                continue
 
+            if message.repost:
+                message.SetContent( self.texthandler("From <a href=\"https://twitter.com/%s\">Twitter</a>: " % (username)) + message.content )
+                pass
+
+            message.attachments = []
+            if message.repost:
+                message.attachments = self.tweet_get_images(status.retweeted_status.media)
+            else:
+                message.attachments = self.tweet_get_images(status.media)
+                pass
+
+            self.messages.append(message)
+            pass
 
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
-            print "********************** Twitter Handler **********************\n"
-            print "Here are the messages I gathered from the Twitter account:\n"
+            print("********************** Twitter Handler **********************\n")
+            print("Here are the messages I gathered from the Twitter account:\n")
             for message in self.messages:
-                print message.Printable()
+                print(message.Printable())
                 pass
 
             pass
 
 
         return self.messages
-    
+
 
     def write(self, messages):
 
         successful_id_list = []
 
-        configstring = ""
-        if self.configfile != "":
-            configstring = '-c %s' % (self.configfile)
-            pass
+        # initialize the connection to Twitter
+        username = self.username
+        api = twitter.Api(tweet_mode='extended', consumer_key = self.credentials[0], consumer_secret=self.credentials[1], access_token_key=self.tokens[0],access_token_secret=self.tokens[1])
+
 
         for message in messages:
 
@@ -219,7 +168,7 @@ class TwitterHandler(SocialHandler):
                 self.msg(0,"Unable to share above message based on sharelevel settings.")
                 continue
 
-       
+
             success = False
             self.msg(0,"Writing to Twitter")
 
@@ -240,58 +189,21 @@ class TwitterHandler(SocialHandler):
                 tweet = tweet.replace("'","'\\\''")
                 tweet = tweet.replace("@","")
 
-                command = self.texthandler("t update %s '%s'" % (configstring,tweet))
-
-                if len(message.attachments) > 0:
-                    command += self.texthandler(" -f %s" % (message.attachments[0]))
-                    pass
-
-                if self.debug:
-                    self.msg(level=0,text=command)
-                    pass
-
+                status = None
                 try:
-                    process = subprocess.Popen([command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                    tries = 0
-                    time.sleep(5)
-                    while tries < 5:
-                        tweet_results = '\n'.join(process.communicate())
-                        if tweet_results.find('Tweet posted') == -1 or process.poll() != 0:
-                            print " ==> Tweet not posted - retrying ... "
-                            print command
-                            print " Twitter output: "
-                            print tweet_results
-                            try:
-                                process.kill()
-                            except OSError:
-                                print tweet_results
-                                pass
-                            process = subprocess.Popen([command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                            time.sleep(5)
+                    if len(message.attachments) > 0:
+                        status = api.PostUpdate(tweet, media=message.attachments[0])
+                    else:
+                        status = api.PostUpdate(tweet)
+                        pass
+                except twitter.error.TwitterError:
+                    self.msg(0, "Unable to post a message to twitter due to twitter.error.TwitterError")
+                    self.msg(0, self.texthandler(message_text))
+                    pass
 
-                        else:
-                            successful_id_list.append( message.id )
-                            break
-                        tries = tries+1
-                    
-                    #results = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
-                    #if results.find('Tweet posted') != -1:
-                    #successful_id_list.append( message.id )
-                except subprocess.CalledProcessError:
-                    continue
+                if status != None and status.created_at != None:
+                    successful_id_list.append( message.id )
 
-                #tries = 0
-
-                #while results.find('Tweet posted') == -1 and tries < 5:
-                #    self.msg(1,"Posting to twitter failed - trying again...")
-                #    try:
-                #        results = subprocess.check_output(command, stderr=subprocess.STDOUT,shell=True)
-                #        if results.find('Tweet posted') != -1:
-                #            successful_id_list.append( message.id )
-                #    except subprocess.CalledProcessError:
-                #        pass
-                #    tries = tries + 1
-                #    pass
                 pass
 
             else:
@@ -305,4 +217,3 @@ class TwitterHandler(SocialHandler):
 
         self.msg(0,"Wrote %d messages" % len(messages))
         return successful_id_list
-
