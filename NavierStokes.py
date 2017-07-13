@@ -176,6 +176,7 @@ for section in config.sections():
         pass
     elif config.get(section, "type") == "diaspora":
         sources_and_sinks[section] = DiasporaTools.DiasporaHandler(webfinger=config.get(section, "webfinger"), \
+                                                                        guid=config.get(section, "guid"), \
                                                                        password=config.get(section, "password"), \
                                                                        aspect=config.get(section,"aspect"),
                                                                        sharelevel=config.get(section,"sharelevel"))

@@ -54,7 +54,7 @@ class GNUSocialHandler(SocialHandler):
         list_of_status_elements = doc.getElementsByTagName("status")
         #print list_of_status_elements
         return list_of_status_elements
-    
+
     def find_element_of_status(self,status,element_name):
         element_content = ""
         for e in status.childNodes:
@@ -64,7 +64,7 @@ class GNUSocialHandler(SocialHandler):
                     break
                 pass
             pass
-        
+
         return element_content
 
     def status_is_retweeted(self,status):
@@ -73,7 +73,7 @@ class GNUSocialHandler(SocialHandler):
                 return True
             pass
         return False
-    
+
     def status_author_name(self,status):
         name = ""
         for e in status.childNodes:
@@ -88,7 +88,7 @@ class GNUSocialHandler(SocialHandler):
                 pass
             pass
         return name
-    
+
 
     def status_attachment(self,status):
         attachments = []
@@ -107,7 +107,7 @@ class GNUSocialHandler(SocialHandler):
             pass
         return attachments
 
-                        
+
 
     def gather(self):
 
@@ -122,11 +122,11 @@ class GNUSocialHandler(SocialHandler):
             return self.messages
 
         pid = os.getpid()
-        
+
         xml_file = codecs.open('/tmp/%d_dents.xml' % (pid),'w',encoding='utf-8')
         xml_file.write(self.texthandler(xml_file_contents))
         xml_file.close()
-        
+
         try:
             document = self.get_a_stream("/tmp/%d_dents.xml" % (pid))
             dents_xml = self.find_status_elements(document)
@@ -135,7 +135,7 @@ class GNUSocialHandler(SocialHandler):
 
         highest_id = 0
         for dent_xml in dents_xml:
-         
+
             dent_source = self.find_element_of_status(dent_xml,"source")
             #if dent_source == "activity":
             #    continue
@@ -145,7 +145,7 @@ class GNUSocialHandler(SocialHandler):
             dent_author = unicode(self.status_author_name(dent_xml).decode('utf8'))
             if dent_author != self.username:
                 continue
-                
+
 
             message = Message()
             message.source = "GNU Social"
@@ -173,7 +173,7 @@ class GNUSocialHandler(SocialHandler):
                     if not os.path.exists('/tmp/%s' % (filename)):
                         os.system('curl --connect-timeout 60 -m 120 -s -o /tmp/%s %s' % ( filename, dent_attachment ))
                         pass
-                    
+
                     message.attachments.append( '/tmp/%s' % (filename) )
                     pass
                 pass
@@ -205,7 +205,7 @@ class GNUSocialHandler(SocialHandler):
         os.system('rm -f /tmp/%d_dents.xml' % (pid))
 
         return self.messages
-    
+
 
     def write(self, messages):
 
@@ -264,13 +264,13 @@ class GNUSocialHandler(SocialHandler):
                     # convert image to png if it's not png
                     prefix = '.'.join(attachment.split('.')[:-1])
                     os.system("convert -scale 1024x768 %s %s_1024x768.png" % (attachment, prefix))
-                    
+
                     png_file = prefix + "_1024x768.png"
                     #if -1 == attachment.find('.png'):
                     #    png_file =  '.'.join(attachment.split('.')[:-1]) + '.png'
                     #    os.system('convert %s %s' %(attachment, png_file))
                     #    pass
-                
+
                     data += " -F media=@" + png_file
                     pass
 
@@ -296,4 +296,3 @@ class GNUSocialHandler(SocialHandler):
 
         self.msg(0,"Wrote %d messages" % len(messages))
         return successful_id_list
-
