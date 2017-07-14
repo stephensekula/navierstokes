@@ -6,7 +6,7 @@ Created: Apr. 27, 2014
 * TwitterHandler:
 Inherits from: SocialHandler
 Purpose: to gather messages from a Twitter account, and write messages to
-the same account. It uses the RubyGem "t" and the Twitter API to do all of this.
+the same account. It uses the Python Twitter library to do this.
 """
 
 from SocialHandler import *
