@@ -94,10 +94,10 @@ class TwitterHandler(SocialHandler):
             message.source = "Twitter"
             message.repost = status.retweeted
             if message.repost and status.retweeted_status != None:
-                message.SetContent(status.retweeted_status.full_text)
+                message.SetContent(self.T2H_URLs(status.retweeted_status.full_text))
                 message.id = status.retweeted_status.id
             else:
-                message.SetContent(status.full_text)
+                message.SetContent(self.T2H_URLs(status.full_text))
                 message.id = status.id
             message.author = status.user.screen_name
             message.reply = True if (status.in_reply_to_status_id != None) else False
