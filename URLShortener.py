@@ -84,6 +84,10 @@ def ExpandShortURL(short_url):
     except KeyError:
         original_url = short_url
 
+    if original_url[:4] != "http":
+        print "URLShortener.ExpandShortURL(): attempt to retrieve original failed. Using shortened link."
+        original_url = short_url
+        pass
 
     return original_url
 
