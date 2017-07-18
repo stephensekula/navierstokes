@@ -22,6 +22,8 @@ import copy
 import unicodedata
 from sets import Set
 
+from bs4 import BeautifulSoup
+
 from os.path import expanduser
 from lockfile import FileLock,LockTimeout
 
@@ -49,13 +51,60 @@ def texthandler(text=unicode("","utf8")):
     return text
 
 
-
 # Global patterns
 global url_pattern
 url_pattern = unicode('(?:http[s]{0,1}://|www.)[^"\'<> ]+')
 
 global html_pattern
 html_pattern = unicode('<.*?>')
+
+
+def FuzzyMatchScore(message1, message2):
+    # Strip URLs before fuzzy matching - different URL shortening services,
+    # both here and on the remote sites, will mess with the match otherwise.
+
+    this_message = copy.deepcopy(message1.content)
+    that_message = copy.deepcopy(message2.content)
+
+
+    # First, compute a fuzzy matching score with URLs left in place.
+    match_ratio_with_urls = fuzz.token_set_ratio(
+        this_message, that_message, force_ascii=True)
+
+    # Now strip URLs and match the stuff other than those and compute a score
+    this_message = BeautifulSoup(this_message, "lxml").get_text('\n')
+    that_message = BeautifulSoup(that_message, "lxml").get_text('\n')
+
+    this_urls = re.findall(url_pattern, this_message, re.MULTILINE)
+    unique_urls = list(Set(this_urls))
+    for url in unique_urls:
+        this_message = this_message.replace(url, "")
+        pass
+
+    that_urls = re.findall(url_pattern, that_message, re.MULTILINE)
+    unique_urls = list(Set(that_urls))
+    for url in unique_urls:
+        that_message = that_message.replace(url, "")
+        pass
+
+    if this_message.isspace() or len(this_message) < 3:
+        # This is a URL-only message.
+        # Danger, Will Robinson! Bail.
+        print("-------------")
+        print("   After stripping URLs and HTML code, this message is blank or extremely short.")
+        print("   It is dangerous to share this message due to its length. Setting match to 100%% and skipping.")
+        print(message1.content)
+        print("-------------")
+        return 100.
+
+    match_ratio_no_urls = fuzz.token_set_ratio(
+        this_message, that_message, force_ascii=True)
+
+    # The match_ratio will be the max(with_urls, without_urls)
+    match_ratio = max([match_ratio_with_urls, match_ratio_no_urls])
+    return match_ratio
+
+
 
 
 FORMAT = "%(asctime)-15s %(message)s"
@@ -296,40 +345,8 @@ for source in messages:
 
                     # Strip URLs before fuzzy matching - different URL shortening services,
                     # both here and on the remote sites, will mess with the match otherwise.
+                    match_ratio = FuzzyMatchScore(message, other_message)
 
-                    this_message = copy.deepcopy(message.content)
-                    that_message = copy.deepcopy(other_message.content)
-
-                    this_urls = re.findall(url_pattern, this_message, re.MULTILINE)
-                    unique_urls = list(Set(this_urls))
-                    for url in unique_urls:
-                        this_message = this_message.replace(url,"")
-                        pass
-
-                    this_htmls = re.findall(html_pattern, this_message, re.MULTILINE)
-                    for htmlcode in this_htmls:
-                        this_message = this_message.replace(htmlcode,"")
-                        pass
-
-                    that_urls = re.findall(url_pattern, that_message, re.MULTILINE)
-                    unique_urls = list(Set(that_urls))
-                    for url in unique_urls:
-                        that_message = that_message.replace(url,"")
-                        pass
-
-                    that_htmls = re.findall(html_pattern, that_message, re.MULTILINE)
-                    for htmlcode in that_htmls:
-                        that_message = that_message.replace(htmlcode,"")
-                        pass
-
-                    if this_message.isspace():
-                        # This is a URL-only message.
-                        # Danger, Will Robinson! Bail.
-                        found_match = True
-                        continue
-
-
-                    match_ratio = fuzz.token_set_ratio(this_message, that_message, force_ascii=True)
                     if match_ratio >= best_match_score:
                         best_match_score = match_ratio
                         best_match_text = unicode("   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content)
@@ -357,41 +374,8 @@ for source in messages:
 
                         # Strip URLs before fuzzy matching - different URL shortening services,
                         # both here and on the remote sites, will mess with the match otherwise.
+                        match_ratio = FuzzyMatchScore(message, other_message)
 
-                        this_message = copy.deepcopy(message.content)
-                        that_message = copy.deepcopy(other_message.content)
-
-                        this_urls = re.findall(url_pattern, this_message, re.MULTILINE)
-                        unique_urls = list(Set(this_urls))
-                        for url in unique_urls:
-                            this_message = this_message.replace(url,"")
-                            pass
-
-                        this_htmls = re.findall(html_pattern, this_message, re.MULTILINE)
-                        for htmlcode in this_htmls:
-                            this_message = this_message.replace(htmlcode,"")
-                            pass
-
-                        that_urls = re.findall(url_pattern, that_message, re.MULTILINE)
-                        unique_urls = list(Set(that_urls))
-                        for url in unique_urls:
-                            that_message = that_message.replace(url,"")
-                            pass
-
-                        that_htmls = re.findall(html_pattern, that_message, re.MULTILINE)
-                        for htmlcode in that_htmls:
-                            that_message = that_message.replace(htmlcode,"")
-                            pass
-
-
-                        if this_message.isspace():
-                            # This is a URL-only message.
-                            # Danger, Will Robinson! Bail.
-                            found_match = True
-                            continue
-
-
-                        match_ratio = fuzz.token_set_ratio(this_message, that_message, force_ascii=True)
                         if match_ratio >= best_match_score:
                             best_match_score = match_ratio
                             best_match_text = unicode("   BEST MATCH ON %s: %f  ____ " % (other_source, match_ratio) + other_message.content)
