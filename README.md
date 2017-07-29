@@ -154,10 +154,16 @@ If you get errors, try running in Debug Mode and see what you can learn:
 
     python ./NavierStokes.py -d
 
-I run NavierStokes every 5 minutes using a CRON job:
+If you want to rate-limit posting, so that no more than N posts are bridged per execution, do this:
+
+    python ./NavierStokes.py -r 5
+
+This ensures that no more than 5 posts are bridged to any network from any other network. This is useful for bot-scripts, especially if the script has not run for a while (due to server problems) and suddenly runs, gathering a large back-log of messages from social networks.
+
+You can NavierStokes periodically (e.g every 5 minutes) using a CRON job:
 
 ```
-*/5 * * * * bash -l -c 'python /path/to/navierstokes/NavierStokes.py >> ${HOME}/.navierstokes/navierstokes.log 2>&1'
+*/5 * * * * bash -l -c 'python /path/to/navierstokes/NavierStokes.py -r 5 >> ${HOME}/.navierstokes/navierstokes.log 2>&1'
 ```
 
 If you get any errors that are unrelated to passwords, logging into, report them to navierstokes+NOSPAM@hub.polari.us.

@@ -120,7 +120,7 @@ if not os.path.exists(home+'/.navierstokes/'):
 
 # Parse command line options
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "dhc:", ["debug","help", "config="])
+    opts, args = getopt.getopt(sys.argv[1:], "dhc:r:", ["debug","help", "config=", "rate="])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -131,6 +131,7 @@ configfile = home + "/.navierstokes/navierstokes.cfg"
 verbose = False
 debug = False
 fuzzy = False
+ratelimit = 100
 
 for o, a in opts:
     if o in ("-h", "--help"):
@@ -140,6 +141,8 @@ for o, a in opts:
         debug = True
     elif o in ("-c", "--config"):
         configfile = a
+    elif o in ("-r", "--rate"):
+        ratelimit = int(a)
     else:
         assert False, "unhandled option"
         pass
@@ -409,7 +412,10 @@ if debug:
     print messagesToWrite
     pass
 
+
 for sinkname in sources_and_sinks:
+
+    total_posted = 0
 
     logging.info("Writing to sink: %s", sinkname)
 
@@ -594,12 +600,18 @@ for sinkname in sources_and_sinks:
             print message.Printable()
             pass
 
+        logging.info("The rate limit (max. posts) for this session is: %d" % (ratelimit))
+        logging.info("Posting only the first %d posts in the queue. The rest will be saved for next time." % (ratelimit))
+
+        messagesToActuallyWrite = messagesToActuallyWrite[:ratelimit]
+
         id_list = sources_and_sinks[sinkname].write( messagesToActuallyWrite )
 
         for message_id in id_list:
             message_archive_file = open(message_archive_filename, 'a')
             message_archive_file.write( str(message_id) + "\n" )
             message_archive_file.close()
+            pass
 
         pass
 
