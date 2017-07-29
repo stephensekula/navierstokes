@@ -71,7 +71,7 @@ if not os.path.exists(home+'/.navierstokes/'):
 
 # Parse command line options
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "dhc:", ["debug","help", "config="])
+    opts, args = getopt.getopt(sys.argv[1:], "dhc:r:", ["debug","help", "config=", "rate="])
 except getopt.GetoptError as err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recognized"
@@ -82,6 +82,7 @@ configfile = home + "/.navierstokes/navierstokes.cfg"
 verbose = False
 debug = False
 fuzzy = False
+ratelimit = 100
 
 for o, a in opts:
     if o in ("-h", "--help"):
@@ -91,6 +92,8 @@ for o, a in opts:
         debug = True
     elif o in ("-c", "--config"):
         configfile = a
+    elif o in ("-r", "--rate"):
+        ratelimit = int(a)
     else:
         assert False, "unhandled option"
         pass
@@ -322,7 +325,6 @@ for source in messages:
                         found_match = True
                         continue
                     
-
                     match_ratio = fuzz.token_set_ratio(this_message, that_message, force_ascii=True)
                     if match_ratio >= best_match_score:
                         best_match_score = match_ratio
@@ -418,7 +420,10 @@ if debug:
     print messagesToWrite
     pass
 
+
 for sinkname in sources_and_sinks:
+
+    total_posted = 0
     
     logging.info("Writing to sink: %s", sinkname)
     
@@ -602,14 +607,24 @@ for sinkname in sources_and_sinks:
             logging.info("New message to write:")
             print message.Printable()
             pass
-
+            
         id_list = sources_and_sinks[sinkname].write( messagesToActuallyWrite )
 
-        for message_id in id_list:
-            message_archive_file = open(message_archive_filename, 'a')
-            message_archive_file.write( str(message_id) + "\n" )
-            message_archive_file.close()
 
+
+        for message_id in id_list:
+            if total_posted >= ratelimit:
+                logging.info("Current total posted (ratelimit) = %d (%d)" % (total_posted, ratelimit))
+                logging.info("Posting this messages exceeds the rate limit for this run. Skipping!")
+            else:
+                message_archive_file = open(message_archive_filename, 'a')
+                message_archive_file.write( str(message_id) + "\n" )
+                message_archive_file.close()
+                pass
+
+            total_posted += 1
+
+            pass
         pass
     
     lock.release()
