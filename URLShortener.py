@@ -27,13 +27,13 @@ class CurlStorage:
         # On Python 2, decoding step can be skipped.
         # On Python 3, decoding step is required.
         header_line = header_line.decode('iso-8859-1')
-        
+
         # Header lines include the first status line (HTTP/1.x ...).
         # We are going to ignore all lines that don't have a colon in them.
         # This will botch headers that are split on multiple lines...
         if ':' not in header_line:
             return
-            
+
         # Break the header line into header name and value.
         name, value = header_line.split(':', 1)
 
@@ -42,14 +42,14 @@ class CurlStorage:
         # around the colon.
         name = name.strip()
         value = value.strip()
-        
+
         # Header names are case insensitive.
         # Lowercase name here.
         name = name.lower()
 
         # Now we can actually record the header name and value.
         self.headers[name] = value
-    
+
 
     def __str__(self):
         return self.contents
@@ -84,29 +84,33 @@ def ExpandShortURL(short_url):
     except KeyError:
         original_url = short_url
 
+    if original_url[:4] != "http":
+        print "URLShortener.ExpandShortURL(): attempt to retrieve original failed. Using shortened link."
+        original_url = short_url
+        pass
 
     return original_url
 
 
 
 class URLShortener(object):
-    def __init__(self, urlShorteningConfig = {}):             
+    def __init__(self, urlShorteningConfig = {}):
         #supported url shortening services:
-        serviceTypes = ['ur1','shortenizer']                
+        serviceTypes = ['ur1','shortenizer']
         defaults = {'service':'ur1', 'url':'http://ur1.ca', 'key':False}
-        
+
         #check if the service type is in the supported list (/in the dict at all):
         try:
             self.service = urlShorteningConfig['service']
         except KeyError:
             urlShorteningConfig = defaults
-        
+
         if not self.service in serviceTypes:
             logging.warn("invalid serviceTYpe: ", self.service)
             logging.info("defaulting urlshortener to ur1.ca")
             urlShorteningConfig = defaults
             self.service = urlShorteningConfig['service']
-            
+
         try:
             self.serviceURL = urlShorteningConfig['url']
             self.key = urlShorteningConfig['key']
@@ -115,12 +119,12 @@ class URLShortener(object):
             self.service = urlShorteningConfig['service']
             self.serviceURL = urlShorteningConfig['url']
             self.key = urlShorteningConfig['key']
-        
+
         #logging.info('init-ing the URLshortener')
         #logging.info('serviceType: ', self.service)
         #logging.info('serviceURL: ', self.serviceURL)
         #logging.info('key: ', self.key)
-        
+
     def getURLfromUR1caResponse(self, response):
         #response:
         #...
@@ -131,21 +135,21 @@ class URLShortener(object):
         postfx      = '</a>'
 
         if not prefx in response:
-            return "failure"    
+            return "failure"
 
-        pos = 0        
+        pos = 0
         pos = response.find(prefx,pos)
         if pos < 0:
             return "failure"
-            
+
         htmlText = response[pos:response.find(postfx,pos) + len(postfx)]
         #print "htmlText:" + htmlText
-        
+
         link = htmlText[htmlText.find(prefx)+len(prefx):]
         link = link[:link.find(linkClose)]
         linkmsg = htmlText[htmlText.find(linkClose)+len(linkClose):htmlText.find(postfx)]
         #print "linkmsg: " + linkmsg
-        
+
         return link
 
     def getUR1ca(self, longurl):
@@ -165,21 +169,21 @@ class URLShortener(object):
                 pass
             tries += 1
             time.sleep(5)
-        
+
         if tries == 5:
             logging.error("Unable to connect to URL shortening site.")
             sys.exit(-1)
-        
-        
+
+
         shortURL = self.getURLfromUR1caResponse(r.text)
-        
+
         if len(longurl) <= len(shortURL):
             return longurl
         else:
             return shortURL
-    
+
     def getURLfromShortenizerResponse(self, response):
-        #JSON response:        
+        #JSON response:
         #{
         #    'longURL': 'http://somelong.url/foo.bar'
         #    'shortURL': 'http://sho.rt/xyzf'
@@ -191,16 +195,16 @@ class URLShortener(object):
             shortURL = 'errror'
             return response['error']
         print shortURL
-        
+
         return shortURL
-    
+
     def getShortenizer(self, longurl, vanityTerm=False):
-        #  this sample POSTs to the shortenizer api and then gets the 
+        #  this sample POSTs to the shortenizer api and then gets the
         #  returned shortened short url from the JSON repsonse
         print 'shortenizing'
         if not self.serviceURL:
             #error
-            print 'error, no serviceURL'            
+            print 'error, no serviceURL'
         if self.serviceURL[-1] != '/':
             self.serviceURL += '/'
         if not '/api/' in self.serviceURL:
@@ -208,7 +212,7 @@ class URLShortener(object):
 
         payload = {'longurl':longurl, 'key':self.key, 'term':vanityTerm}
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        
+
         try:
             r = requests.post(self.serviceURL, data=json.dumps(payload), headers=headers, verify=False)
             r = r.text
@@ -217,31 +221,31 @@ class URLShortener(object):
             r = 'error: Unable to connect to URL shortening site'
             logging.error(r)
             shortURL = r
-                
+
         #print "response: \n", r, "---/response -- \n"
-        
+
         return shortURL
-            
-    def shorten(self, longurl, vanityTerm=False):         
+
+    def shorten(self, longurl, vanityTerm=False):
         logging.debug('url shortening service: ', self.service)
         if self.service == 'shortenizer':
             shortURL = self.getShortenizer(longurl, vanityTerm)
         else:
             shortURL = self.getUR1ca(longurl)
-                    
+
         print "original URL length: " + str(len(longurl))
-        print "short URL length: " + str(len(shortURL))   
-        if len(longurl) <= len(shortURL) or (shortURL[:6] == 'error:'):
+        print "short URL length: " + str(len(shortURL))
+        if len(longurl) <= len(shortURL) or (shortURL[:6] == 'error:') or (shortURL[:8] == 'failure'):
             return longurl
         else:
-            return shortURL        
-            
+            return shortURL
+
 if __name__ == '__main__':
     #syntax for test is ie:
     # python shortenURL.py -u http://pump.io/tryit.html
     #python CLIshortenURL_test.py -u https://somelongurl.com/somelong/path/foo.bar -t shortenizer -s http://u.jrobb.org -k mykey
     import sys
-    import getopt 
+    import getopt
     # Parse command line options
     try:
         opts, args = getopt.getopt(sys.argv[1:], "s:u:t:v:k:", ["type=", "service=", "url=","vanity=","key="])
@@ -253,7 +257,7 @@ if __name__ == '__main__':
         os.remove(path_to_pidfile)
         sys.exit(2)
         pass
-    
+
     serviceURL = 'http://ur1.ca'
     vanityTerm = ''
     key = ''
@@ -273,19 +277,18 @@ if __name__ == '__main__':
             assert False, "unhandled option"
             pass
         pass
-        
+
     print "serviceTYpe: ", serviceType
     print "longurl: ", longurl
     print "serviceURL: ", serviceURL
     print "term: ", vanityTerm
     print "key: ", key
-    
+
     config = {'service':serviceType, 'url':serviceURL, 'key':key}
-    
+
     myurl = URLShortener(config)
     if not longurl:
         print "error, no url, something's not right"
     else:
         #output the shortened URL
         print myurl.shorten(longurl, vanityTerm)
-    
