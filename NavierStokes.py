@@ -598,24 +598,20 @@ for sinkname in sources_and_sinks:
             logging.info("New message to write:")
             print message.Printable()
             pass
-            
+
+        logging.info("The rate limit (max. posts) for this session is: %d" % (ratelimit))
+        logging.info("Posting only the first %d posts in the queue. The rest will be saved for next time." % (ratelimit))
+
+        messagesToActuallyWrite = messagesToActuallyWrite[:ratelimit]
+
         id_list = sources_and_sinks[sinkname].write( messagesToActuallyWrite )
 
-
-
         for message_id in id_list:
-            if total_posted >= ratelimit:
-                logging.info("Current total posted (ratelimit) = %d (%d)" % (total_posted, ratelimit))
-                logging.info("Posting this messages exceeds the rate limit for this run. Skipping!")
-            else:
-                message_archive_file = open(message_archive_filename, 'a')
-                message_archive_file.write( str(message_id) + "\n" )
-                message_archive_file.close()
-                pass
-
-            total_posted += 1
-
+            message_archive_file = open(message_archive_filename, 'a')
+            message_archive_file.write( str(message_id) + "\n" )
+            message_archive_file.close()
             pass
+
         pass
 
     lock.release()
