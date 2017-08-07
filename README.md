@@ -65,16 +65,22 @@ requests
 subprocess
 sys
 time
-twitter
+python-twitter
 unicodedata
 xml.dom.minidom
 ```
+
+You should be able to install all of this with:
+```
+pip install lynx FuzzyWuzzy bs4 lockfile pycurl python-twitter urllib3[secure] python-Levenshtein
+```
+For cliaspora and PyPump see the download instructions above (the current PyPump 0.7 library from pypi is not supported).
 
 # Installation
 
     Unpack the tarball. This automatically creates the navierstokes/ application directory
     You should create a configuration file for NavierStokes: ~/.navierstokes/navierstokes.cfg. The syntax for the file is explained below.
-    If you intend to bridge between Pump.io and other networks, you must use PyPump to register a client (e.g. NavierStokesApp) on Pump.io. Follow their instructions for getting the client credentials and tokens. Enter those into the
+    If you intend to bridge between Pump.io and other networks, you must use PyPump to register a client (e.g. NavierStokesApp) on Pump.io. Fill and run the "Pump.io authentication script" below to get client credentials and tokens. Enter those into the
 
     ~/.navierstokes/navierstokes.cfg
 
@@ -165,6 +171,9 @@ You can NavierStokes periodically (e.g every 5 minutes) using a CRON job:
 ```
 
 If you get any errors that are unrelated to passwords, logging into, report them to navierstokes+NOSPAM@hub.polari.us.
+
+### Pump.io authentication script
+
 A simple program to authenticate PyPump against your pump.io instance
 
 For PyPump v0.5, this ought to work:
