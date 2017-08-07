@@ -223,12 +223,14 @@ class PumpHandler(SocialHandler):
                     pass
                 message.attachments.append("/tmp/{0}".format(local_img_name) )
 
+            if not pump_obj.updated:
+                continue
             t = datetime.datetime.strptime(str(pump_obj.updated), "%Y-%m-%d %H:%M:%S+00:00")
             message.date = calendar.timegm(t.timetuple())
 
             message.author = pump_obj.author.display_name
             message.author_url = pump_obj.author.url
-            
+
 
             #if str(message.author) != str(self.me):
             if message.author != self.me.display_name:
