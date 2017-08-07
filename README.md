@@ -31,6 +31,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
         cd PyPump
         git fetch
         git checkout v0.5
+        python setup.py install
     cURL (GNU Social access)
     LYNX (for converting HTML to plain text - some social networks don't understand HTML)
     FuzzyWuzzy Python fuzzy text-matching libraries
@@ -70,7 +71,7 @@ unicodedata
 xml.dom.minidom
 ```
 
-You should be able to install all of this with:
+You should be able to install all of this (in Python 2) with:
 ```
 pip install lynx FuzzyWuzzy bs4 lockfile pycurl python-twitter urllib3[secure] python-Levenshtein
 ```
