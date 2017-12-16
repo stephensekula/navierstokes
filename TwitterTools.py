@@ -92,14 +92,15 @@ class TwitterHandler(SocialHandler):
             message_time_text = datetime.datetime.strptime(status.created_at, "%a %b %d %H:%M:%S +0000 %Y")
             message.date = calendar.timegm(message_time_text.timetuple())
             message.source = "Twitter"
+            message.author = status.user.screen_name
             message.repost = status.retweeted
             if message.repost and status.retweeted_status != None:
                 message.SetContent(self.T2H_URLs(status.retweeted_status.full_text))
                 message.id = status.retweeted_status.id
+                message.author = status.retweeted_status.user.screen_name
             else:
                 message.SetContent(self.T2H_URLs(status.full_text))
                 message.id = status.id
-            message.author = status.user.screen_name
             message.reply = True if (status.in_reply_to_status_id != None) else False
             message.direct = True if (message.content[0] == "@") else False
             if message.reply or message.direct:
@@ -113,7 +114,7 @@ class TwitterHandler(SocialHandler):
                 continue
 
             if message.repost:
-                message.SetContent( self.texthandler("From <a href=\"https://twitter.com/%s\">Twitter</a>: " % (username)) + message.content )
+                message.SetContent( self.texthandler("From <a href=\"https://twitter.com/%(name)s\">%(name)s</a> on Twitter: " % {"name": message.author}) + message.content )
                 pass
 
             message.attachments = []
