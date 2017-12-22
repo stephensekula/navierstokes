@@ -24,6 +24,7 @@ import codecs
 import diaspy
 import json
 import html2text
+import shutil
 from bs4 import BeautifulSoup
 
 
@@ -150,8 +151,11 @@ class DiasporaHandler(SocialHandler):
 
 
             if len(message.attachments) > 0:
+                # Move the attachment to the local directory
+                destination = message.attachments[0].split("/")[-1]
+                shutil.move(message.attachments[0], destination)
                 try:
-                    stream.post(text=message_text, photo=message.attachments[0], aspect_ids=aspect)
+                    stream.post(text=message_text, photo=destination, aspect_ids=aspect)
                 except Exception:
                     # This is due to this bug: https://github.com/marekjm/diaspy/issues/22
                     # Try to work around it for now.
@@ -159,6 +163,9 @@ class DiasporaHandler(SocialHandler):
                     stream.post(text=message_text, aspect_ids=aspect)
                     pass
 
+                # Remove the local copy of the image
+                os.remove(destination)
+                
             else:
                 stream.post(text=message_text, aspect_ids=aspect)
                 pass
