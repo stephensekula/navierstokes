@@ -177,7 +177,7 @@ class TwitterHandler(SocialHandler):
 
             # if message is too long, chop it and add URL
             message_text = copy.deepcopy(message.content)
-            if len(message_text) > 140:
+            if len(message_text) > 280:
                 if len(message.attachments) > 0:
                     message_text = message_text[:50] + "... " + message.link
                 else:
@@ -186,7 +186,7 @@ class TwitterHandler(SocialHandler):
 
                 pass
 
-            if len(message_text) <= 140:
+            if len(message_text) <= 280:
                 tweet = message_text
                 tweet = tweet.replace('\n',' ')
                 tweet = tweet.replace("'","'\\\''")
