@@ -218,12 +218,7 @@ for section in config.sections():
 
         pass
     elif config.get(section, "type") == "pump.io":
-        client_credentials = config.get(section, "client_credentials").split(',')
-        client_tokens=config.get(section, "client_tokens").split(',')
-
         sources_and_sinks[section] = PumpTools.PumpHandler(webfinger=config.get(section, "webfinger"), \
-                                                               credentials=client_credentials, \
-                                                               tokens=client_tokens, \
                                                                sharelevel=config.get(section,"sharelevel"))
         pass
     elif config.get(section, "type") == "diaspora":

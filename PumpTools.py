@@ -11,12 +11,12 @@ the same instance. It uses PyPump 0.5 to do all of this
 """
 
 from SocialHandler import *
-from pypump import PyPump, Client
-from pypump.models.image import Image
+from pypump import PyPump, Client, JSONStore, AbstractStore
+from pypump.models.media import Image
 from pypump.models.collection import Collection
 from pypump.models.collection import Public
 from pypump.models.person import Person
-from pypump.exception import PyPumpException
+from pypump.exceptions import PyPumpException
 
 from requests.exceptions import ConnectionError
 
@@ -35,18 +35,16 @@ from requests_oauthlib import OAuth1
 
 class PumpHandler(SocialHandler):
     
-    def __init__(self,webfinger,credentials,tokens,sharelevel="Public"):
+    def __init__(self,webfinger,sharelevel="Public"):
         SocialHandler.__init__(self)
         self.webfinger = webfinger
-        self.credentials = [s.strip() for s in credentials] #get rid of any stray spaces in the credentials/tokens
-        self.tokens = [s.strip() for s in tokens]        
         self.sharelevel = sharelevel
 
         self.pump = None
         self.me = None
 
         try:
-            self.pump = self.CreatePumpClient(self.webfinger, self.credentials, self.tokens)
+            self.pump = self.CreatePumpClient(self.webfinger)
             self.me   = self.pump.Person(self.webfinger)
         except PyPumpException:
             print "Unable to initiate a connection to the pump server. Pump.io will be skipped."
@@ -61,23 +59,21 @@ class PumpHandler(SocialHandler):
             
         pass
 
-    def simple_verifier(url):
+    def simple_verifier(url=''):
+        print(url)
         print 'Go to: ' + url
-        return raw_input('Verifier: ') # they will get a code back
+        return raw_input('Verifier: ').lstrip(" ").rstrip(" ")
 
-    def CreatePumpClient(self, webfinger, client_credentials,client_tokens):
+
+    def CreatePumpClient(self, webfinger):
         client = Client(
             webfinger=self.webfinger,
             type="native",
             name="NavierStokes",
-            key=client_credentials[0],
-            secret=client_credentials[1],
             )
         
         pump = PyPump(
             client=client,
-            token=client_tokens[0], # the token
-            secret=client_tokens[1], # the token secret
             verifier_callback=self.simple_verifier
             )
         
@@ -295,12 +291,7 @@ class PumpHandler(SocialHandler):
                     pass
                 for attachment in message.attachments:
                     new_note.from_file(attachment)
-                    pass
-
-                try:
-                    new_note.send()
                     successful_id_list.append( message.id )
-                except PyPumpException:
                     pass
                 pass
             pass

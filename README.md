@@ -98,8 +98,6 @@ sharelevel: Public
 [pump.io]
 type: pump.io
 webfinger: user@pump.server
-client_credentials: XXXXXXXXXXXXXXXXXXXXxx
-client_tokens: XXXXXXXXXXXXXXXXXX
 sharelevel: All
 
 [diaspora]
@@ -131,9 +129,7 @@ serviceKey: pseudosecretKey
 #serviceKey: False
 ```
 
-### The meaning of client_credentials and client_tokens for Pump.io and Twitter
-For pump.io, these arrays hold the comma-separated list of credentials and tokens that you obtain when registering your NavierStokes pump client (see below).
-
+### The meaning of client_credentials for Twitter
 For Twitter, this set of lists holds the following items. client_credentials holds the consumer key, followed by the consumer secret (comma-separated), that you get when you register NavierStokes in your twitter account as a new app (apps.twitter.com). The client_tokens list holds, in order, the access token and the access token secret (again, comma-separated) that you get from that same registration process.
 
 ### The meaning of other configuration keys
@@ -167,7 +163,7 @@ You can NavierStokes periodically (e.g every 5 minutes) using a CRON job:
 If you get any errors that are unrelated to passwords, logging into, report them to navierstokes+NOSPAM@hub.polari.us.
 A simple program to authenticate PyPump against your pump.io instance
 
-For PyPump v0.5, this ought to work:
+For PyPump v0.7 and beyond (e.g. PyPump master branch), this ought to work:
 
 ```
 #!/usr/bin/env python
@@ -185,9 +181,8 @@ def simple_verifier(url):
     return raw_input('Verifier: ') # they will get a code back
 
 pump = PyPump(client=client, verifier_callback=simple_verifier)
-client_credentials = pump.get_registration() # will return [<key>, <secret>, <expirey>]
-client_tokens = pump.get_token() # [<token>, <secret>]
 
-print "client_credentials: %s,%s" % (client_credentials[0],client_credentials[1])
-print "client_tokens: %s,%s" % (client_tokens[0],client_tokens[1])
+# You now have a file in ~/.config/PyPump/credentials.json that will be automatically loaded by PyPump
+# when you run NavierStokes. Authentication is now automatically provided by this mechanism.
+
 ```
