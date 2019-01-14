@@ -26,11 +26,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 # Requirements
 
     cliaspora-0.1.9.tgz (Diaspora access) (https://freeshell.de/~mk/projects/cliaspora.html)
-    PyPump 0.5 (pump.io access)
+    PyPump 0.7 or greater (master recommended) (pump.io access)
         git clone https://github.com/xray7224/PyPump.git
         cd PyPump
         git fetch
-        git checkout v0.5
+        git checkout master
     cURL (GNU Social access)
     LYNX (for converting HTML to plain text - some social networks don't understand HTML)
     FuzzyWuzzy Python fuzzy text-matching libraries
