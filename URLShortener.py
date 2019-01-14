@@ -8,6 +8,8 @@ import logging
 import pycurl
 import json
 import time
+import sys
+
 try:
     from io import BytesIO
 except ImportError:
@@ -244,7 +246,7 @@ if __name__ == '__main__':
     #syntax for test is ie:
     # python shortenURL.py -u http://pump.io/tryit.html
     #python CLIshortenURL_test.py -u https://somelongurl.com/somelong/path/foo.bar -t shortenizer -s http://u.jrobb.org -k mykey
-    import sys
+
     import getopt
     # Parse command line options
     try:
