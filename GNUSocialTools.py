@@ -153,6 +153,8 @@ class GNUSocialHandler(SocialHandler):
             message.content = self.TextToHtml(message.content)
             if message.content.find("deleted notice") != -1:
                 continue
+            if message.content.find("started following") != -1:
+                continue
             message.author = dent_author
             message.reply = True if self.find_element_of_status(dent_xml,"in_reply_to_status_id") != "" else False
             message.public = True
