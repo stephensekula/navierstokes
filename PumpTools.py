@@ -47,12 +47,12 @@ class PumpHandler(SocialHandler):
             self.pump = self.CreatePumpClient(self.webfinger)
             self.me   = self.pump.Person(self.webfinger)
         except PyPumpException:
-            print "Unable to initiate a connection to the pump server. Pump.io will be skipped."
+            print("Unable to initiate a connection to the pump server. Pump.io will be skipped.")
             self.pump = None
             self.me = None
             pass
         except ConnectionError:
-            print "The connection to the pump server has timed out. Pump.io will be skipped."
+            print("The connection to the pump server has timed out. Pump.io will be skipped.")
             self.pump = None
             self.me = None
             pass
@@ -61,7 +61,7 @@ class PumpHandler(SocialHandler):
 
     def simple_verifier(url=''):
         print(url)
-        print 'Go to: ' + url
+        print('Go to: ' + url)
         return raw_input('Verifier: ').lstrip(" ").rstrip(" ")
 
 
@@ -127,7 +127,7 @@ class PumpHandler(SocialHandler):
                 if pump_obj.deleted:
                     continue
             except AttributeError:
-                print "The arrtribute \"deleted\" does not exist . . . continuing anyway . . . "
+                print("The arrtribute \"deleted\" does not exist . . . continuing anyway . . . ")
                 pass
 
             # Determine if this message was directed to someone on Pump.io and thus
@@ -198,14 +198,14 @@ class PumpHandler(SocialHandler):
                 
                 image_raw = self.pump._requester(requests.get, endpoint, raw=False, **request)
                 
-                fout = open("/tmp/{0}".format(local_img_name), "w")
+                fout = open("/tmp/{0}".format(local_img_name), "wb")
                 fout.write(image_raw.content)
                 fout.close()
                 
                 #message.content = unicodedata.normalize('NFKD', pump_obj.display_name).encode('ascii','ignore')
-                #print ".display_name: %s" % (pump_obj.display_name)
-                #print ".summary: %s" % (pump_obj.summary)
-                #print ".content: %s" % (pump_obj.content)
+                #print(".display_name: %s" % (pump_obj.display_name))
+                #print(".summary: %s" % (pump_obj.summary))
+                #print(".content: %s" % (pump_obj.content))
 
                 text = ""
                 if not pump_obj.content:
@@ -239,10 +239,10 @@ class PumpHandler(SocialHandler):
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
-            print "********************** Pump.io Handler **********************\n"
-            print "Here are the messages I gathered from the pump.io server:\n"
+            print("********************** Pump.io Handler **********************\n")
+            print("Here are the messages I gathered from the pump.io server:\n")
             for message in self.messages:
-                print message.Printable()
+                print(message.Printable())
                 pass
             
         return self.messages

@@ -21,7 +21,7 @@ import time
 import datetime
 import calendar
 import codecs
-import commands
+import subprocess
 
 
 from MessageObj import Message
@@ -29,7 +29,7 @@ from MessageObj import Message
 
 class GNUSocialHandler(SocialHandler):
     """ a class to read and post to a GNU Social feed """
-    def __init__(self,username=unicode("","utf8"),password="",site="",sharelevel="Public"):
+    def __init__(self,username=u'',password="",site="",sharelevel="Public"):
         SocialHandler.__init__(self)
         self.username = username
         self.password = password
@@ -195,10 +195,10 @@ class GNUSocialHandler(SocialHandler):
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
-            print "********************** GNU Social Handler **********************\n"
-            print "Here are the messages I gathered from the GNU Social server:\n"
+            print("********************** GNU Social Handler **********************\n")
+            print("Here are the messages I gathered from the GNU Social server:\n")
             for message in self.messages:
-                print message.Printable()
+                print(message.Printable())
                 pass
 
         # cleanup
@@ -282,7 +282,7 @@ class GNUSocialHandler(SocialHandler):
                 self.msg(level=0,text=command)
                 pass
 
-            results = commands.getoutput(command)
+            results = subprocess.check_output(command,stderr=subprocess.STDOUT, shell=True)
             if results.find("error") != -1:
                 if results.find("Maximum notice size") != -1:
                     self.msg(level=2,text="Message too long to post to GNU Social - skipping...")

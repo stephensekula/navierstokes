@@ -19,7 +19,6 @@ import os
 import re
 import calendar
 import datetime
-import commands
 import codecs
 import diaspy
 import json
@@ -56,15 +55,15 @@ class DiasporaHandler(SocialHandler):
         for post in stream:
             msg = Message()
             msg.source = "Diaspora"
-            msg.id = post['id']
+            msg.id = post.id
             msg.link = '%s/posts/%d' % (self.webfinger.split('@')[1],msg.id)
-            msg.author = post['author']['name']
-            msg.title = post['title']
-            msg.date   = calendar.timegm(datetime.datetime.strptime(post['created_at'],"%Y-%m-%dT%H:%M:%S.000Z").timetuple())
+            msg.author = post.author()
+            msg.title = post.data()['title']
+            msg.date   = calendar.timegm(datetime.datetime.strptime(post.data()['created_at'],"%Y-%m-%dT%H:%M:%S.000Z").timetuple())
             msg.SetContent(msg.content + post.__str__())
 
             # harvest media from the post
-            for medium in post['photos']:
+            for medium in post.data()['photos']:
                 post_attachment = medium["sizes"]["large"]
                 filename = post_attachment.split('/')[-1]
                 if not os.path.exists('/tmp/%s' % (filename)):
@@ -74,14 +73,14 @@ class DiasporaHandler(SocialHandler):
                 pass
 
             # determine the message type
-            if post['post_type'] == "StatusMessage":
+            if post.data()['post_type'] == "StatusMessage":
                 msg.repost = 0
                 msg.direct = 0
-                if post['author']['guid'] != self.guid:
+                if post.data()['author']['guid'] != self.guid:
                     continue
                 #if msg.author != user['name']:
                 #    continue
-            elif post['post_type'] == "Reshare":
+            elif post.data()['post_type'] == "Reshare":
                 msg.repost = 1
                 msg.direct = 0
                 msg.SetContent(msg.content + "\n\n" + "Reshared from %s on Diaspora: " % (post.author()))
@@ -89,7 +88,7 @@ class DiasporaHandler(SocialHandler):
             else:
                 continue
 
-            if post['public'] == True:
+            if post.data()['public'] == True:
                 msg.public = 1
             else:
                 msg.public = 0
@@ -156,17 +155,23 @@ class DiasporaHandler(SocialHandler):
                 # Try to work around it for now.
 
                 # Move the attachment to the local directory
-                destination = message.attachments[0].split("/")[-1]
+                destination = "./" + message.attachments[0].split("/")[-1]
                 shutil.move(message.attachments[0], destination)
                 post_trials = 0
                 while post_trials < 5:
                     has_exception = False
                     try:
+                        connection = diaspy.connection.Connection(pod='https://%s' % (self.webfinger.split('@')[1]),username=self.webfinger.split('@')[0],password=self.password)
+                        connection.login()
+                        stream = diaspy.streams.Stream(connection)
                         stream.post(text=message_text, photo=destination, aspect_ids=aspect)
                     except Exception:
                         has_exception = True
                         if post_trials >= 4:
                             message_text += "\n\n" + message.link
+                            connection = diaspy.connection.Connection(pod='https://%s' % (self.webfinger.split('@')[1]),username=self.webfinger.split('@')[0],password=self.password)
+                            connection.login()
+                            stream = diaspy.streams.Stream(connection)
                             stream.post(text=message_text, aspect_ids=aspect)
                             pass
                     if has_exception == True:

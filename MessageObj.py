@@ -5,26 +5,26 @@ import unicodedata
 
 class Message:
     def __init__(self):
-        self.title   = unicode()
-        self.content = unicode()
+        self.title   = u''
+        self.content = u''
         self.id = 0
-        self.file = unicode("")
+        self.file = u''
         self.date = 0
-        self.author = unicode("")
-        self.author_url = unicode("")
+        self.author = u''
+        self.author_url = u''
         self.reply = 0
         self.direct = 0
         self.repost = 0
         self.attachments = []
         self.public = 0
-        self.link = unicode("")
-        self.source = unicode("")
+        self.link = u''
+        self.source = u''
         pass
 
     def Printable(self):
-        printable = unicode("")
+        printable = u''
         printable += \
-unicode("======================== MESSAGE OBJECT ========================\n \
+u'======================== MESSAGE OBJECT ========================\n \
 FROM:    %(author)s\n \
 DATE:    %(datetime)s\n \
 ID:      %(id)d\n \
@@ -33,27 +33,27 @@ LINK:    %(link)s\n \
 REPLY?:  %(reply)d\n \
 PUBLIC?: %(public)d\n \
 DIRECT?: %(direct)d\n \
-REPOST?: %(repost)d\n") % {'author': self.author, 'datetime': ((datetime.datetime.fromtimestamp(time.mktime(time.localtime(self.date)))).strftime('%Y %B %d %H:%M:%S')), 'id': self.id, 'source': self.source, 'reply': self.reply, 'public': self.public, 'direct': self.direct, 'repost': self.repost, 'link': self.link}
+REPOST?: %(repost)d\n' % {'author': self.author, 'datetime': ((datetime.datetime.fromtimestamp(time.mktime(time.localtime(self.date)))).strftime('%Y %B %d %H:%M:%S')), 'id': self.id, 'source': self.source, 'reply': self.reply, 'public': self.public, 'direct': self.direct, 'repost': self.repost, 'link': self.link}
 
 
 
-        if not isinstance(self.content, unicode):
-            printable += self.content.decode('utf8', errors='ignore')
-        else:
-            printable += self.content
+        #if not isinstance(self.content, unicode):
+        #    printable += self.content.decode('utf8', errors='ignore')
+        #else:
+        printable += self.content.decode('utf8', errors='ignore')
 
         #except UnicodeDecodeError:
         #    printable += unicode("CONTENT: %s\n" % (unicodedata.normalize('NFKD',self.content).encode('ascii','ignore')))
         #    pass
-        printable += unicode("ATTACHMENTS: %s\n" % (str(self.attachments)))
+        printable += u'ATTACHMENTS: %s\n' % (str(self.attachments))
 
-        if type(printable) == unicode:
-            return unicodedata.normalize('NFKD', printable).encode('ascii','ignore')
-        else:
-            return printable
+        #if type(printable) == unicode:
+        return unicodedata.normalize('NFKD', printable).encode('ascii','ignore')
+        #else:
+        #    return printable
 
     def Print(self):
-        print self.Printable()
+        print(self.Printable())
         
-    def SetContent(self, text=unicode("")):
+    def SetContent(self, text=u''):
         self.content = text

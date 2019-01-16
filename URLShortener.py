@@ -85,7 +85,7 @@ def ExpandShortURL(short_url):
         original_url = short_url
 
     if original_url[:4] != "http":
-        print "URLShortener.ExpandShortURL(): attempt to retrieve original failed. Using shortened link."
+        print("URLShortener.ExpandShortURL(): attempt to retrieve original failed. Using shortened link.")
         original_url = short_url
         pass
 
@@ -143,12 +143,12 @@ class URLShortener(object):
             return "failure"
 
         htmlText = response[pos:response.find(postfx,pos) + len(postfx)]
-        #print "htmlText:" + htmlText
+        #print("htmlText:" + htmlText)
 
         link = htmlText[htmlText.find(prefx)+len(prefx):]
         link = link[:link.find(linkClose)]
         linkmsg = htmlText[htmlText.find(linkClose)+len(linkClose):htmlText.find(postfx)]
-        #print "linkmsg: " + linkmsg
+        #print("linkmsg: " + linkmsg)
 
         return link
 
@@ -194,17 +194,17 @@ class URLShortener(object):
         except:
             shortURL = 'errror'
             return response['error']
-        print shortURL
+        print(shortURL)
 
         return shortURL
 
     def getShortenizer(self, longurl, vanityTerm=False):
         #  this sample POSTs to the shortenizer api and then gets the
         #  returned shortened short url from the JSON repsonse
-        print 'shortenizing'
+        print('shortenizing')
         if not self.serviceURL:
             #error
-            print 'error, no serviceURL'
+            print('error, no serviceURL')
         if self.serviceURL[-1] != '/':
             self.serviceURL += '/'
         if not '/api/' in self.serviceURL:
@@ -222,7 +222,7 @@ class URLShortener(object):
             logging.error(r)
             shortURL = r
 
-        #print "response: \n", r, "---/response -- \n"
+        #print("response: \n", r, "---/response -- \n")
 
         return shortURL
 
@@ -233,8 +233,8 @@ class URLShortener(object):
         else:
             shortURL = self.getUR1ca(longurl)
 
-        print "original URL length: " + str(len(longurl))
-        print "short URL length: " + str(len(shortURL))
+        print("original URL length: " + str(len(longurl)))
+        print("short URL length: " + str(len(shortURL)))
         if len(longurl) <= len(shortURL) or (shortURL[:6] == 'error:') or (shortURL[:8] == 'failure'):
             return longurl
         else:
@@ -249,11 +249,11 @@ if __name__ == '__main__':
     # Parse command line options
     try:
         opts, args = getopt.getopt(sys.argv[1:], "s:u:t:v:k:", ["type=", "service=", "url=","vanity=","key="])
-        print "opts: " + str(opts)
-        print "args: " + str(args)
+        print("opts: " + str(opts))
+        print("args: " + str(args))
     except getopt.GetoptError as err:
         # print help information and exit:
-        print str(err) # will print something like "option -a not recognized"
+        print(str(err)) # will print something like "option -a not recognized"
         os.remove(path_to_pidfile)
         sys.exit(2)
         pass
@@ -278,17 +278,17 @@ if __name__ == '__main__':
             pass
         pass
 
-    print "serviceTYpe: ", serviceType
-    print "longurl: ", longurl
-    print "serviceURL: ", serviceURL
-    print "term: ", vanityTerm
-    print "key: ", key
+    print("serviceTYpe: ", serviceType)
+    print("longurl: ", longurl)
+    print("serviceURL: ", serviceURL)
+    print("term: ", vanityTerm)
+    print("key: ", key)
 
     config = {'service':serviceType, 'url':serviceURL, 'key':key}
 
     myurl = URLShortener(config)
     if not longurl:
-        print "error, no url, something's not right"
+        print("error, no url, something's not right")
     else:
         #output the shortened URL
-        print myurl.shorten(longurl, vanityTerm)
+        print(myurl.shorten(longurl, vanityTerm))
