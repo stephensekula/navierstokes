@@ -22,6 +22,7 @@ import datetime
 import calendar
 import codecs
 import feedparser
+from bs4 import BeautifulSoup
 
 
 class RSSHandler(SocialHandler):
@@ -45,7 +46,7 @@ class RSSHandler(SocialHandler):
         self.msg(0, self.texthandler("Gathering messages.") )
 
         rss_content = feedparser.parse(self.texthandler(self.feed_url))
-
+        
         for entry in rss_content.entries:
             msg = Message()
 
@@ -102,7 +103,17 @@ class RSSHandler(SocialHandler):
             except AttributeError:
                 msg.title = self.texthandler(msg.content[:60])+self.texthandler("...")
                 pass
-        
+
+            # make an effort to get the featured image, if there is one
+            try:
+                content = entry.content[0]['value']
+                soup = BeautifulSoup(content, "lxml")
+                for img in soup.findAll('img', limit=1):
+                    filename = img['src'].split('/')[-1]
+                    os.system('curl --connect-timeout 60 -m 120 -s -o /tmp/%s %s' % ( filename, img['src'] ))
+                    msg.attachments.append( '/tmp/%s' % (filename) )
+            except:
+                pass
 
             self.messages.append(msg)
             
