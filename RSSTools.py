@@ -69,6 +69,7 @@ class RSSHandler(SocialHandler):
             #msg.content = self.texthandler("<p>Shared from RSS:</p>\n")
             msg.content = self.texthandler(self.prepend)
             try:
+
                 msg.content += self.texthandler("<p><b>\"%s\"</b></p>\n" % entry.title)
                 msg.title   =  self.texthandler(entry.title)
             except AttributeError:
@@ -92,6 +93,13 @@ class RSSHandler(SocialHandler):
             except AttributeError:
                 pass
 
+
+            # Cleanup HTML from content.
+            msg_text = BeautifulSoup(msg.content, "html.parser").get_text()
+            #msg_text = msg_text.replace('\n','\n\n')
+            msg.content = msg_text
+
+            
             msg.link = entry.link
             try:
                 msg.author = self.texthandler(entry.author)
