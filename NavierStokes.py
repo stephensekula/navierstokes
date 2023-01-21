@@ -118,24 +118,30 @@ if not os.path.exists(home+'/.navierstokes/'):
     pass
 
 
-# Parse command line options
-try:
-    opts, args = getopt.getopt(sys.argv[1:], "dhc:r:", ["debug","help", "config=", "rate="])
-except getopt.GetoptError as err:
-    # print help information and exit:
-    print str(err) # will print something like "option -a not recognized"
-    os.remove(path_to_pidfile)
-    sys.exit(2)
-    pass
 configfile = home + "/.navierstokes/navierstokes.cfg"
 verbose = False
 debug = False
 fuzzy = False
 ratelimit = 100
 
+path_to_pidfile = configfile + '.pid'
+pid_is_running = False
+
+# Parse command line options
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "dhc:r:", ["debug","help", "config=", "rate="])
+except getopt.GetoptError as err:
+    # print help information and exit:
+    print str(err) # will print something like "option -a not recognized"
+    if os.path.exists( path_to_pidfile ):
+        os.remove(path_to_pidfile)
+    sys.exit(2)
+    pass
+
 for o, a in opts:
     if o in ("-h", "--help"):
-        os.remove(path_to_pidfile)
+        if os.path.exists( path_to_pidfile ):
+            os.remove(path_to_pidfile)
         sys.exit()
     elif o in ("-d", "--debug"):
         debug = True
@@ -150,15 +156,15 @@ for o, a in opts:
 
 
 # Check if a PID file already exists
-path_to_pidfile = configfile + '.pid'
-pid_is_running = False
 if os.path.exists( path_to_pidfile ):
     # see if this PID is _actually_ running
-    pid = int(open(path_to_pidfile).read())
 
     try:
+        pid = int(open(path_to_pidfile).read())
         os.kill(pid, 0)
     except OSError:
+        pid_is_running = False
+    except ValueError:
         pid_is_running = False
     else:
         pid_is_running = True
@@ -545,7 +551,7 @@ for sinkname in sources_and_sinks:
 
         if debug:
             print "Message text after cleanup:"
-            print message.content
+            print(message.Printable())
             print "------------------------------- END OF LINE -------------------------------"
             pass
 
