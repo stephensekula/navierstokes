@@ -119,7 +119,8 @@ class RSSHandler(SocialHandler):
                 for img in soup.findAll('img', limit=1):
                     filename = img['src'].split('/')[-1]
                     os.system('curl --connect-timeout 60 -m 120 -s -o /tmp/%s %s' % ( filename, img['src'] ))
-                    msg.attachments.append( '/tmp/%s' % (filename) )
+                    if os.path.exists('/tmp/%s' % (filename)):
+                        msg.attachments.append( '/tmp/%s' % (filename) )
             except:
                 pass
 
