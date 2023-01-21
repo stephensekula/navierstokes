@@ -21,7 +21,8 @@ import calendar
 #import commands
 import time
 
-import URLShortener
+import pyshorteners
+from pyshorteners import Shorteners
 
 # Python Twitter API access
 import twitter
@@ -177,20 +178,29 @@ class TwitterHandler(SocialHandler):
 
             # if message is too long, chop it and add URL
             message_text = copy.deepcopy(message.content)
-            if len(message_text) > 140:
+            message_text = message_text.replace('\n',' ')
+            message_text = message_text.replace("'","'\\\''")
+            message_text = message_text.replace("@","")
+
+            message_length = len(message_text)
+
+            # handle the url
+            url_shortener = pyshorteners.Shortener(Shorteners.TINYURL)
+          
+            message_link = url_shortener.short(message.link)
+            link_length = len(message_link)
+            
+            if message_length + link_length >= 140:
                 if len(message.attachments) > 0:
-                    message_text = message_text[:50] + "... " + message.link
+                    message_text = message_text[:(110 - link_length)] + "... " + message_link
                 else:
-                    message_text = message_text[:80] + "... " + message.link
+                    message_text = message_text[:(140 - link_length)] + "... " + message_link
                     pass
 
                 pass
 
-            if len(message_text) <= 140:
+            if len(message_text) <= 280:
                 tweet = message_text
-                tweet = tweet.replace('\n',' ')
-                tweet = tweet.replace("'","'\\\''")
-                tweet = tweet.replace("@","")
 
                 status = None
                 try:
