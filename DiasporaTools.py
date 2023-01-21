@@ -47,7 +47,11 @@ class DiasporaHandler(SocialHandler):
 
         self.messages = []
 
-        connection = diaspy.connection.Connection(pod='https://%s' % (self.webfinger.split('@')[1]),username=self.webfinger.split('@')[0],password=self.password)
+        connection = None
+        try:
+            connection = diaspy.connection.Connection(pod='https://%s' % (self.webfinger.split('@')[1]),username=self.webfinger.split('@')[0],password=self.password)
+        except:
+            return self.messages
 
         connection.login()
         stream = diaspy.streams.Activity(connection)
@@ -181,7 +185,10 @@ class DiasporaHandler(SocialHandler):
                 os.remove(destination)
                 
             else:
-                stream.post(text=message_text, aspect_ids=aspect)
+                try:
+                    stream.post(text=message_text, aspect_ids=aspect)
+                except:
+                    self.msg(0, "Unable to post message:\n%s" % (message_text))
                 pass
             pass
 
