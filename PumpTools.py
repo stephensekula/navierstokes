@@ -90,7 +90,15 @@ class PumpHandler(SocialHandler):
         if not self.pump:
             return []
 
-        for activity in self.me.outbox.major[:20]:
+        outbox_major = []
+
+        try:
+            outbox_major = self.me.outbox.major[:20]
+        except:
+            self.msg(0, "An error occurred while gathering recent messages.")
+            return []
+        
+        for activity in outbox_major:
             pump_obj    = activity.obj
 
             pump_obj_id = activity.id
