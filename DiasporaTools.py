@@ -19,7 +19,7 @@ import os
 import re
 import calendar
 import datetime
-import commands
+import subprocess
 import codecs
 import diaspy
 import json
@@ -27,7 +27,7 @@ import html2text
 import shutil
 import time
 from bs4 import BeautifulSoup
-
+import json
 
 class DiasporaHandler(SocialHandler):
     def __init__(self, webfinger, guid, password, aspect="public", sharelevel="Public"):
@@ -49,15 +49,23 @@ class DiasporaHandler(SocialHandler):
 
         connection = None
         try:
-            connection = diaspy.connection.Connection(pod='https://%s' % (self.webfinger.split('@')[1]),username=self.webfinger.split('@')[0],password=self.password)
-        except:
+            pod = self.webfinger.split("@")[1]
+            username = self.webfinger.split("@")[0]
+            if self.debug:
+                self.msg(0, f"Pod {pod} login as {username}...")
+            connection = diaspy.connection.Connection(pod=f'https://{pod}', 
+                                                      username=username, 
+                                                      password=self.password)
+        except Exception as e:
+            self.msg(0,"Exception while establishing connection to Diaspora Pod:")
+            self.msg(0,e)
             return self.messages
 
         connection.login()
         stream = diaspy.streams.Activity(connection)
         #user   = diaspy.people.User(connection, guid=self.guid)
 
-        for post in stream:
+        for post in json.loads(stream.json()):
             msg = Message()
             msg.source = "Diaspora"
             msg.id = post['id']
@@ -65,7 +73,7 @@ class DiasporaHandler(SocialHandler):
             msg.author = post['author']['name']
             msg.title = post['title']
             msg.date   = calendar.timegm(datetime.datetime.strptime(post['created_at'],"%Y-%m-%dT%H:%M:%S.000Z").timetuple())
-            msg.SetContent(msg.content + post.__str__())
+            msg.SetContent(msg.content + post['text'])
 
             # harvest media from the post
             for medium in post['photos']:
@@ -103,8 +111,8 @@ class DiasporaHandler(SocialHandler):
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
-            print("********************** Diaspora Handler **********************\n")
-            print("Here are the messages I gathered from the Diaspora server:\n")
+            self.PrintBanner("Diaspora Handler", "*")
+            self.msg(0, "Here are the messages I gathered from the Diaspora server:\n")
             for message in self.messages:
                 print(message.Printable())
                 pass

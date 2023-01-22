@@ -21,7 +21,7 @@ import time
 import datetime
 import calendar
 import codecs
-import commands
+import subprocess
 
 
 from MessageObj import Message
@@ -29,7 +29,7 @@ from MessageObj import Message
 
 class GNUSocialHandler(SocialHandler):
     """ a class to read and post to a GNU Social feed """
-    def __init__(self,username=unicode("","utf8"),password="",site="",sharelevel="Public"):
+    def __init__(self,username="",password="",site="",sharelevel="Public"):
         SocialHandler.__init__(self)
         self.username = username
         self.password = password
@@ -50,9 +50,9 @@ class GNUSocialHandler(SocialHandler):
 
     def find_status_elements(self,doc):
         list_of_status_elements = []
-        #print doc.toprettyxml()
+        #print(doc.toprettyxml())
         list_of_status_elements = doc.getElementsByTagName("status")
-        #print list_of_status_elements
+        #print(list_of_status_elements)
         return list_of_status_elements
 
     def find_element_of_status(self,status,element_name):
@@ -60,7 +60,8 @@ class GNUSocialHandler(SocialHandler):
         for e in status.childNodes:
             if e.ELEMENT_NODE and e.localName == element_name:
                 for t in e.childNodes:
-                    element_content = t.data.encode('utf-8').strip()
+                    # element_content = t.data.encode('utf-8').strip()
+                    element_content = t.data.strip()
                     break
                 pass
             pass
@@ -81,7 +82,8 @@ class GNUSocialHandler(SocialHandler):
                 for u in e.childNodes:
                     if u.ELEMENT_NODE and u.localName == "screen_name":
                         for t in u.childNodes:
-                            name = t.data.encode('utf-8').strip()
+                            # name = t.data.encode('utf-8').strip()
+                            name = t.data.strip()
                             break
                         pass
                     pass
@@ -113,13 +115,13 @@ class GNUSocialHandler(SocialHandler):
 
         self.messages = []
 
-        self.msg(0, unicode("Gathering messages."))
+        self.msg(0, "Gathering messages.")
 
         # Get the XML file from the web
-        try:
-            xml_file_contents = unicode(commands.getoutput('curl -m 120 --connect-timeout 60 -s -u \'%s:%s\' %s/api/statuses/user_timeline/%s.xml?count=200' % (self.username,self.password,self.site,self.username)).decode('utf-8'))
-        except xml.parsers.expat.ExpatError:
-            return self.messages
+        # try:
+        xml_file_contents = subprocess.check_output('curl -m 120 --connect-timeout 60 -s -u \'%s:%s\' %s/api/statuses/user_timeline/%s.xml?count=200' % (self.username,self.password,self.site,self.username), shell=True).decode('utf-8')
+        # except xml.parsers.expat.ExpatError:
+        #     return self.messages
 
         pid = os.getpid()
 
@@ -140,12 +142,10 @@ class GNUSocialHandler(SocialHandler):
             #if dent_source == "activity":
             #    continue
 
-            dent_text = unicode(self.find_element_of_status(dent_xml,"text").decode('utf8'))
-
-            dent_author = unicode(self.status_author_name(dent_xml).decode('utf8'))
+            dent_text = self.find_element_of_status(dent_xml,"text")
+            dent_author = self.status_author_name(dent_xml)
             if dent_author != self.username:
                 continue
-
 
             message = Message()
             message.source = "GNU Social"
@@ -186,8 +186,9 @@ class GNUSocialHandler(SocialHandler):
             message.date = calendar.timegm(t.timetuple())
             message.repost = self.status_is_retweeted(dent_xml)
             if message.repost:
-                message.SetContent( unicode("<a href=\"%s\">From GNU Social</a> : " % (self.find_element_of_status(dent_xml,"uri")) + message.content ))
+                message.SetContent( "<a href=\"%s\">From GNU Social</a> : " % (self.find_element_of_status(dent_xml,"uri") + message.content ))
                 pass
+
 
             self.append_message(message)
             pass
@@ -195,10 +196,10 @@ class GNUSocialHandler(SocialHandler):
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
-            print "********************** GNU Social Handler **********************\n"
-            print "Here are the messages I gathered from the GNU Social server:\n"
+            print("********************** GNU Social Handler **********************\n")
+            print("Here are the messages I gathered from the GNU Social server:\n")
             for message in self.messages:
-                print message.Printable()
+                print(message.Printable())
                 pass
 
         # cleanup
@@ -236,10 +237,11 @@ class GNUSocialHandler(SocialHandler):
             pid = os.getpid()
 
             fout = codecs.open('/tmp/%d_statusnet_text.txt' % (pid),'w',encoding='utf-8')
+            message.content = self.texthandler(message.content)
             try:
-                fout.write(unicode('source=NavierStokesApp&status=')+message.content)
+                fout.write('source=NavierStokesApp&status='+message.content)
             except UnicodeEncodeError:
-                fout.write(unicode('source=NavierStokesApp&status=')+unicodedata.normalize('NFKD',message.content).encode('ascii','ignore'))
+                fout.write('source=NavierStokesApp&status='+message.content)
             fout.close()
 
             data += " -d @/tmp/%d_statusnet_text.txt" % (pid)
@@ -255,7 +257,7 @@ class GNUSocialHandler(SocialHandler):
                 try:
                     fout.write(message.content)
                 except UnicodeEncodeError:
-                    fout.write(unicodedata.normalize('NFKD',message.content).encode('ascii','ignore'))
+                    fout.write(message.content)
                 fout.close()
 
                 data =  " -F source=NavierStokesApp"
@@ -282,11 +284,14 @@ class GNUSocialHandler(SocialHandler):
                 self.msg(level=0,text=command)
                 pass
 
-            results = commands.getoutput(command)
+            results = self.texthandler(subprocess.check_output(command, shell=True))
             if results.find("error") != -1:
                 if results.find("Maximum notice size") != -1:
                     self.msg(level=2,text="Message too long to post to GNU Social - skipping...")
+                elif results.find("A file this large would exceed your user quota") != -1:
+                    self.msg(level=2,text="Message too large in bytes to post to GNU Social - skipping...")
                 else:
+                    self.msg(level=3,text=results)
                     self.msg(level=3,text="Unable to post this message")
                     pass
                 pass

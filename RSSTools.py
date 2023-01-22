@@ -131,10 +131,10 @@ class RSSHandler(SocialHandler):
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
-            print self.texthandler("********************** RSS Handler **********************\n")
-            print self.texthandler("Here are the messages I gathered from the RSS feed:\n")
+            print(self.texthandler("********************** RSS Handler **********************\n"))
+            print(self.texthandler("Here are the messages I gathered from the RSS feed:\n"))
             for message in self.messages:
-                print message.Printable()
+                print(message.Printable())
                 pass
             
         return self.messages
