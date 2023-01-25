@@ -50,7 +50,7 @@ cd navierstokes/
 
 You should create a configuration file for NavierStokes: ~/.navierstokes/navierstokes.cfg. The syntax for the file is explained below.
 
-You will need to register a new application on some platforms. The ```pump_register.py``` and ```mastodon_register.py``` scripts help with this and only require you to provide a webfinger (e.g., ```username@website```) to start the process.
+You will need to register a new application on some platforms. The ```xyz_register.py``` scripts help with this and only require you to provide a webfinger (e.g., ```username@website```) to start the process.
 
 Some credentials need to be entered into the configuration file (see below).
 
@@ -83,6 +83,7 @@ max_message_age: 86400
 [mastodon]
 type: mastodon
 webfinger: user@mastodon.server
+client_tokens: XXXXXXXXXXXXXXXXXXX
 sharelevel: All
 
 [diaspora]

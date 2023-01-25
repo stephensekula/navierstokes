@@ -30,6 +30,7 @@ import requests
 from requests_oauthlib import OAuth1
 
 import SocialHandler
+import MastodonTools
 import GNUSocialTools
 import PumpTools
 import DiasporaTools
@@ -241,6 +242,13 @@ for section in config.sections():
                                                                        credentials=client_credentials, \
                                                                        tokens=client_tokens, \
                                                                        sharelevel=config.get(section, "sharelevel"))
+        pass
+    elif config.get(section, "type") == "mastodon":
+        token=config.get(section, "client_tokens")
+
+        sources_and_sinks[section] = MastodonTools.MastodonHandler(webfinger=config.get(section, "webfinger"), \
+                                                                   token=token, \
+                                                                   sharelevel=config.get(section, "sharelevel"))
         pass
     pass
 
