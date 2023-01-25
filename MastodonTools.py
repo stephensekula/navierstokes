@@ -142,7 +142,8 @@ class MastodonHandler(SocialHandler):
                     media_ids.append(m.media_post(attachment))
             
             try:
-                m.status_post(message.content, media_ids=media_ids)
+                message_text = BeautifulSoup(message.content, "html.parser").text
+                m.status_post(message_text, media_ids=media_ids)
                 successful_id_list.append( message.id )
             except:
                 self.msg(0, "Unable to post message:\n%s" % (message.content))
