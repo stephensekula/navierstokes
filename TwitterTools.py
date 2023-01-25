@@ -183,8 +183,8 @@ class TwitterHandler(SocialHandler):
 
             # if message is too long, chop it and add URL
             message_text = copy.deepcopy(message.content)
-            message_text = self.texthandler(message_text).replace('\n',' ')
-            message_text = self.texthandler(message_text).replace("'","'\\\''")
+            # message_text = self.texthandler(message_text).replace('\n',' ')
+            # message_text = self.texthandler(message_text).replace("'","'\\\''")
             message_text = self.texthandler(message_text).replace("@","")
 
             message_length = len(message_text)
@@ -195,11 +195,13 @@ class TwitterHandler(SocialHandler):
             message_link = url_shortener.tinyurl.short(message.link)
             link_length = len(message_link)
             
-            if message_length + link_length >= 140:
+            max_length = 280
+
+            if message_length + link_length >= max_length:
                 if len(message.attachments) > 0:
-                    message_text = message_text[:(110 - link_length)] + "... " + message_link
+                    message_text = message_text[:(max_length - 30 - link_length)] + "... " + message_link
                 else:
-                    message_text = message_text[:(140 - link_length)] + "... " + message_link
+                    message_text = message_text[:(max_length - link_length)] + "... " + message_link
                     pass
 
                 pass
