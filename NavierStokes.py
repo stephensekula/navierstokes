@@ -628,3 +628,4 @@ for sinkname in sources_and_sinks:
 
 # We are done. Remove the PID file
 os.remove(path_to_pidfile)
+logging.info("NavierStokes execution complete. You are invited to run this bridge again sometime!")
