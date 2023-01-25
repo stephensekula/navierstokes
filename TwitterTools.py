@@ -82,10 +82,8 @@ class TwitterHandler(SocialHandler):
             pass
 
         username = self.username
-        # api = twitter.api(tweet_mode='extended', consumer_key = self.credentials[0], consumer_secret=self.credentials[1], access_token_key=self.tokens[0],access_token_secret=self.tokens[1])
         api = twitter.Twitter(auth=twitter.OAuth(self.tokens[0],self.tokens[1],self.credentials[0],self.credentials[1]))
 
-        # statuses = api.GetUserTimeline(screen_name=self.username)
         statuses = api.statuses.user_timeline(screen_name=self.username,tweet_mode='extended')
 
         message = Message()
@@ -153,7 +151,6 @@ class TwitterHandler(SocialHandler):
 
         # initialize the connection to Twitter
         username = self.username
-        # api = twitter.Api(tweet_mode='extended', consumer_key = self.credentials[0], consumer_secret=self.credentials[1], access_token_key=self.tokens[0],access_token_secret=self.tokens[1])
         api = twitter.Twitter(auth=twitter.OAuth(self.tokens[0],self.tokens[1],self.credentials[0],self.credentials[1]))
 
 
@@ -183,8 +180,6 @@ class TwitterHandler(SocialHandler):
 
             # if message is too long, chop it and add URL
             message_text = copy.deepcopy(message.content)
-            # message_text = self.texthandler(message_text).replace('\n',' ')
-            # message_text = self.texthandler(message_text).replace("'","'\\\''")
             message_text = self.texthandler(message_text).replace("@","")
 
             message_length = len(message_text)
