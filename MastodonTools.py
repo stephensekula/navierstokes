@@ -65,7 +65,7 @@ class MastodonHandler(SocialHandler):
             msg.link = post['uri']
             msg.author = post['account']['display_name']
             msg.date   = calendar.timegm(post['created_at'].timetuple())
-            msg.SetContent(msg.content + BeautifulSoup(post["content"], "html.parser").text)
+            msg.SetContent(msg.content + BeautifulSoup(post["content"], "html.parser").get_text())
 
             # harvest media from the post
             for medium in post['media_attachments']:
@@ -142,7 +142,7 @@ class MastodonHandler(SocialHandler):
                     media_ids.append(m.media_post(attachment))
             
             try:
-                message_text = BeautifulSoup(message.content, "html.parser").text
+                message_text = BeautifulSoup(message.content, "html.parser").get_text()
                 m.status_post(message_text, media_ids=media_ids)
                 successful_id_list.append( message.id )
             except:
