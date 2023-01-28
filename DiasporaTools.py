@@ -164,12 +164,6 @@ class DiasporaHandler(SocialHandler):
 
 
             if len(message.attachments) > 0:
-                # This is due to this bug: https://github.com/marekjm/diaspy/issues/22
-                # Try to work around it for now.
-
-                # Move the attachment to the local directory
-                # destination = message.attachments[0].split("/")[-1]
-                # shutil.move(message.attachments[0], destination)
                 post_trials = 0
                 while post_trials < 5:
                     has_exception = False
@@ -188,10 +182,6 @@ class DiasporaHandler(SocialHandler):
                         break
                     pass
                         
-
-                # Remove the local copy of the image
-                # os.remove(destination)
-                
             else:
                 try:
                     stream.post(text=message_text, aspect_ids=aspect)

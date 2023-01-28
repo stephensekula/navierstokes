@@ -225,11 +225,6 @@ class PumpHandler(SocialHandler):
                 fout.write(image_raw.content)
                 fout.close()
                 
-                #message.content = unicodedata.normalize('NFKD', pump_obj.display_name).encode('ascii','ignore')
-                #print(".display_name: %s" % (pump_obj.display_name))
-                #print(".summary: %s" % (pump_obj.summary))
-                #print(".content: %s" % (pump_obj.content))
-
                 text = ""
                 if not pump_obj.content:
                     message.SetContent("")
