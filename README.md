@@ -35,7 +35,7 @@ conda activate navierstokes
 conda install ConfigParser sets bs4 lockfile requests requests-oauthlib pycurl chardet
 
 # Some things are just easier with Pip
-pip install pypump diaspy-api twitter Mastodon.py html2text pyshorteners feedparser fuzzywuzzy python-Levenshtein lxml
+pip install pypump diaspy-api twitter Mastodon.py html2text pyshorteners feedparser thefuzz python-Levenshtein lxml
 ```
 
 # Installation
