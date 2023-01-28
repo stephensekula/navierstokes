@@ -547,11 +547,11 @@ for sinkname in sources_and_sinks:
             message.content = sources_and_sinks[sinkname].ShortenURLs(message.content)
             pass
 
-        try:
-            message.content = message.content.encode('utf-8')
-        except UnicodeDecodeError:
-            message.content = message.content.decode('iso-8859-1')
-            pass
+        # try:
+        #     message.content = message.content.encode('utf-8')
+        # except UnicodeDecodeError:
+        #     message.content = message.content.decode('iso-8859-1')
+        #     pass
 
 
         if debug:
