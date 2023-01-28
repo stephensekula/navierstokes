@@ -168,13 +168,13 @@ class DiasporaHandler(SocialHandler):
                 # Try to work around it for now.
 
                 # Move the attachment to the local directory
-                destination = message.attachments[0].split("/")[-1]
-                shutil.move(message.attachments[0], destination)
+                # destination = message.attachments[0].split("/")[-1]
+                # shutil.move(message.attachments[0], destination)
                 post_trials = 0
                 while post_trials < 5:
                     has_exception = False
                     try:
-                        stream.post(text=message_text, photo=destination, aspect_ids=aspect)
+                        stream.post(text=message_text, photo=message.attachments[0], aspect_ids=aspect)
                     except Exception:
                         has_exception = True
                         if post_trials >= 4:
@@ -190,7 +190,7 @@ class DiasporaHandler(SocialHandler):
                         
 
                 # Remove the local copy of the image
-                os.remove(destination)
+                # os.remove(destination)
                 
             else:
                 try:
