@@ -205,25 +205,24 @@ class TwitterHandler(SocialHandler):
                 tweet = message_text
 
                 status = None
-                #try:
-                if len(message.attachments) > 0:
-                    t_upload = twitter.Twitter(domain='upload.twitter.com',
+                try:
+                    if len(message.attachments) > 0:
+                        t_upload = twitter.Twitter(domain='upload.twitter.com',
                                                    auth=twitter.OAuth(self.tokens[0],self.tokens[1],self.credentials[0],self.credentials[1]))
-                    images = []
-                    for attachment in message.attachments:
-                        with open(attachment, "rb") as imagefile:
-                            imagedata = imagefile.read()
-                            images.append(t_upload.media.upload(media=imagedata)["media_id_string"])
-                        #status = api.statuses.update(status=tweet, media_ids=",".join(images))
-                        status = api.statuses.update(status=tweet, media_ids=",".join(images))                        
-                else:
-                    status = api.statuses.update(status=tweet)
+                        images = []
+                        for attachment in message.attachments:
+                            with open(attachment, "rb") as imagefile:
+                                imagedata = imagefile.read()
+                                images.append(t_upload.media.upload(media=imagedata)["media_id_string"])
+                            status = api.statuses.update(status=tweet, media_ids=",".join(images))                        
+                    else:
+                        status = api.statuses.update(status=tweet)
+                        pass
+                except Exception as e:
+                    self.msg(0,e)
+                    self.msg(0, "Unable to post a message to twitter due to error")
+                    self.msg(0, self.texthandler(message_text))
                     pass
-                #except Exception as e:
-                #    self.msg(0,e)
-                #    self.msg(0, "Unable to post a message to twitter due to error")
-                #    self.msg(0, self.texthandler(message_text))
-                #    pass
 
                 if status != None and status['created_at'] != None:
                     successful_id_list.append( message.id )
