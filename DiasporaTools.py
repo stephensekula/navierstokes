@@ -195,10 +195,11 @@ class DiasporaHandler(SocialHandler):
             else:
                 try:
                     stream.post(text=message_text, aspect_ids=aspect)
+                    successful_id_list.append( message.id )
                 except:
                     self.msg(0, "Unable to post message:\n%s" % (message_text))
                 pass
             pass
 
-        self.msg(0, "Wrote %d messages." % (len(messages)))
+        self.msg(0, "Wrote %d messages." % (len(successful_id_list)))
         return successful_id_list

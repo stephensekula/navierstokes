@@ -321,5 +321,5 @@ class PumpHandler(SocialHandler):
                 pass
             pass
 
-        self.msg(0, "Wrote %d messages." % (len(messages)))
+        self.msg(0, "Wrote %d messages." % (len(successful_id_list)))
         return successful_id_list
