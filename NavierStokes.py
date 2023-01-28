@@ -41,8 +41,8 @@ import URLShortener
 from MessageObj import Message
 
 # Fuzzy text matching
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
+from thefuzz import fuzz
+from thefuzz import process
 
 # functions
 def texthandler(text=""):
@@ -65,7 +65,6 @@ def FuzzyMatchScore(message1, message2):
 
     this_message = copy.deepcopy(message1.content)
     that_message = copy.deepcopy(message2.content)
-
 
     # First, compute a fuzzy matching score with URLs left in place.
     match_ratio_with_urls = fuzz.token_set_ratio(
