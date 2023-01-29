@@ -157,7 +157,10 @@ class GNUSocialHandler(SocialHandler):
             message.reply = True if self.find_element_of_status(dent_xml,"in_reply_to_status_id") != "" else False
             message.public = True
 
-            message.id = int(self.find_element_of_status(dent_xml,'id'))
+            try:
+                message.id = int(self.find_element_of_status(dent_xml,'id'))
+            except ValueError:
+                continue
 
             message.link = f'{self.site}/conversation/{message.id}#notice-{message.id}'
 
