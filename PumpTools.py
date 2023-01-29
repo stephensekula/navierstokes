@@ -46,9 +46,6 @@ class PumpHandler(SocialHandler):
         try:
             self.pump = self.CreatePumpClient(self.webfinger)
             self.me   = self.pump.Person(self.webfinger)
-            print("Account information:")
-            print(self.webfinger)
-            print(self.me.summary)
         except PyPumpException as e:
             print(e)
             print("Unable to initiate a connection to the pump server. Pump.io will be skipped.")
