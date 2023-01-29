@@ -46,23 +46,35 @@ class PumpHandler(SocialHandler):
         try:
             self.pump = self.CreatePumpClient(self.webfinger)
             self.me   = self.pump.Person(self.webfinger)
-        except PyPumpException:
-            print "Unable to initiate a connection to the pump server. Pump.io will be skipped."
+            print("Account information:")
+            print(self.webfinger)
+            print(self.me.summary)
+        except PyPumpException as e:
+            print(e)
+            print("Unable to initiate a connection to the pump server. Pump.io will be skipped.")
             self.pump = None
             self.me = None
             pass
         except ConnectionError:
-            print "The connection to the pump server has timed out. Pump.io will be skipped."
+            print("The connection to the pump server has timed out. Pump.io will be skipped.")
             self.pump = None
             self.me = None
             pass
             
         pass
 
-    def simple_verifier(url=''):
+    def simple_verifier(self, url=''):
+        print('Go to: ' + url)
+        return input('Verifier: ').lstrip(" ").rstrip(" ")
+
+    def verifier(self,url=''):
+        """ Will ask user to click link to accept app and write code """
         print(url)
-        print 'Go to: ' + url
-        return raw_input('Verifier: ').lstrip(" ").rstrip(" ")
+        print('In a browser, open up the above link to grant this application access')
+        print('your account. Follow the instructions on the link and paste the verifier')
+        print('code into here to give us access.')
+        print()
+        return input('Verifier: ').lstrip(" ").rstrip(" ")
 
 
     def CreatePumpClient(self, webfinger):
@@ -71,10 +83,11 @@ class PumpHandler(SocialHandler):
             type="native",
             name="NavierStokes",
             )
-        
+
         pump = PyPump(
             client=client,
-            verifier_callback=self.simple_verifier
+            verifier_callback=self.verifier,
+            retries=10
             )
         
         return pump
@@ -95,6 +108,8 @@ class PumpHandler(SocialHandler):
         try:
             outbox_major = self.me.outbox.major[:20]
         except:
+            if self.debug:
+                print(self.me)
             self.msg(0, "An error occurred while gathering recent messages.")
             return []
         
@@ -135,7 +150,7 @@ class PumpHandler(SocialHandler):
                 if pump_obj.deleted:
                     continue
             except AttributeError:
-                print "The arrtribute \"deleted\" does not exist . . . continuing anyway . . . "
+                print("The arrtribute \"deleted\" does not exist . . . continuing anyway . . . ")
                 pass
 
             # Determine if this message was directed to someone on Pump.io and thus
@@ -210,11 +225,6 @@ class PumpHandler(SocialHandler):
                 fout.write(image_raw.content)
                 fout.close()
                 
-                #message.content = unicodedata.normalize('NFKD', pump_obj.display_name).encode('ascii','ignore')
-                #print ".display_name: %s" % (pump_obj.display_name)
-                #print ".summary: %s" % (pump_obj.summary)
-                #print ".content: %s" % (pump_obj.content)
-
                 text = ""
                 if not pump_obj.content:
                     message.SetContent("")
@@ -247,10 +257,10 @@ class PumpHandler(SocialHandler):
         self.messages = sorted(self.messages, key=lambda msg: msg.date, reverse=False)
 
         if self.debug:
-            print "********************** Pump.io Handler **********************\n"
-            print "Here are the messages I gathered from the pump.io server:\n"
+            print("********************** Pump.io Handler **********************\n")
+            print("Here are the messages I gathered from the pump.io server:\n")
             for message in self.messages:
-                print message.Printable()
+                print(message.Printable())
                 pass
             
         return self.messages
@@ -267,7 +277,9 @@ class PumpHandler(SocialHandler):
         for message in messages:
 
 
-            if message.content == "" and len(message.attachments):
+            content = self.texthandler(message.content)
+
+            if content == "" and len(message.attachments):
                 continue
 
             do_write = False
@@ -277,7 +289,7 @@ class PumpHandler(SocialHandler):
                 do_write = True
                 pass
             else:
-                self.msg(0,message.content)
+                self.msg(0,content)
                 self.msg(0,"Unable to share message based on sharelevel settings.")
                 do_write = False
                 pass
@@ -286,14 +298,14 @@ class PumpHandler(SocialHandler):
                 continue
 
             if len(message.attachments)==0:
-                new_note = self.pump.Note(display_name=message.title,content=message.content)
+                new_note = self.pump.Note(display_name=message.title,content=content)
                 if message.public:
                     new_note.to = self.pump.Public
                     pass
                 new_note.send()
                 successful_id_list.append( message.id )
             else:
-                new_note = self.pump.Image(display_name=message.title,content=message.content)
+                new_note = self.pump.Image(display_name=message.title,content=content)
                 if message.public:
                     new_note.to = self.pump.Public
                     pass
@@ -304,5 +316,5 @@ class PumpHandler(SocialHandler):
                 pass
             pass
 
-        self.msg(0, "Wrote %d messages." % (len(messages)))
+        self.msg(0, "Wrote %d messages." % (len(successful_id_list)))
         return successful_id_list

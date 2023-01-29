@@ -4,7 +4,7 @@ NavierStokes is a set of Python classes that allow you to bridge between social 
 
 It employs “fuzzy text matching”, as well as a record of posts that have already been shared between networks, to try to prevent a post from being shared more than once to other networks (or back to the originating network). Fuzzy text matching is needed because different social networks encode or format the same information slightly differently. For instance, a post in HTML on Pump.io will not be formatted in HTML on Twitter, and Twitter will shorten links, thus altering the text of the original post. Fuzzy text matching uses statistical methods to attempt to compute the probability that the message has already been shared on a network. Above a match threshold, the post will not be shared.
 
-NavierStokes considers only posts made in the last hour when it scans the streams from different social networks. It won't re-post something that is 6 hours or 6 days old.
+NavierStokes considers only posts made within a time window (default is 1 hour) when it scans the streams from different social networks. It won't re-post something that is 6 hours or 6 days old ... unless you want it to (this can be controlled from the configuration file for each service).
 
 ## Developers
 
@@ -25,68 +25,45 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 # Requirements
 
-    diapsy (Limited Diaspora access) (https://github.com/marekjm/diaspy)
-    PyPump 0.7 or greater (master recommended) (pump.io access)
-        git clone https://github.com/xray7224/PyPump.git
-        cd PyPump
-        git fetch
-        git checkout master
-    cURL (GNU Social access)
-    LYNX (for converting HTML to plain text - some social networks don't understand HTML)
-    FuzzyWuzzy Python fuzzy text-matching libraries
-        https://github.com/seatgeek/fuzzywuzzy
-        git clone https://github.com/seatgeek/fuzzywuzzy.git
-        cd fuzzywuzzy
-        python setup.py install
-    txt2html: needed for clean text → HTML conversion (e.g. from Twitter messages to Pump.io)
-
-In general, here are the Python libraries needed to make this package operate:
+I strongly recommend creating an encapsulated Python 3.X environment using pip or conda. Below I give guidance on doing this with conda.
 
 ```
-abc
-bs4
-calendar
-codecs
-commands
-copy
-diaspy
-feedparser
-fuzzywuzzy
-getopt
-hashlib
-inspect
-lockfile
-logging
-math
-os
-pycurl
-pypump
-re
-requests
-subprocess
-sys
-time
-twitter
-unicodedata
-xml.dom.minidom
+conda create -n navierstokes python==3.11
+
+conda activate navierstokes
+
+conda install ConfigParser sets bs4 lockfile requests requests-oauthlib pycurl chardet
+
+# Some things are just easier with Pip
+pip install pypump diaspy-api twitter Mastodon.py html2text pyshorteners feedparser thefuzz python-Levenshtein lxml
 ```
 
 # Installation
 
-    Unpack the tarball. This automatically creates the navierstokes/ application directory
-    You should create a configuration file for NavierStokes: ~/.navierstokes/navierstokes.cfg. The syntax for the file is explained below.
-    If you intend to bridge between Pump.io and other networks, you must use PyPump to register a client (e.g. NavierStokesApp) on Pump.io. Follow their instructions for getting the client credentials and tokens. Enter those into the
+```
+git clone git@github.com:stephensekula/navierstokes.git
 
-    ~/.navierstokes/navierstokes.cfg
+conda activate navierstokes
 
-    file (see example below). PyPump docs: https://pypump.readthedocs.org/en/latest/
-    Make sure Cliaspora is available in the PATH environment variable, or Diaspora interactions will fail.
+cd navierstokes/
+```
+
+You should create a configuration file for NavierStokes: ~/.navierstokes/navierstokes.cfg. The syntax for the file is explained below.
+
+You will need to register a new application on some platforms. The ```xyz_register.py``` scripts help with this and only require you to provide a webfinger (e.g., ```username@website```) to start the process.
+
+Some credentials need to be entered into the configuration file (see below).
 
 ## Example navierstokes.cfg file
 
 Be sure to make this .cfg file only readable by you:
 
-    chmod 600 ~/.navierstokes/navierstokes.cfg
+```
+chmod 600 ~/.navierstokes/navierstokes.cfg
+```
+
+Here is example syntax for the file:
+
 
 ```
 [gnusocial]
@@ -95,10 +72,18 @@ site: gnusocial.server.url
 username: myname
 password: XXXXXXXXXXXXXXXX
 sharelevel: Public
+max_message_age: 3600
 
 [pump.io]
 type: pump.io
 webfinger: user@pump.server
+sharelevel: All
+max_message_age: 86400
+
+[mastodon]
+type: mastodon
+webfinger: user@mastodon.server
+client_tokens: XXXXXXXXXXXXXXXXXXX
 sharelevel: All
 
 [diaspora]
@@ -137,6 +122,8 @@ For Twitter, this set of lists holds the following items. client_credentials hol
 ### The meaning of other configuration keys
 Note that “sharelevel” means at what level of publicity from other networks you want a notice shared to this one. I've set this, for now, the way I like it. If you set this to “Public”, ONLY notices that are public on other networks will go there. For instance, I only like to share things that are public on pump.io with Twitter. Things on Twitter are public by default, so they will ALWAYS be shared with other networks.
 
+"max_message_age" controls how old a message can be and still be posted across your networks. The value is seconds from the time NavierStokes is run. The default is 3600s (1 hour).
+
 “shortenurls” presently enabled will take ALL URLs listed in the message text and shorten them via ur1.ca. In the future, this will be a choice the user can make.
 Running NavierStokes
 
@@ -144,47 +131,29 @@ Running NavierStokes
 
 Once you have written a .cfg file and setup account information in it (and, in the case of Pump.io and Twitter, you have authenticated PyPump and t against those respective networks as clients), you can try executing NavierStokes manually:
 
-    python ./NavierStokes.py
+```
+python ./NavierStokes.py
+```
 
 If you get errors, try running in Debug Mode and see what you can learn:
 
-    python ./NavierStokes.py -d
+```
+python ./NavierStokes.py -d
+```
 
 If you want to rate-limit posting, so that no more than N posts are bridged per execution, do this:
 
-    python ./NavierStokes.py -r 5
+```
+python ./NavierStokes.py -r 5
+```
 
 This ensures that no more than 5 posts are bridged to any network from any other network. This is useful for bot-scripts, especially if the script has not run for a while (due to server problems) and suddenly runs, gathering a large back-log of messages from social networks.
 
 You can NavierStokes periodically (e.g every 5 minutes) using a CRON job:
 
 ```
-*/5 * * * * bash -l -c 'python /path/to/navierstokes/NavierStokes.py -r 5 >> ${HOME}/.navierstokes/navierstokes.log 2>&1'
+*/5 * * * * bash -l -c 'source activate ~/anaconda/envs/navierstokes; python /path/to/navierstokes/NavierStokes.py -r 5 >> ${HOME}/.navierstokes/navierstokes.log 2>&1'
 ```
 
-If you get any errors that are unrelated to passwords, logging into, report them to navierstokes+NOSPAM@hub.polari.us.
-A simple program to authenticate PyPump against your pump.io instance
-
-For PyPump v0.7 and beyond (e.g. PyPump master branch), this ought to work:
-
-```
-#!/usr/bin/env python
-
-from pypump import PyPump, Client
-
-client = Client(
-    webfinger="ME@MY.PUMP",
-    type="native", # Can be "native" or "web"
-    name="NavierStokesApp"
-)
-
-def simple_verifier(url):
-    print 'Go to: ' + url
-    return raw_input('Verifier: ') # they will get a code back
-
-pump = PyPump(client=client, verifier_callback=simple_verifier)
-
-# You now have a file in ~/.config/PyPump/credentials.json that will be automatically loaded by PyPump
-# when you run NavierStokes. Authentication is now automatically provided by this mechanism.
-
+If you get any errors that are unrelated to passwords, logging in, or other authentication issues, then report them via the issue tracker on Github..
 ```

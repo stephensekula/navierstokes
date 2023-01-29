@@ -18,11 +18,11 @@ import os
 import re
 import datetime
 import calendar
-#import commands
 import time
+import json
 
 import pyshorteners
-from pyshorteners import Shorteners
+from pyshorteners import shorteners
 
 # Python Twitter API access
 import twitter
@@ -54,7 +54,7 @@ class TwitterHandler(SocialHandler):
 
         for photo_link in medialinks:
             # download the HTML page that holds the image
-            photo_link_url = photo_link.media_url_https
+            photo_link_url = photo_link['media_url_https']
             filename_match = re.search('.*/(.*)', photo_link_url, re.DOTALL)
             if filename_match:
                 local_filename = "/tmp/%s" % (filename_match.group(1))
@@ -82,27 +82,27 @@ class TwitterHandler(SocialHandler):
             pass
 
         username = self.username
-        api = twitter.Api(tweet_mode='extended', consumer_key = self.credentials[0], consumer_secret=self.credentials[1], access_token_key=self.tokens[0],access_token_secret=self.tokens[1])
+        api = twitter.Twitter(auth=twitter.OAuth(self.tokens[0],self.tokens[1],self.credentials[0],self.credentials[1]))
 
-        statuses = api.GetUserTimeline(screen_name=self.username)
+        statuses = api.statuses.user_timeline(screen_name=self.username,tweet_mode='extended')
 
         message = Message()
 
         for status in statuses:
             message = Message()
-            message_time_text = datetime.datetime.strptime(status.created_at, "%a %b %d %H:%M:%S +0000 %Y")
+            message_time_text = datetime.datetime.strptime(status['created_at'], "%a %b %d %H:%M:%S +0000 %Y")
             message.date = calendar.timegm(message_time_text.timetuple())
             message.source = "Twitter"
-            message.author = status.user.screen_name
-            message.repost = status.retweeted
-            if message.repost and status.retweeted_status != None:
-                message.SetContent(self.T2H_URLs(status.retweeted_status.full_text))
-                message.id = status.retweeted_status.id
-                message.author = status.retweeted_status.user.screen_name
+            message.author = status['user']['screen_name']
+            message.repost = status['retweeted']
+            if message.repost and status['retweeted_status'] != None:
+                message.SetContent(self.T2H_URLs(status['retweeted_status']['full_text']))
+                message.id = status['retweeted_status']['id']
+                message.author = status['retweeted_status']['user']['screen_name']
             else:
-                message.SetContent(self.T2H_URLs(status.full_text))
-                message.id = status.id
-            message.reply = True if (status.in_reply_to_status_id != None) else False
+                message.SetContent(self.T2H_URLs(status['full_text']))
+                message.id = status['id']
+            message.reply = True if (status['in_reply_to_status_id'] != None) else False
             message.direct = True if (message.content[0] == "@") else False
             if message.reply or message.direct:
                 message.public = False
@@ -120,9 +120,11 @@ class TwitterHandler(SocialHandler):
 
             message.attachments = []
             if message.repost:
-                message.attachments = self.tweet_get_images(status.retweeted_status.media)
+                if 'media' in status['retweeted_status']['entities']:
+                    message.attachments = self.tweet_get_images(status['retweeted_status']['entities']['media'])
             else:
-                message.attachments = self.tweet_get_images(status.media)
+                if 'media' in status['entities']:
+                    message.attachments = self.tweet_get_images(status['entities']['media'])
                 pass
 
             self.messages.append(message)
@@ -149,7 +151,7 @@ class TwitterHandler(SocialHandler):
 
         # initialize the connection to Twitter
         username = self.username
-        api = twitter.Api(tweet_mode='extended', consumer_key = self.credentials[0], consumer_secret=self.credentials[1], access_token_key=self.tokens[0],access_token_secret=self.tokens[1])
+        api = twitter.Twitter(auth=twitter.OAuth(self.tokens[0],self.tokens[1],self.credentials[0],self.credentials[1]))
 
 
         for message in messages:
@@ -178,23 +180,23 @@ class TwitterHandler(SocialHandler):
 
             # if message is too long, chop it and add URL
             message_text = copy.deepcopy(message.content)
-            message_text = message_text.replace('\n',' ')
-            message_text = message_text.replace("'","'\\\''")
-            message_text = message_text.replace("@","")
+            message_text = self.texthandler(message_text).replace("@","")
 
             message_length = len(message_text)
 
             # handle the url
-            url_shortener = pyshorteners.Shortener(Shorteners.TINYURL)
+            url_shortener = pyshorteners.Shortener()
           
-            message_link = url_shortener.short(message.link)
+            message_link = url_shortener.tinyurl.short(message.link)
             link_length = len(message_link)
             
-            if message_length + link_length >= 140:
+            max_length = 280
+
+            if message_length + link_length >= max_length:
                 if len(message.attachments) > 0:
-                    message_text = message_text[:(110 - link_length)] + "... " + message_link
+                    message_text = message_text[:(max_length - 30 - link_length)] + "... " + message_link
                 else:
-                    message_text = message_text[:(140 - link_length)] + "... " + message_link
+                    message_text = message_text[:(max_length - link_length)] + "... " + message_link
                     pass
 
                 pass
@@ -205,16 +207,24 @@ class TwitterHandler(SocialHandler):
                 status = None
                 try:
                     if len(message.attachments) > 0:
-                        status = api.PostUpdate(tweet, media=message.attachments[0])
+                        t_upload = twitter.Twitter(domain='upload.twitter.com',
+                                                   auth=twitter.OAuth(self.tokens[0],self.tokens[1],self.credentials[0],self.credentials[1]))
+                        images = []
+                        for attachment in message.attachments:
+                            with open(attachment, "rb") as imagefile:
+                                imagedata = imagefile.read()
+                                images.append(t_upload.media.upload(media=imagedata)["media_id_string"])
+                            status = api.statuses.update(status=tweet, media_ids=",".join(images))                        
                     else:
-                        status = api.PostUpdate(tweet)
+                        status = api.statuses.update(status=tweet)
                         pass
-                except twitter.error.TwitterError:
-                    self.msg(0, "Unable to post a message to twitter due to twitter.error.TwitterError")
+                except Exception as e:
+                    self.msg(0,e)
+                    self.msg(0, "Unable to post a message to twitter due to error")
                     self.msg(0, self.texthandler(message_text))
                     pass
 
-                if status != None and status.created_at != None:
+                if status != None and status['created_at'] != None:
                     successful_id_list.append( message.id )
 
                 pass
@@ -228,5 +238,5 @@ class TwitterHandler(SocialHandler):
 
             pass
 
-        self.msg(0,"Wrote %d messages" % len(messages))
+        self.msg(0,"Wrote %d messages" % len(successful_id_list))
         return successful_id_list
