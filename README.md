@@ -25,18 +25,37 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 # Requirements
 
-I strongly recommend creating an encapsulated Python 3.X environment using pip or conda. Below I give guidance on doing this with conda.
+I strongly recommend creating an encapsulated Python 3.X environment using pip or conda. Below I give guidance on doing this with conda and the Python venv approach.
 
 ```
+## Conda approach
 conda create -n navierstokes python==3.11
-
 conda activate navierstokes
-
-conda install ConfigParser sets bs4 lockfile requests requests-oauthlib pycurl chardet
-
-# Some things are just easier with Pip
-pip install pypump diaspy-api twitter Mastodon.py html2text pyshorteners feedparser thefuzz python-Levenshtein lxml
 ```
+
+```
+## Python venv approach
+python3 -m venv navierstokes_env
+source ./navierstokes_env/bin/activate
+
+# Install wheel first; on some systems, this isn't installed and is needed for some library installations
+pip install wheel
+```
+
+Then run the script that installs the needed dependencies:
+
+```
+bash ./install_dependencies.sh
+```
+
+You can do the above as a way to keep things fresh when you periodically ```git pull``` to update the code, e.g.,
+
+```
+# Update the code and refresh/update dependencies
+git pull
+bash ./install_dependencies.sh
+```
+
 
 # Installation
 
