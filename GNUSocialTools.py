@@ -194,18 +194,26 @@ class GNUSocialHandler(SocialHandler):
                         filename = dent_attachment.split('/')[-2]
                     if not os.path.exists('/tmp/%s' % (filename)):
                         os.system('curl -L --connect-timeout 60 -m 120 -s -o /tmp/%s %s' % ( filename, dent_attachment ))
+
+                    do_attach_image = True
+
                     attachment_name=f'/tmp/{filename}'
                     # Recent GNU Social instances will generate WebP images. Not guaranteed to be compatible
                     # with other social networks (fie on thee, social networks!). Convert to JPG, which is
                     # generally friendly (fie on thee, JPEG!)
 
                     if os.path.exists(f'/tmp/{filename}'):
-                        im = Image.open(f'/tmp/{filename}')
-                        rgb_im = im.convert('RGB')
-                        rgb_im.save(f'/tmp/{filename}-1.jpg')
-                        attachment_name=f'/tmp/{filename}-1.jpg'
+                        try:
+                            im = Image.open(f'/tmp/{filename}')
+                            rgb_im = im.convert('RGB')
+                            rgb_im.save(f'/tmp/{filename}-1.jpg')
+                            attachment_name=f'/tmp/{filename}-1.jpg'
+                        except:
+                            self.msg(0, "One of the attachments did not convert to a JPEG correctly") 
+                            do_attach_image = False
 
-                    message.attachments.append( attachment_name )
+                    if do_attach_image:
+                        message.attachments.append( attachment_name )
                     pass
                 pass
 
