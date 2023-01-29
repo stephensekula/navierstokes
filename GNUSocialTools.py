@@ -159,7 +159,7 @@ class GNUSocialHandler(SocialHandler):
 
             message.id = int(self.find_element_of_status(dent_xml,'id'))
 
-            message.link = '%s/conversation/%d#notice-%d' % (self.site,message.id,message.id)
+            message.link = f'{self.site}/conversation/{message.id}#notice-{message.id}'
 
             # if the dent has a @ at the beginning, it was meant to be a direct
             # message to someone on GNU social and should not be broadcast
