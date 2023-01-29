@@ -311,8 +311,11 @@ class PumpHandler(SocialHandler):
                 # In Pump.io, an image is a post - you cannot associate >1 image with a
                 # a single post. Pick the first one in the list (not ideal) and post
                 # ONCE.
-                new_note.from_file(attachment[0])
-                successful_id_list.append( message.id )
+                try:
+                    new_note.from_file(message.attachments[0])
+                    successful_id_list.append( message.id )
+                except:
+                    pass
                 pass
             pass
 

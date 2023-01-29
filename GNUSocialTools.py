@@ -22,6 +22,7 @@ import datetime
 import calendar
 import codecs
 import subprocess
+from PIL import Image
 
 
 from MessageObj import Message
@@ -150,7 +151,7 @@ class GNUSocialHandler(SocialHandler):
             message = Message()
             message.source = "GNU Social"
             message.SetContent(dent_text)
-            message.content = self.TextToHtml(message.content)
+            # message.content = self.TextToHtml(message.content)
             if message.content.find("deleted notice") != -1:
                 continue
             message.author = dent_author
@@ -170,16 +171,44 @@ class GNUSocialHandler(SocialHandler):
                 message.direct = 1
 
             dent_attachments = self.status_attachment(dent_xml)
+
+            # Recent versions of GNU Social will place images directly in the text of the post, using
+            # a pattern like "http.*?domain.com\/attachment\/[A-Za-z0-9]\+\/view". Extract these for download
+            # as well
+            site_pattern=self.site
+
+            pattern_list = [f'({site_pattern}/attachment/\w+/view)', f'({site_pattern}/url/\w+)']
+            for pattern in pattern_list:
+                attachment_pattern=re.compile(pattern)
+                attachment_matches = attachment_pattern.search(message.content)
+                if attachment_matches != None:
+                    for in_text_attachment in attachment_matches.groups():
+                        dent_attachments.append(in_text_attachment)
+                        # Remove this URL from the original message content
+                        message.content = message.content.replace(in_text_attachment, '')
+
             for dent_attachment in dent_attachments:
                 if dent_attachment.find(self.site) != -1:
                     filename = dent_attachment.split('/')[-1]
+                    if dent_attachment.find("/view") != -1:
+                        filename = dent_attachment.split('/')[-2]
                     if not os.path.exists('/tmp/%s' % (filename)):
-                        os.system('curl --connect-timeout 60 -m 120 -s -o /tmp/%s %s' % ( filename, dent_attachment ))
-                        pass
+                        os.system('curl -L --connect-timeout 60 -m 120 -s -o /tmp/%s %s' % ( filename, dent_attachment ))
+                    attachment_name=f'/tmp/{filename}'
+                    # Recent GNU Social instances will generate WebP images. Not guaranteed to be compatible
+                    # with other social networks (fie on thee, social networks!). Convert to JPG, which is
+                    # generally friendly (fie on thee, JPEG!)
 
-                    message.attachments.append( '/tmp/%s' % (filename) )
+                    if os.path.exists(f'/tmp/{filename}'):
+                        im = Image.open(f'/tmp/{filename}')
+                        rgb_im = im.convert('RGB')
+                        rgb_im.save(f'/tmp/{filename}-1.jpg')
+                        attachment_name=f'/tmp/{filename}-1.jpg'
+
+                    message.attachments.append( attachment_name )
                     pass
                 pass
+
 
             # Remove offset from timestamp and handle it separately - strptime cannot reliably handle %z in Python
             gs_msg_timestamp = self.find_element_of_status(dent_xml,"created_at")
