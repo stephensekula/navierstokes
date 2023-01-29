@@ -13,6 +13,7 @@ import hashlib
 import copy
 import URLShortener
 import chardet
+from rfc2html import markup
 
 
 class SocialHandler(object):
@@ -214,37 +215,13 @@ class SocialHandler(object):
 
     def TextToHtml(self, msg="" ):
         # Convert links to HTML in a text message
-        # Relied on external tool, txt2html
 
-        # write message to file for conversion
-        pid = os.getpid()
-        text_file = open("/tmp/txt2html_%d.txt" % (pid), "w")
+        # return html_message
+        html_message = markup(msg)
 
-        #text_file.write(msg.encode('utf8'))
-        text_file.write(self.texthandler(msg))
-
-        text_file.close();
-
-        # Convert using tool
-        html_message = ""
-        try:
-            #html_message = unicode(subprocess.check_output(["txt2html", "--infile", "/tmp/txt2html_%d.txt" % (pid)]))
-            html_message = subprocess.check_output(["txt2html", "--infile", "/tmp/txt2html_%d.txt" % (pid)])
-
-        except subprocess.CalledProcessError:
-            print(self.texthandler("There was a problem trying to call the txt2html program - make sure it is installed correctly."))
-            sys.exit(-1)
-            pass
-
-        # excerpt the content of the <body> tags
-
-        html_message = self.texthandler(html_message)
-
-        body_begin = html_message.find('<body>') + 6
-        body_end   = html_message.find('</body>')
-
-        html_message = html_message[body_begin:body_end]
-
+        # The Markup program wraps everything in "<pre></pre>" tags - not optimal. Strip these.
+        html_message = html_message.replace("</pre>","")
+        html_message = html_message.replace("<pre>","")
         return html_message
 
 

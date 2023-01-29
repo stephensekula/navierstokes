@@ -17,6 +17,7 @@ requests-oauthlib \
 pycurl \
 chardet \
 lxml \
+rfc2html \
 thefuzz \
 python-Levenshtein \
 html2text \
