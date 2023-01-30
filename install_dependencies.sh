@@ -20,6 +20,7 @@ lxml \
 rfc2html \
 thefuzz \
 python-Levenshtein \
+Pillow \
 html2text \
 pyshorteners \
 feedparser
