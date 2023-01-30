@@ -214,14 +214,14 @@ class TwitterHandler(SocialHandler):
                             with open(attachment, "rb") as imagefile:
                                 imagedata = imagefile.read()
                                 images.append(t_upload.media.upload(media=imagedata)["media_id_string"])
-                            status = api.statuses.update(status=tweet, media_ids=",".join(images))                        
+                        status = api.statuses.update(status=tweet, media_ids=",".join(images))                        
                     else:
                         status = api.statuses.update(status=tweet)
                         pass
                 except Exception as e:
                     self.msg(0,e)
                     self.msg(0, "Unable to post a message to twitter due to error")
-                    self.msg(0, self.texthandler(message_text))
+                    self.msg(0, message_text)
                     pass
 
                 if status != None and status['created_at'] != None:
