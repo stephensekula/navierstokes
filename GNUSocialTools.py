@@ -163,7 +163,7 @@ class GNUSocialHandler(SocialHandler):
             except ValueError:
                 continue
 
-            message.link = f'{self.site}/conversation/{message.id}#notice-{message.id}'
+            message.link = f'{self.site}/notice/{message.id}'
 
             # if the dent has a @ at the beginning, it was meant to be a direct
             # message to someone on GNU social and should not be broadcast
