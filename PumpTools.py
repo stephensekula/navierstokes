@@ -276,9 +276,9 @@ class PumpHandler(SocialHandler):
         for message in messages:
 
 
-            content = self.texthandler(message.content)
+            content = message.content
 
-            if content == "" and len(message.attachments):
+            if content == "" and len(message.attachments) == 0:
                 continue
 
             do_write = False
@@ -296,26 +296,31 @@ class PumpHandler(SocialHandler):
             if not do_write:
                 continue
 
-            if len(message.attachments)==0:
-                new_note = self.pump.Note(display_name=message.title,content=content)
-                if message.public:
-                    new_note.to = self.pump.Public
-                    pass
-                new_note.send()
-                successful_id_list.append( message.id )
-            else:
-                new_note = self.pump.Image(display_name=message.title,content=content)
-                if message.public:
-                    new_note.to = self.pump.Public
-                    pass
-                # In Pump.io, an image is a post - you cannot associate >1 image with a
-                # a single post. Pick the first one in the list (not ideal) and post
-                # ONCE.
-                try:
+            try:
+                if len(message.attachments)==0:
+                    new_note = self.pump.Note(display_name=message.title,content=content)
+                    if message.public:
+                        new_note.to = self.pump.Public
+                        pass
+                    new_note.send()
+                    successful_id_list.append( message.id )
+                else:
+                    new_note = self.pump.Image(display_name=message.title,content=content)
+                    if message.public:
+                        new_note.to = self.pump.Public
+                        pass
+                    # In Pump.io, an image is a post - you cannot associate >1 image with a
+                    # a single post. Pick the first one in the list (not ideal) and post
+                    # ONCE.
                     new_note.from_file(message.attachments[0])
                     successful_id_list.append( message.id )
-                except:
                     pass
+            except Exception as e:
+                self.msg(0,"Error when posting message.")
+                self.msg(0, message.title)
+                self.msg(0, content)
+                self.msg(0, message.attachments)
+                self.msg(0,e)
                 pass
             pass
 
