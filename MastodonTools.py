@@ -3,7 +3,7 @@ MastodonTools.py
 Author: Stephen J. Sekula
 Created: Jan. 24, 2023
 
-* DisaporaHandler:
+* MastodonHandler:
 Inherits from: SocialHandler
 Purpose: to gather messages from a Mastodon instance, and write messages to
 the same instance. This relies on the Mastodon.py interface to the Mastodon API.
@@ -65,8 +65,13 @@ class MastodonHandler(SocialHandler):
             msg.link = post['uri']
             msg.author = post['account']['display_name']
             msg.date   = calendar.timegm(post['created_at'].timetuple())
-            msg.SetContent(msg.content + BeautifulSoup(post["content"], "html.parser").get_text())
+            msg.repost = post['reblog'] != None
 
+            if msg.repost == False:
+                msg.SetContent(msg.content + BeautifulSoup(post["content"], "html.parser").get_text())
+            else:
+                msg.SetContent(f'From {post["reblog"]["account"]["acct"]} on Mastodon: ' + BeautifulSoup(post["reblog"]["content"], "html.parser").get_text())
+                
             # harvest media from the post
             for medium in post['media_attachments']:
                 post_attachment = medium["url"]
@@ -78,7 +83,6 @@ class MastodonHandler(SocialHandler):
                 pass
 
             # determine the message type
-            msg.repost = post['reblog'] != None
             msg.direct = False
 
             if post['visibility'] == 'public':
