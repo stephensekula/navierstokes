@@ -191,6 +191,7 @@ class TwitterHandler(SocialHandler):
             link_length = len(message_link)
             separator = "... "
             separator_length = len(separator)
+            safety_margin = 5
             
             max_length = 280
 
@@ -198,9 +199,9 @@ class TwitterHandler(SocialHandler):
             
             if (message_length + separator_length + link_length) >= max_length:
                 if len(message.attachments) > 0:
-                    message_text = message_text[:(max_length - 30 - link_length - separator_length)] + "... " + message_link
+                    message_text = message_text[:(max_length - 30 - safety_margin - link_length - separator_length)] + "... " + message_link
                 else:
-                    message_text = message_text[:(max_length - link_length - separator_length)] + "... " + message_link
+                    message_text = message_text[:(max_length - safety_margin - link_length - separator_length)] + "... " + message_link
                     pass
 
                 pass
