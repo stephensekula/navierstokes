@@ -303,17 +303,7 @@ class GNUSocialHandler(SocialHandler):
                 data =  " -F source=NavierStokesApp"
                 data += " -F \"status=</tmp/%d_statusnet_text.txt\"" % (pid)
                 for attachment in message.attachments:
-                    # convert image to png if it's not png
-                    prefix = '.'.join(attachment.split('.')[:-1])
-                    os.system("convert -scale 1024x768 %s %s_1024x768.png" % (attachment, prefix))
-
-                    png_file = prefix + "_1024x768.png"
-                    #if -1 == attachment.find('.png'):
-                    #    png_file =  '.'.join(attachment.split('.')[:-1]) + '.png'
-                    #    os.system('convert %s %s' %(attachment, png_file))
-                    #    pass
-
-                    data += " -F media=@" + png_file
+                    data += " -F media=@" + attachment
                     pass
 
 
