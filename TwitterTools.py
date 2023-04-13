@@ -180,7 +180,10 @@ class TwitterHandler(SocialHandler):
 
             # if message is too long, chop it and add URL
             message_text = copy.deepcopy(message.content)
-            message_text = self.texthandler(message_text).replace("@","")
+
+            # Remove "@" that appear at the beginning of a word (to avoid @-tagging by accident)
+            at_tag_pattern = re.compile('\s@')
+            message_text = at_tag_pattern.sub(' ', self.texthandler(message_text))
 
             message_length = len(message_text)
 
