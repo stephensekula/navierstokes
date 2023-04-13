@@ -96,7 +96,7 @@ class DiasporaHandler(SocialHandler):
             elif post['post_type'] == "Reshare":
                 msg.repost = 1
                 msg.direct = 0
-                msg.SetContent(msg.content + "\n\n" + "Reshared from %s on Diaspora: " % (post.author()))
+                msg.SetContent(msg.content + "\n\n" + "Reshared from %s on Diaspora: " % (post['author']))
                 pass
             else:
                 continue
