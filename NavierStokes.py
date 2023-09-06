@@ -533,14 +533,14 @@ for sinkname in sources_and_sinks:
            type(sources_and_sinks[sinkname]) == GNUSocialTools.GNUSocialHandler:
             message.content = sources_and_sinks[sinkname].HTMLConvert(message.content)
 
-        if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler or \
-           type(sources_and_sinks[sinkname]) == GNUSocialTools.GNUSocialHandler:
-            message.content = texthandler(message.content).lstrip(' ')
-            message.content = texthandler(message.content).rstrip('\n')
+        #if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler or \
+        #   type(sources_and_sinks[sinkname]) == GNUSocialTools.GNUSocialHandler:
+        #    message.content = texthandler(message.content).lstrip(' ')
+        #    message.content = texthandler(message.content).rstrip('\n')
 
 
-        if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler:
-            message.content = texthandler(message.content).replace('"','\\"')
+        #if type(sources_and_sinks[sinkname]) == TwitterTools.TwitterHandler:
+        #    message.content = texthandler(message.content).replace('"','\\"')
 
 
         if sources_and_sinks[sinkname].do_url_shortening:
