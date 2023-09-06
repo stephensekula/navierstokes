@@ -68,9 +68,9 @@ class MastodonHandler(SocialHandler):
             msg.repost = post['reblog'] != None
 
             if msg.repost == False:
-                msg.SetContent(msg.content + BeautifulSoup(post["content"], "html.parser").get_text())
+                msg.SetContent(msg.content + BeautifulSoup(post["content"], "html.parser").get_text(separator="\n"))
             else:
-                msg.SetContent(f'From {post["reblog"]["account"]["acct"]} on Mastodon: ' + BeautifulSoup(post["reblog"]["content"], "html.parser").get_text())
+                msg.SetContent(f'From {post["reblog"]["account"]["acct"]} on Mastodon: ' + BeautifulSoup(post["reblog"]["content"], "html.parser").get_text(separator="\n"))
                 
             # harvest media from the post
             for medium in post['media_attachments']:
